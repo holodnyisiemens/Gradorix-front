@@ -1,0 +1,334 @@
+.page {
+  padding: 0 0 var(--space-8);
+  animation: fade-in-up 0.3s ease;
+}
+
+/* Greeting block */
+.greeting {
+  padding: var(--space-6) 0 var(--space-4);
+}
+
+.greetingDate {
+  font-size: var(--text-xs);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.greetingName {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--text-primary);
+  animation: flicker 8s infinite;
+}
+
+.greetingAccent {
+  color: var(--accent-red-bright);
+  text-shadow: var(--glow-text);
+}
+
+.greetingRole {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+  letter-spacing: 0.04em;
+}
+
+/* Today section (Junior) */
+.todaySection {
+  margin-bottom: var(--space-6);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.todayEmpty {
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+/* Stats grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.statCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.statValueAccent  { color: var(--accent-red-bright); text-shadow: var(--glow-text); }
+.statValueGreen   { color: var(--color-success-bright); }
+.statValueOrange  { color: var(--accent-orange-bright); }
+.statValueBlue    { color: var(--color-info-bright); }
+.statValueYellow  { color: var(--accent-yellow); }
+
+.statLabel {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Quick actions */
+.quickActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+.actionItem:hover {
+  border-color: var(--border-default);
+  background: var(--bg-elevated);
+}
+.actionItem:active { transform: scale(0.99); }
+
+.actionIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.actionIconRed    { background: rgba(204, 0, 0, 0.12); color: var(--accent-red-bright); }
+.actionIconOrange { background: rgba(224, 92, 0, 0.12); color: var(--accent-orange-bright); }
+.actionIconGreen  { background: rgba(45, 138, 78, 0.12); color: var(--color-success-bright); }
+.actionIconBlue   { background: rgba(26, 106, 170, 0.12); color: var(--color-info-bright); }
+
+.actionText { flex: 1; min-width: 0; }
+.actionTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+.actionSubtitle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* Recent section */
+.recentSection {
+  margin-bottom: var(--space-4);
+}
+
+.seeAll {
+  font-size: var(--text-sm);
+  color: var(--accent-red-bright);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  float: right;
+}
+.seeAll:hover { color: var(--accent-orange-bright); }
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Progress bar */
+.progressWrap {
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-3);
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--accent-red), var(--accent-orange-bright));
+  transition: width 0.6s ease;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}
+
+/* Activity stats card (HR dashboard) */
+.activityCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: border-color var(--transition-fast);
+}
+.activityCard:hover { border-color: var(--border-default); }
+
+.activityHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.activityAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.activityInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activityName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.activityMeta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.activityRate {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.activityProgressWrap {
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.activityProgressBar {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
+}
+
+.activityTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.activityTags span {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-medium);
+}
+
+.tagDone       { background: rgba(45,138,78,0.12);   color: var(--color-success-bright); }
+.tagInProgress { background: rgba(224,92,0,0.12);    color: var(--accent-orange-bright); }
+.tagGoing      { background: rgba(26,106,170,0.12);  color: var(--color-info-bright); }
+.tagSkipped    { background: rgba(204,0,0,0.12);     color: var(--accent-red-bright); }
+
+.topBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(245,197,24,0.15);
+  color: var(--accent-yellow);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.03em;
+}
+
+.inactiveBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+}
+
+/* Desktop layout */
+@media (min-width: 768px) {
+  .page { padding: 0 0 var(--space-8); }
+
+  .statsGrid { grid-template-columns: repeat(4, 1fr); }
+
+  .greeting { padding: var(--space-4) 0 var(--space-6); }
+  .greetingName { font-size: var(--text-5xl); }
+
+  .quickActions { max-width: 600px; }
+
+  .list { display: grid; grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,91 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.earned {
+  border-color: rgba(245, 197, 24, 0.25);
+  background: rgba(245, 197, 24, 0.04);
+}
+
+.locked {
+  opacity: 0.5;
+  filter: grayscale(0.4);
+}
+
+.icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.earned .icon {
+  background: rgba(245, 197, 24, 0.1);
+  border-color: rgba(245, 197, 24, 0.3);
+}
+
+.content { flex: 1; min-width: 0; }
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.description {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xp {
+  font-size: 11px;
+  font-weight: var(--font-bold);
+  color: var(--accent-yellow);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.locked .xp { color: var(--text-muted); }
+
+.lockIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Grid layout for achievement list */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+@media (min-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

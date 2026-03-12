@@ -1,0 +1,36 @@
+/* === MOBILE: flex column with in-flow bottom nav === */
+.layout {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.main {
+  flex: 1;
+  min-height: 0; /* Critical: lets flex child shrink below content size */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Consistent horizontal padding for ALL pages */
+  padding-inline: var(--page-padding);
+  /* Small padding so last item doesn't touch BottomNav */
+}
+
+/* === DESKTOP (>=768px): sidebar + scrollable content === */
+@media (min-width: 768px) {
+  .layout {
+    max-width: none;
+    height: 100dvh;
+    flex-direction: row;
+    margin: 0;
+  }
+
+  .main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-width: 960px;
+  }
+}

@@ -1,0 +1,51 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.default {
+  padding: var(--space-4);
+}
+
+.compact {
+  padding: var(--space-3);
+}
+
+.flush {
+  padding: 0;
+}
+
+.interactive {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.interactive:hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-md);
+}
+
+.interactive:active {
+  transform: scale(0.99);
+}
+
+.glow {
+  border-color: var(--border-accent);
+  box-shadow: var(--glow-red-sm);
+}
+
+/* Left accent bar */
+.accent::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent-red);
+  box-shadow: var(--glow-red-sm);
+}

@@ -1,0 +1,84 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fade-in 0.2s ease;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.overlayCenter {
+  align-items: center;
+  padding: var(--space-4);
+}
+
+.sheet {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-bottom: none;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  width: 100%;
+  max-width: var(--max-width);
+  max-height: 90dvh;
+  overflow-y: auto;
+  animation: slide-up 0.3s ease;
+  overscroll-behavior: contain;
+}
+
+.dialog {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-height: 85dvh;
+  overflow-y: auto;
+  animation: fade-in-up 0.25s ease;
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+  margin: var(--space-3) auto var(--space-1);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) 0;
+  gap: var(--space-4);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+}
+
+.close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.close:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.body {
+  padding: var(--space-4);
+}

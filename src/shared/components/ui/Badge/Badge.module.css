@@ -1,0 +1,68 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Variants */
+.default {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+.red {
+  background: rgba(204, 0, 0, 0.15);
+  color: var(--accent-red-bright);
+  border: 1px solid rgba(204, 0, 0, 0.25);
+}
+.red .dot { background: var(--accent-red-bright); }
+
+.orange {
+  background: rgba(224, 92, 0, 0.15);
+  color: var(--accent-orange-bright);
+  border: 1px solid rgba(224, 92, 0, 0.25);
+}
+.orange .dot { background: var(--accent-orange-bright); }
+
+.green {
+  background: rgba(45, 138, 78, 0.15);
+  color: var(--color-success-bright);
+  border: 1px solid rgba(45, 138, 78, 0.25);
+}
+.green .dot { background: var(--color-success-bright); }
+
+.yellow {
+  background: rgba(245, 197, 24, 0.12);
+  color: var(--accent-yellow);
+  border: 1px solid rgba(245, 197, 24, 0.25);
+}
+.yellow .dot { background: var(--accent-yellow); }
+
+.blue {
+  background: rgba(26, 58, 107, 0.3);
+  color: var(--color-info-bright);
+  border: 1px solid rgba(58, 154, 238, 0.25);
+}
+.blue .dot { background: var(--color-info-bright); }
+
+.gray {
+  background: rgba(90, 85, 80, 0.2);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+.gray .dot { background: var(--text-muted); }

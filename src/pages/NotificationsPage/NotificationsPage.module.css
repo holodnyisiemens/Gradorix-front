@@ -1,0 +1,28 @@
+.page {
+  padding: var(--space-4) 0 var(--space-8);
+  animation: fade-in-up 0.3s ease;
+}
+
+.list {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-16);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.emptyIcon { font-size: 48px; opacity: 0.4; }
+
+@media (min-width: 768px) {
+  .page { padding: var(--space-4) var(--space-6) var(--space-8); }
+  .list { border-radius: var(--radius-xl); }
+}

@@ -1,0 +1,90 @@
+.nav {
+  /* In-flow flex item — sits at bottom of AppLayout column */
+  width: 100%;
+  height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+  background: rgba(17, 17, 17, 0.98);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 var(--space-2);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+}
+
+.item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: var(--space-2) 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: color var(--transition-fast);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  min-width: 0;
+}
+
+.item:hover { color: var(--text-secondary); }
+
+.item.active {
+  color: var(--accent-red-bright);
+}
+
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.item.active .iconWrapper::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: rgba(204, 0, 0, 0.12);
+  border-radius: var(--radius-md);
+  z-index: -1;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: var(--font-medium);
+  letter-spacing: 0.03em;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.badge {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: var(--font-bold);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--bg-base);
+  animation: badge-pop 0.3s ease;
+}
+
+/* Hide on desktop — SideNav takes over */
+@media (min-width: 768px) {
+  .nav { display: none; }
+}

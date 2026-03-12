@@ -1,0 +1,101 @@
+:root {
+  /* === BACKGROUNDS === */
+  --bg-base: #080808;
+  --bg-card: #111111;
+  --bg-elevated: #1a1a1a;
+  --bg-overlay: rgba(0, 0, 0, 0.85);
+
+  /* === ACCENT COLORS (Stranger Things palette) === */
+  --accent-red: #cc0000;
+  --accent-red-bright: #ff1a1a;
+  --accent-red-glow: rgba(204, 0, 0, 0.4);
+  --accent-orange: #e05c00;
+  --accent-orange-bright: #ff7a1a;
+  --accent-yellow: #f5c518;
+  --accent-blue: #1a3a6b;
+  --accent-blue-bright: #2a5aab;
+
+  /* === TEXT === */
+  --text-primary: #f0ede6;
+  --text-secondary: #9a9080;
+  --text-muted: #5a5550;
+  --text-accent: #cc0000;
+  --text-inverted: #080808;
+
+  /* === STATUS COLORS === */
+  --color-success: #2d8a4e;
+  --color-success-bright: #3dbd6a;
+  --color-warning: #e08020;
+  --color-warning-bright: #ffaa40;
+  --color-danger: #cc0000;
+  --color-danger-bright: #ff3333;
+  --color-info: #1a6aaa;
+  --color-info-bright: #3a9aee;
+
+  /* === BORDERS === */
+  --border-subtle: rgba(240, 237, 230, 0.06);
+  --border-default: rgba(240, 237, 230, 0.12);
+  --border-strong: rgba(240, 237, 230, 0.25);
+  --border-accent: rgba(204, 0, 0, 0.5);
+
+  /* === TYPOGRAPHY === */
+  --font-display: 'Bebas Neue', 'Impact', sans-serif;
+  --font-body: 'Montserrat', 'Segoe UI', sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* === SPACING === */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* === BORDER RADIUS === */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* === SHADOWS & GLOWS === */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.8);
+  --glow-red: 0 0 20px rgba(204, 0, 0, 0.6), 0 0 40px rgba(204, 0, 0, 0.3);
+  --glow-red-sm: 0 0 8px rgba(204, 0, 0, 0.5);
+  --glow-orange: 0 0 20px rgba(224, 92, 0, 0.5), 0 0 40px rgba(224, 92, 0, 0.2);
+  --glow-text: 0 0 10px rgba(204, 0, 0, 0.8), 0 0 20px rgba(204, 0, 0, 0.4);
+
+  /* === TRANSITIONS === */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* === LAYOUT === */
+  --bottom-nav-height: 64px;
+  --sidebar-width: 220px;
+  --header-height: 56px;
+  --max-width: 480px;
+  --page-padding: 16px;
+}

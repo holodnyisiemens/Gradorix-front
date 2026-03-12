@@ -1,0 +1,8 @@
+.page {
+  padding: var(--space-4) 0 var(--space-8);
+  animation: fade-in-up 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .page { padding: var(--space-6) 0 var(--space-8); }
+}
