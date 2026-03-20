@@ -7,12 +7,14 @@ import {
   getChallengesForJunior, getJuniorsForMentor, getNotificationsForUser,
   getCalendarEventsForJunior, getAchievementsForJunior, getJuniorActivityStats,
   MOCK_ALL_USERS, MOCK_CHALLENGES, MOCK_MENTOR_JUNIOR, MOCK_CHALLENGE_JUNIOR,
-  getUserById,
+  getUserById, getUserPoints, getQuizResultsForUser,
 } from '@shared/api/mockData';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { UserCard } from '@modules/users/components/UserCard';
 import { AchievementList } from '@modules/achievements/components/AchievementCard';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
+import { HRCharts } from '@modules/charts/HRCharts';
+import { HiPoProgressChart } from '@modules/charts/HiPoProgressChart';
 import styles from './DashboardPage.module.css';
 
 function greetByTime(): string {
@@ -133,6 +135,15 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
             <span className={styles.statLabel}>XP набрано</span>
           </div>
         </div>
+
+        {/* Charts */}
+        <HiPoProgressChart
+          done={done}
+          total={total}
+          completionRate={progressPercent}
+          quizCount={getQuizResultsForUser(userId).length}
+          points={getUserPoints(userId)?.totalPoints ?? 0}
+        />
 
         {/* Progress */}
         <div style={{ marginBottom: 24 }}>
@@ -349,6 +360,17 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
               <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
             </div>
           ))}
+        </div>
+
+        {/* HR Charts */}
+        <div className={styles.recentSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              <TrendingUp size={16} style={{ color: 'var(--color-success-bright)', marginRight: 6, verticalAlign: 'middle' }} />
+              Аналитика
+            </h2>
+          </div>
+          <HRCharts />
         </div>
 
         {/* Junior Activity Stats */}

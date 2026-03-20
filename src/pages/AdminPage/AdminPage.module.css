@@ -1,0 +1,28 @@
+.page { padding-top: var(--space-4); }
+
+.tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-2); }
+.tab { padding: var(--space-1) var(--space-3); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; color: var(--text-muted); font-size: var(--text-sm); cursor: pointer; }
+.tabActive { background: rgba(204,0,0,0.1); border-color: rgba(204,0,0,0.3); color: var(--color-primary-bright); }
+
+.list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+.itemTop { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-1); }
+.itemTitle { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); flex: 1; }
+.itemSub { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2); }
+.itemDesc { font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-2); line-height: 1.5; }
+.itemActions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.status { font-size: 11px; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+.pending { background: rgba(245,197,24,0.12); color: var(--color-warning-bright); border: 1px solid rgba(245,197,24,0.25); }
+.approved { background: rgba(61,189,106,0.1); color: var(--color-success-bright); border: 1px solid rgba(61,189,106,0.2); }
+.rejected { background: rgba(204,0,0,0.1); color: var(--color-primary-bright); border: 1px solid rgba(204,0,0,0.2); }
+.revision { background: rgba(245,100,20,0.1); color: #f56414; border: 1px solid rgba(245,100,20,0.2); }
+
+.reviewNote { font-size: 11px; color: var(--color-info-bright); margin-top: var(--space-2); padding: var(--space-2); background: rgba(58,154,238,0.06); border-radius: var(--radius-sm); }
+
+.achGrid { display: flex; flex-direction: column; gap: var(--space-3); }
+.achCard { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+.achTop { display: flex; align-items: flex-start; gap: var(--space-3); }
+.achTitle { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+.achDesc { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }

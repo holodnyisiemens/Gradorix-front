@@ -1,0 +1,42 @@
+.page { padding-top: var(--space-4); }
+
+.filters { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
+
+.filterBtn {
+  padding: var(--space-1) var(--space-3);
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filterBtn.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+.list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.cardTop { display: flex; align-items: flex-start; gap: var(--space-2); margin-bottom: var(--space-2); }
+.cardTitle { flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+.statusBadge { font-size: 11px; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+.pending { background: rgba(245,197,24,0.12); color: var(--color-warning-bright); border: 1px solid rgba(245,197,24,0.25); }
+.approved { background: rgba(61,189,106,0.1); color: var(--color-success-bright); border: 1px solid rgba(61,189,106,0.2); }
+.rejected { background: rgba(204,0,0,0.1); color: var(--color-primary-bright); border: 1px solid rgba(204,0,0,0.2); }
+.revision { background: rgba(245,100,20,0.1); color: #f56414; border: 1px solid rgba(245,100,20,0.2); }
+
+.cardDesc { font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-2); line-height: 1.5; }
+
+.cardMeta { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+.metaItem { font-size: 11px; color: var(--text-muted); }
+.points { font-family: var(--font-display); font-size: var(--text-sm); color: var(--color-warning-bright); }
+.note { font-size: var(--text-xs); color: var(--color-info-bright); margin-top: var(--space-2); padding: var(--space-2); background: rgba(58,154,238,0.06); border-radius: var(--radius-sm); border-left: 2px solid var(--color-info-bright); }
+
+.actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+.userName { font-size: var(--text-xs); color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }

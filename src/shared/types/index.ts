@@ -76,3 +76,109 @@ export interface JuniorActivityStats {
   completionRate: number; // 0-100
   lastActive: string; // ISO date
 }
+
+// ===== POINTS / LEADERBOARD =====
+export interface UserPoints {
+  userId: number;
+  totalPoints: number;
+  level: number;
+  levelName: string;
+  pointsToNextLevel: number;
+  rank: number;
+}
+
+// ===== QUIZ / TESTS =====
+export type QuestionType = 'single' | 'multiple' | 'text';
+
+export interface TestQuestion {
+  id: number;
+  text: string;
+  type: QuestionType;
+  options?: string[];
+  correctAnswers?: number[]; // indices into options
+}
+
+export interface Quiz {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  durationMin: number;
+  questions: TestQuestion[];
+  points: number;
+  available: boolean;
+}
+
+export interface QuizResult {
+  userId: number;
+  quizId: number;
+  score: number; // percentage 0-100
+  completedAt: string;
+  pointsEarned: number;
+}
+
+// ===== KNOWLEDGE BASE =====
+export interface KBSection {
+  id: number;
+  title: string;
+  icon: string;
+  description: string;
+}
+
+export interface KBArticle {
+  id: number;
+  sectionId: number;
+  title: string;
+  content: string;
+  createdAt: string;
+  author: string;
+}
+
+// ===== TEAM =====
+export type TeamStatus = 'active' | 'on_hold' | 'completed';
+
+export interface Team {
+  id: number;
+  name: string;
+  description: string;
+  status: TeamStatus;
+  memberIds: number[];
+  project: string;
+  mentorId?: number;
+}
+
+// ===== AI CHAT =====
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+// ===== MEETING ATTENDANCE =====
+export interface MeetingAttendance {
+  id: number;
+  eventId: number; // CalendarEvent id
+  userId: number;
+  attended: boolean;
+  markedAt?: string;
+  markedBy?: number; // if HR overrode it
+}
+
+// ===== ACTIVITY / POINTS MANAGEMENT =====
+export type ActivityStatus = 'pending' | 'approved' | 'rejected' | 'revision';
+export type ActivityType = 'achievement' | 'task' | 'test' | 'event' | 'custom';
+
+export interface Activity {
+  id: number;
+  userId: number;
+  title: string;
+  description: string;
+  requestedPoints: number;
+  awardedPoints?: number;
+  status: ActivityStatus;
+  type: ActivityType;
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+}

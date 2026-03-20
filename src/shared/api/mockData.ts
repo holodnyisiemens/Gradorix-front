@@ -7,7 +7,11 @@ import type {
   CalendarEvent,
   Achievement,
   JuniorActivityStats,
+  Quiz, QuizResult, KBSection, KBArticle, Team, UserPoints, Activity,
+  MeetingAttendance,
 } from '@shared/types';
+
+export type { MeetingAttendance };
 
 // ============== USERS ==============
 export const MOCK_ALL_USERS: User[] = [
@@ -97,9 +101,9 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
 
 // ============== CALENDAR EVENTS ==============
 export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
-  { id: 1,  title: 'Code Review: первый PR',   date: '2026-03-10', type: 'challenge', challengeId: 2,  description: 'Дедлайн по созданию PR' },
-  { id: 2,  title: 'Стэндап-митинг',           date: '2026-03-12', type: 'meeting',   description: 'Еженедельный standup 11:00' },
-  { id: 3,  title: 'REST API дизайн',           date: '2026-03-14', type: 'challenge', challengeId: 3,  description: 'Дедлайн по заданию' },
+  { id: 1,  title: 'Code Review: первый PR',   date: '2026-03-13', type: 'challenge', challengeId: 2,  description: 'Дедлайн по созданию PR' },
+  { id: 2,  title: 'Стэндап-митинг',           date: '2026-03-13', type: 'meeting',   description: 'Еженедельный standup 11:00' },
+  { id: 3,  title: 'REST API дизайн',          date: '2026-03-14', type: 'challenge', challengeId: 3,  description: 'Дедлайн по заданию' },
   { id: 4,  title: 'Паттерны проектирования',  date: '2026-03-16', type: 'challenge', challengeId: 11, description: 'Дедлайн по паттернам' },
   { id: 5,  title: 'Тестирование с Pytest',    date: '2026-03-18', type: 'challenge', challengeId: 4,  description: 'Старт нового задания' },
   { id: 6,  title: 'Встреча с ментором',       date: '2026-03-19', type: 'meeting',   description: 'Ревью прогресса за месяц, 15:00' },
@@ -182,4 +186,196 @@ export function getJuniorActivityStats(): JuniorActivityStats[] {
         lastActive: '2026-03-12',
       };
     });
+}
+
+// ============== QUIZZES / TESTS ==============
+export const MOCK_QUIZZES: Quiz[] = [
+  {
+    id: 1, title: 'Основы Git', category: 'Инструменты', durationMin: 10, points: 80, available: true,
+    description: 'Проверь знания по Git: ветки, мерджи, ребейз, конфликты.',
+    questions: [
+      { id: 1, text: 'Какая команда создаёт новую ветку и сразу переключается на неё?', type: 'single', options: ['git branch new', 'git checkout -b new', 'git switch new', 'git new branch'], correctAnswers: [1] },
+      { id: 2, text: 'Что делает git rebase?', type: 'single', options: ['Создаёт merge commit', 'Переносит коммиты на новое основание', 'Удаляет историю', 'Синхронизирует remote'], correctAnswers: [1] },
+      { id: 3, text: 'Выбери команды для просмотра истории коммитов:', type: 'multiple', options: ['git log', 'git history', 'git log --oneline', 'git show-log'], correctAnswers: [0, 2] },
+      { id: 4, text: 'Как называется зона перед коммитом?', type: 'single', options: ['Staging area', 'Buffer zone', 'Pre-commit', 'Draft'], correctAnswers: [0] },
+      { id: 5, text: 'Что означает HEAD в Git?', type: 'text' },
+    ],
+  },
+  {
+    id: 2, title: 'Python: типы данных', category: 'Python', durationMin: 8, points: 60, available: true,
+    description: 'Проверь понимание встроенных типов Python: list, dict, tuple, set.',
+    questions: [
+      { id: 1, text: 'Какой тип данных неизменяемый (immutable)?', type: 'single', options: ['list', 'dict', 'tuple', 'set'], correctAnswers: [2] },
+      { id: 2, text: 'Что вернёт len({1, 2, 2, 3})?', type: 'single', options: ['4', '3', '2', 'Ошибку'], correctAnswers: [1] },
+      { id: 3, text: 'Выбери мутабельные типы:', type: 'multiple', options: ['list', 'tuple', 'dict', 'frozenset'], correctAnswers: [0, 2] },
+      { id: 4, text: 'Как получить ключи словаря?', type: 'single', options: ['dict.values()', 'dict.keys()', 'dict.items()', 'dict.get()'], correctAnswers: [1] },
+    ],
+  },
+  {
+    id: 3, title: 'REST API и HTTP', category: 'Backend', durationMin: 12, points: 100, available: true,
+    description: 'Тест по принципам REST, HTTP методам, статус-кодам.',
+    questions: [
+      { id: 1, text: 'Какой HTTP метод используется для создания ресурса?', type: 'single', options: ['GET', 'POST', 'PUT', 'DELETE'], correctAnswers: [1] },
+      { id: 2, text: 'Что означает статус-код 404?', type: 'single', options: ['Сервер недоступен', 'Не авторизован', 'Ресурс не найден', 'Запрос выполнен'], correctAnswers: [2] },
+      { id: 3, text: 'Выбери идемпотентные HTTP методы:', type: 'multiple', options: ['GET', 'POST', 'PUT', 'DELETE'], correctAnswers: [0, 2, 3] },
+      { id: 4, text: 'Что такое CRUD?', type: 'single', options: ['Create, Read, Update, Delete', 'Copy, Run, Upload, Download', 'Cache, Route, Use, Deploy', 'Connect, Request, URL, Data'], correctAnswers: [0] },
+      { id: 5, text: 'Какой код возвращается при успешном создании ресурса?', type: 'single', options: ['200', '201', '204', '202'], correctAnswers: [1] },
+    ],
+  },
+  {
+    id: 4, title: 'SQL основы', category: 'Базы данных', durationMin: 10, points: 90, available: true,
+    description: 'Базовые знания SQL: SELECT, JOIN, GROUP BY, агрегатные функции.',
+    questions: [
+      { id: 1, text: 'Какой JOIN вернёт только совпадающие строки из обеих таблиц?', type: 'single', options: ['LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'FULL JOIN'], correctAnswers: [2] },
+      { id: 2, text: 'Что делает GROUP BY?', type: 'single', options: ['Сортирует результат', 'Группирует строки по значению', 'Фильтрует дубликаты', 'Объединяет таблицы'], correctAnswers: [1] },
+      { id: 3, text: 'Выбери агрегатные функции:', type: 'multiple', options: ['COUNT()', 'UPPER()', 'SUM()', 'AVG()'], correctAnswers: [0, 2, 3] },
+      { id: 4, text: 'Что такое PRIMARY KEY?', type: 'text' },
+    ],
+  },
+  {
+    id: 5, title: 'Soft skills: коммуникация', category: 'Soft skills', durationMin: 6, points: 50, available: true,
+    description: 'Тест на понимание принципов эффективной коммуникации в команде.',
+    questions: [
+      { id: 1, text: 'Что главное в конструктивной обратной связи?', type: 'single', options: ['Указать на все ошибки', 'Конкретность и уважение', 'Краткость любой ценой', 'Оценивать личность'], correctAnswers: [1] },
+      { id: 2, text: 'Активное слушание включает:', type: 'multiple', options: ['Перефразирование', 'Перебивание', 'Уточняющие вопросы', 'Молчание'], correctAnswers: [0, 2] },
+      { id: 3, text: 'Цель стендапа — это:', type: 'single', options: ['Отчёт руководству', 'Синхронизация команды и выявление блокеров', 'Детальный разбор задач', 'Планирование спринта'], correctAnswers: [1] },
+    ],
+  },
+];
+
+export const MOCK_QUIZ_RESULTS: QuizResult[] = [
+  { userId: 4, quizId: 1, score: 90, completedAt: '2026-03-02', pointsEarned: 72 },
+  { userId: 4, quizId: 2, score: 75, completedAt: '2026-03-05', pointsEarned: 45 },
+  { userId: 4, quizId: 4, score: 100, completedAt: '2026-02-16', pointsEarned: 90 },
+  { userId: 5, quizId: 1, score: 60, completedAt: '2026-03-03', pointsEarned: 48 },
+  { userId: 5, quizId: 3, score: 80, completedAt: '2026-03-10', pointsEarned: 80 },
+  { userId: 7, quizId: 2, score: 50, completedAt: '2026-03-08', pointsEarned: 30 },
+];
+
+// ============== USER POINTS / LEADERBOARD ==============
+function calcUserPoints(): UserPoints[] {
+  const LEVEL_NAMES = ['Новичок', 'Стажёр', 'Специалист', 'Эксперт', 'Мастер', 'Легенда'];
+  const LEVEL_THRESHOLDS = [0, 200, 500, 900, 1400, 2000];
+
+  const rawPoints: Record<number, number> = {
+    4: 675, // Kate: tasks + quizzes
+    5: 348, // Ivan
+    6: 120, // Mila (inactive, low)
+    7: 210, // Sasha
+    2: 430, // Alex (mentor bonus)
+    3: 310, // Dasha (mentor)
+    1: 0,   // HR — не участвует
+  };
+
+  const sorted = Object.entries(rawPoints)
+    .filter(([, pts]) => pts > 0)
+    .sort(([, a], [, b]) => b - a);
+
+  return sorted.map(([idStr, pts], i) => {
+    const userId = Number(idStr);
+    let level = 0;
+    for (let l = LEVEL_THRESHOLDS.length - 1; l >= 0; l--) {
+      if (pts >= LEVEL_THRESHOLDS[l]) { level = l; break; }
+    }
+    const nextThreshold = LEVEL_THRESHOLDS[level + 1] ?? LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+    return {
+      userId,
+      totalPoints: pts,
+      level,
+      levelName: LEVEL_NAMES[level] ?? 'Легенда',
+      pointsToNextLevel: Math.max(0, nextThreshold - pts),
+      rank: i + 1,
+    };
+  });
+}
+export const MOCK_USER_POINTS: UserPoints[] = calcUserPoints();
+
+// ============== KNOWLEDGE BASE ==============
+export const MOCK_KB_SECTIONS: KBSection[] = [
+  { id: 1, title: 'О программе',         icon: '🎯', description: 'Цели, структура и правила программы HiPo' },
+  { id: 2, title: 'Учебные материалы',   icon: '📚', description: 'Статьи, видео и гайды по технологиям' },
+  { id: 3, title: 'Регламенты',          icon: '📋', description: 'Процессы, стандарты и шаблоны команды' },
+  { id: 4, title: 'FAQ',                 icon: '💡', description: 'Ответы на частые вопросы участников' },
+];
+
+export const MOCK_KB_ARTICLES: KBArticle[] = [
+  { id: 1,  sectionId: 1, title: 'Добро пожаловать в HiPo!', createdAt: '2026-01-10', author: 'Анна Соколова',
+    content: '## Добро пожаловать!\n\nПрограмма HiPo — это путь от перспективного сотрудника до будущего руководителя.\n\n### Что вас ждёт:\n- Персональный ментор из числа действующих руководителей\n- Задания и испытания для прокачки компетенций\n- Рейтинг и система достижений\n- Доступ к базе знаний\n\n### Продолжительность программы\n6 месяцев. За это время вы пройдёте путь от новичка до специалиста, готового к руководящей роли.' },
+  { id: 2,  sectionId: 1, title: 'Как начисляются баллы', createdAt: '2026-01-10', author: 'Анна Соколова',
+    content: '## Система баллов\n\nБаллы начисляются за активности в программе:\n\n| Активность | Баллы |\n|-----------|-------|\n| Выполнение задания | 50–200 |\n| Прохождение теста | 50–100 |\n| Добавление достижения | 30–150 |\n| Посещение мероприятия | 20–50 |\n\n### Уровни\n- Новичок: 0–199 баллов\n- Стажёр: 200–499\n- Специалист: 500–899\n- Эксперт: 900–1399\n- Мастер: 1400–1999\n- Легенда: 2000+' },
+  { id: 3,  sectionId: 1, title: 'Роль ментора в программе', createdAt: '2026-01-15', author: 'Анна Соколова',
+    content: '## Ментор — ваш проводник\n\nМентор — действующий руководитель, который сопровождает вас на протяжении всей программы.\n\n### Функции ментора:\n- Назначение и проверка заданий\n- Code review и обратная связь\n- Еженедельные встречи\n- Оценка прогресса\n\n### Как работать с ментором:\nПодготовьтесь к каждой встрече: зафиксируйте прогресс, сформулируйте вопросы и блокеры.' },
+  { id: 4,  sectionId: 2, title: 'Git Flow: полное руководство', createdAt: '2026-01-20', author: 'Алексей Воронов',
+    content: '## Git Flow\n\nGit Flow — популярная модель ветвления для командной разработки.\n\n### Основные ветки:\n- `main` — стабильный production код\n- `develop` — ветка разработки\n\n### Вспомогательные ветки:\n- `feature/*` — новые функции\n- `release/*` — подготовка релиза\n- `hotfix/*` — срочные исправления\n\n### Типичный workflow:\n1. Создай `feature/my-feature` от `develop`\n2. Разработай фичу, коммить\n3. Открой Pull Request в `develop`\n4. Пройди code review\n5. Merge!' },
+  { id: 5,  sectionId: 2, title: 'FastAPI: от нуля до API', createdAt: '2026-02-01', author: 'Алексей Воронов',
+    content: '## FastAPI Quick Start\n\nFastAPI — современный фреймворк для создания API на Python.\n\n```python\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get("/items/{item_id}")\nasync def read_item(item_id: int):\n    return {"item_id": item_id}\n```\n\n### Ключевые возможности:\n- Автодокументация (Swagger UI)\n- Валидация через Pydantic\n- Async/await из коробки\n- Dependency Injection' },
+  { id: 6,  sectionId: 2, title: 'Docker для разработчика', createdAt: '2026-02-10', author: 'Даша Крылова',
+    content: '## Docker: основы\n\nDocker позволяет упаковать приложение со всеми зависимостями в контейнер.\n\n### Dockerfile пример:\n```dockerfile\nFROM python:3.11-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .\nCMD ["uvicorn", "main:app", "--host", "0.0.0.0"]\n```\n\n### Docker Compose:\n```yaml\nservices:\n  api:\n    build: .\n    ports: ["8000:8000"]\n  db:\n    image: postgres:15\n```' },
+  { id: 7,  sectionId: 3, title: 'Шаблон стендап-отчёта', createdAt: '2026-01-12', author: 'Анна Соколова',
+    content: '## Формат стендапа\n\nСтендап длится 5–10 минут. Каждый участник отвечает на 3 вопроса:\n\n1. **Что сделал вчера?**\n   Конкретные задачи, завершённые активности\n\n2. **Что планирую сегодня?**\n   Конкретные задачи на день\n\n3. **Есть ли блокеры?**\n   Что мешает двигаться вперёд\n\n### Пример:\n> Вчера: закончил задание по Git Flow, открыл PR #12\n> Сегодня: начну REST API дизайн\n> Блокеры: нет' },
+  { id: 8,  sectionId: 3, title: 'Правила code review', createdAt: '2026-01-18', author: 'Алексей Воронов',
+    content: '## Code Review Guidelines\n\n### Для автора PR:\n- Описывай изменения в теле PR\n- Добавляй скриншоты для UI изменений\n- Размер PR: до 400 строк\n\n### Для ревьювера:\n- Оставляй конкретные комментарии\n- Используй префиксы: `nit:`, `suggestion:`, `blocker:`\n- Отвечай в течение рабочего дня\n\n### Критерии одобрения:\n- Код работает и проходит тесты\n- Логика понятна без лишних комментариев\n- Нет security уязвимостей' },
+  { id: 9,  sectionId: 4, title: 'Как добавить достижение?', createdAt: '2026-02-05', author: 'Анна Соколова',
+    content: '## Добавление достижений\n\nДостижения — это внешние активности, которые вы хотите зафиксировать в программе.\n\n### Примеры достижений:\n- Выступление на конференции\n- Публикация статьи\n- Сертификат курса\n- Участие в хакатоне\n\n### Как добавить:\n1. Перейдите в раздел "Профиль" → "Достижения"\n2. Нажмите "Добавить достижение"\n3. Заполните название и описание\n4. Ожидайте подтверждения от HR (до 2 рабочих дней)' },
+  { id: 10, sectionId: 4, title: 'Как работают тесты?', createdAt: '2026-02-05', author: 'Анна Соколова',
+    content: '## Система тестирования\n\nТесты — способ проверить и подтвердить знания по пройденным темам.\n\n### Правила:\n- Каждый тест можно пройти один раз (в моках — неограниченно)\n- Результат фиксируется и влияет на рейтинг\n- Баллы начисляются пропорционально правильным ответам\n\n### Типы вопросов:\n- Одиночный выбор\n- Множественный выбор\n- Открытый ответ (проверяется ментором)\n\n### Совет:\nПроходите тесты сразу после изучения темы, пока знания свежие!' },
+];
+
+// ============== TEAMS ==============
+export const MOCK_TEAMS: Team[] = [
+  { id: 1, name: 'Backend Pioneers', project: 'Gradorix API', status: 'active', mentorId: 2,
+    description: 'Команда занимается разработкой бэкенд-части платформы Gradorix: REST API, интеграции, база данных.',
+    memberIds: [4, 5] },
+  { id: 2, name: 'Growth Squad', project: 'HiPo Analytics', status: 'active', mentorId: 3,
+    description: 'Команда фокусируется на аналитике и визуализации данных о прогрессе участников программы.',
+    memberIds: [6, 7] },
+];
+
+// ============== ACTIVITIES (for HR points management) ==============
+export const MOCK_ACTIVITIES: Activity[] = [
+  { id: 1,  userId: 4, title: 'Выступление на внутреннем митапе',      type: 'achievement', requestedPoints: 100, status: 'approved', awardedPoints: 100, submittedAt: '2026-03-01', reviewedAt: '2026-03-02', description: 'Рассказал про Git Flow практики на внутреннем митапе команды (~15 человек)' },
+  { id: 2,  userId: 4, title: 'Сертификат: Python Professional',        type: 'achievement', requestedPoints: 150, status: 'approved', awardedPoints: 150, submittedAt: '2026-02-20', reviewedAt: '2026-02-21', description: 'Получен сертификат платформы Stepik по курсу Python Professional' },
+  { id: 3,  userId: 5, title: 'Участие в хакатоне Gradorix Hack',       type: 'achievement', requestedPoints: 200, status: 'pending', submittedAt: '2026-03-11', description: 'Участвовал в двухдневном хакатоне, команда заняла 2 место' },
+  { id: 4,  userId: 7, title: 'Публикация статьи в корп. блоге',        type: 'achievement', requestedPoints: 80,  status: 'revision', submittedAt: '2026-03-09', reviewedAt: '2026-03-10', description: 'Написал статью о работе с PostgreSQL', reviewNote: 'Добавь ссылку на опубликованную статью' },
+  { id: 5,  userId: 5, title: 'Помощь коллеге с дебагом',               type: 'custom',      requestedPoints: 30,  status: 'approved', awardedPoints: 30, submittedAt: '2026-03-06', reviewedAt: '2026-03-07', description: 'Помог Кате разобраться с проблемой в async коде, потратил ~2 часа' },
+  { id: 6,  userId: 4, title: 'Завершил курс Docker on Demand',         type: 'achievement', requestedPoints: 120, status: 'pending', submittedAt: '2026-03-12', description: 'Прошёл 8-часовой курс Docker на платформе Udemy' },
+  { id: 7,  userId: 7, title: 'Code review для джуна из другой команды', type: 'custom',      requestedPoints: 40,  status: 'rejected', submittedAt: '2026-03-04', reviewedAt: '2026-03-05', description: 'Провёл ревью 3 PR', reviewNote: 'Активность вне программы, баллы не начисляются' },
+];
+
+// ============== NEW HELPERS ==============
+
+export function getUserPoints(userId: number): UserPoints | undefined {
+  return MOCK_USER_POINTS.find((up) => up.userId === userId);
+}
+
+export function getQuizResultsForUser(userId: number): QuizResult[] {
+  return MOCK_QUIZ_RESULTS.filter((r) => r.userId === userId);
+}
+
+export function getTeamForUser(userId: number): Team | undefined {
+  return MOCK_TEAMS.find((t) => t.memberIds.includes(userId));
+}
+
+export function getActivitiesForUser(userId: number): Activity[] {
+  return MOCK_ACTIVITIES.filter((a) => a.userId === userId);
+}
+
+export function getKBArticlesBySection(sectionId: number): KBArticle[] {
+  return MOCK_KB_ARTICLES.filter((a) => a.sectionId === sectionId);
+}
+
+// ============== MEETING ATTENDANCE ==============
+export const MOCK_ATTENDANCE: MeetingAttendance[] = [
+  { id: 1, eventId: 2, userId: 4, attended: true, markedAt: '2026-03-13T11:30:00Z' },
+  { id: 2, eventId: 7, userId: 4, attended: true, markedAt: '2026-03-19T11:30:00Z' },
+  { id: 3, eventId: 2, userId: 5, attended: false },
+  { id: 4, eventId: 6, userId: 4, attended: true, markedAt: '2026-03-19T15:10:00Z' },
+];
+
+export function getAttendanceForUser(userId: number): MeetingAttendance[] {
+  return MOCK_ATTENDANCE.filter(a => a.userId === userId);
+}
+
+export function getMeetingEvents(): CalendarEvent[] {
+  return MOCK_CALENDAR_EVENTS.filter(e => e.type === 'meeting');
 }

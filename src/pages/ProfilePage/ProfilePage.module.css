@@ -81,6 +81,129 @@
   flex-shrink: 0;
 }
 
+/* Points / Level block */
+.levelBlock {
+  background: linear-gradient(135deg, rgba(204,0,0,0.1) 0%, rgba(204,0,0,0.03) 100%);
+  border: 1px solid rgba(204,0,0,0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.levelLeft {
+  text-align: center;
+  min-width: 64px;
+}
+
+.levelNum {
+  font-family: var(--font-display);
+  font-size: 36px;
+  color: var(--color-primary-bright);
+  line-height: 1;
+}
+
+.levelWord {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.levelRight { flex: 1 }
+
+.levelName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.levelPts {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.levelProgress {
+  height: 4px;
+  background: var(--bg-subtle);
+  border-radius: 2px;
+  margin-top: var(--space-2);
+  overflow: hidden;
+}
+
+.levelProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-bright));
+  border-radius: 2px;
+}
+
+.rankBadge {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--color-warning-bright);
+}
+
+/* Stats row */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.statBox {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.statVal {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+}
+
+.statLbl {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Achievements mini */
+.achievementsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.achip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  text-align: center;
+}
+
+.achipIcon { font-size: 24px; }
+.achipTitle { font-size: 9px; color: var(--text-muted); }
+.achipLocked { opacity: 0.35; filter: grayscale(1); }
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-2);
+}
+
 @media (min-width: 768px) {
   .page { padding: var(--space-4) 0 var(--space-8); max-width: 500px; }
 }
