@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { getNotificationsForUser, MOCK_NOTIFICATIONS } from '@shared/api/mockData';
+import { useNotifications, useMarkNotificationRead } from '@shared/hooks/useApi';
+import { useQueryClient } from '@tanstack/react-query';
+import { notificationsApi } from '@shared/api/services/notifications';
 import { NotificationItem } from '@modules/notifications/components/NotificationItem';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
@@ -8,25 +9,21 @@ import styles from './NotificationsPage.module.css';
 
 export function NotificationsPage() {
   const user = useAuthStore((s) => s.user)!;
-  const [notifications, setNotifications] = useState(() => getNotificationsForUser(user.id));
+  const { data: notifications = [], isLoading } = useNotifications(user.id);
+  const markRead = useMarkNotificationRead();
+  const qc = useQueryClient();
 
   const unread = notifications.filter((n) => !n.is_read).length;
 
   const handleRead = (id: number) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-    );
-    // Also update mock data
-    const notif = MOCK_NOTIFICATIONS.find((n) => n.id === id);
-    if (notif) notif.is_read = true;
+    markRead.mutate(id);
   };
 
-  const handleReadAll = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    notifications.forEach((n) => {
-      const notif = MOCK_NOTIFICATIONS.find((m) => m.id === n.id);
-      if (notif) notif.is_read = true;
-    });
+  const handleReadAll = async () => {
+    await Promise.all(
+      notifications.filter((n) => !n.is_read).map((n) => notificationsApi.markRead(n.id))
+    );
+    qc.invalidateQueries({ queryKey: ['notifications'] });
   };
 
   return (
@@ -43,7 +40,7 @@ export function NotificationsPage() {
         }
       />
       <div className={styles.page}>
-        {notifications.length === 0 ? (
+        {isLoading ? null : notifications.length === 0 ? (
           <div className={styles.empty}>
             <span className={styles.emptyIcon}>🔔</span>
             <p>Уведомлений нет</p>

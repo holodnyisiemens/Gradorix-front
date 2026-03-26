@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      context: .
+      network: host
+    container_name: gradorix-front
+    ports:
+      - "80:80"
+    restart: unless-stopped

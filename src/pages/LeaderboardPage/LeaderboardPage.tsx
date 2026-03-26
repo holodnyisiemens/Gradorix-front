@@ -1,13 +1,16 @@
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
-import { MOCK_USER_POINTS, getUserById } from '@shared/api/mockData';
+import { useLeaderboard, useUsers } from '@shared/hooks/useApi';
 import styles from './LeaderboardPage.module.css';
 
 const LEVEL_THRESHOLDS = [0, 200, 500, 900, 1400, 2000];
 
 export function LeaderboardPage() {
   const user = useAuthStore((s) => s.user)!;
-  const myPoints = MOCK_USER_POINTS.find((p) => p.userId === user.id);
+  const { data: leaderboard = [] } = useLeaderboard();
+  const { data: allUsers = [] } = useUsers();
+
+  const myPoints = leaderboard.find((p) => p.userId === user.id);
 
   function rankClass(rank: number) {
     if (rank === 1) return styles.rankGold;
@@ -27,7 +30,6 @@ export function LeaderboardPage() {
     <>
       <PageHeader title="Рейтинг" subtitle="Участники программы HiPo" />
       <div className={styles.page}>
-        {/* My position card */}
         {myPoints && (
           <div className={styles.myCard}>
             <div className={styles.myRank}>{rankEmoji(myPoints.rank)}</div>
@@ -58,8 +60,8 @@ export function LeaderboardPage() {
         <p className={styles.sectionTitle}>Все участники</p>
 
         <div className={styles.list}>
-          {MOCK_USER_POINTS.map((entry) => {
-            const u = getUserById(entry.userId);
+          {leaderboard.map((entry) => {
+            const u = allUsers.find((x) => x.id === entry.userId);
             if (!u) return null;
             const isMe = u.id === user.id;
             const initials = ((u.firstname?.[0] ?? '') + (u.lastname?.[0] ?? '')).toUpperCase()

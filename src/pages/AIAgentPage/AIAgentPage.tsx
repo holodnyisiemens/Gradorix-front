@@ -2,43 +2,52 @@ import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
-import {
-  getUserPoints, getJuniorActivityStats, MOCK_ALL_USERS,
-  MOCK_QUIZ_RESULTS, MOCK_QUIZZES, MOCK_ACTIVITIES,
-} from '@shared/api/mockData';
-import type { ChatMessage } from '@shared/types';
+import { useUsers, useQuizzes, useQuizResults, useActivities, useChallengeJuniors, useUserPoints } from '@shared/hooks/useApi';
+import type { ChatMessage, User, UserPoints, QuizResult, Quiz, Activity } from '@shared/types';
 import styles from './AIAgentPage.module.css';
 
+interface ReplyContext {
+  allUsers: User[];
+  userPoints: UserPoints | undefined;
+  quizResults: QuizResult[];
+  quizzes: Quiz[];
+  activities: Activity[];
+  juniorActivityStats: Array<{ userId: number; done: number; skipped: number; totalChallenges: number; completionRate: number }>;
+}
+
 // ===== GIGACHAT MOCK ENGINE =====
-function generateReply(text: string, role: string, userId: number): string {
+function generateReply(text: string, role: string, ctx: ReplyContext): string {
   const q = text.toLowerCase();
-  const pts = getUserPoints(userId);
+  const pts = ctx.userPoints;
 
   if (role === 'HR') {
     // Analytics mode
     if (q.includes('топ') || q.includes('рейтинг') || q.includes('лучш')) {
-      const stats = getJuniorActivityStats().sort((a, b) => b.completionRate - a.completionRate);
+      const stats = ctx.juniorActivityStats.slice().sort((a, b) => b.completionRate - a.completionRate);
       const top = stats.slice(0, 3).map((s, i) => {
-        const u = MOCK_ALL_USERS.find((x) => x.id === s.userId);
+        const u = ctx.allUsers.find((x) => x.id === s.userId);
         return `${i + 1}. ${u?.firstname} ${u?.lastname} — ${s.completionRate}% выполнения задач`;
       }).join('\n');
       return `📊 **Топ участников по выполнению задач:**\n\n${top}\n\nДанные актуальны на сегодня. Хотите подробнее по кому-то конкретному?`;
     }
     if (q.includes('активност') || q.includes('статистик')) {
-      const stats = getJuniorActivityStats();
+      const stats = ctx.juniorActivityStats;
       const total = stats.reduce((s, a) => s + a.done, 0);
       const skipped = stats.reduce((s, a) => s + a.skipped, 0);
-      return `📈 **Сводка активности HiPo:**\n\nВсего выполнено заданий: **${total}**\nПропущено: **${skipped}**\nАктивных участников: **${stats.filter(s => s.totalChallenges > 0).length}** из ${stats.length}\n\nСредний процент выполнения: **${Math.round(stats.reduce((s, a) => s + a.completionRate, 0) / stats.length)}%**`;
+      const avgRate = stats.length ? Math.round(stats.reduce((s, a) => s + a.completionRate, 0) / stats.length) : 0;
+      return `📈 **Сводка активности HiPo:**\n\nВсего выполнено заданий: **${total}**\nПропущено: **${skipped}**\nАктивных участников: **${stats.filter(s => s.totalChallenges > 0).length}** из ${stats.length}\n\nСредний процент выполнения: **${avgRate}%**`;
     }
     if (q.includes('тест') || q.includes('quiz')) {
-      const results = MOCK_QUIZ_RESULTS;
-      const avgScore = Math.round(results.reduce((s, r) => s + r.score, 0) / results.length);
-      return `🧪 **Статистика тестирования:**\n\nВсего попыток: **${results.length}**\nСредний балл: **${avgScore}%**\n\nЛучший результат: ${results.sort((a,b) => b.score - a.score)[0]?.score}% (тест "${MOCK_QUIZZES.find(q => q.id === results[0]?.quizId)?.title}")\n\nХотите детализацию по конкретному участнику?`;
+      const results = ctx.quizResults;
+      const avgScore = results.length ? Math.round(results.reduce((s, r) => s + r.score, 0) / results.length) : 0;
+      const best = results.slice().sort((a, b) => b.score - a.score)[0];
+      const bestQuiz = best ? ctx.quizzes.find(qz => qz.id === best.quizId)?.title : '';
+      return `🧪 **Статистика тестирования:**\n\nВсего попыток: **${results.length}**\nСредний балл: **${avgScore}%**\n\nЛучший результат: ${best?.score ?? 0}% (тест "${bestQuiz}")\n\nХотите детализацию по конкретному участнику?`;
     }
-    if (q.includes('активност') || q.includes('достижени') || q.includes('подтвер')) {
-      const pending = MOCK_ACTIVITIES.filter((a) => a.status === 'pending');
+    if (q.includes('достижени') || q.includes('подтвер')) {
+      const pending = ctx.activities.filter((a) => a.status === 'pending');
       return `⏳ **Ожидают подтверждения: ${pending.length} активностей**\n\n${pending.map(a => {
-        const u = MOCK_ALL_USERS.find(x => x.id === a.userId);
+        const u = ctx.allUsers.find(x => x.id === a.userId);
         return `• ${u?.firstname} ${u?.lastname}: "${a.title}" (+${a.requestedPoints} баллов)`;
       }).join('\n')}\n\nПерейдите в раздел "Баллы" для обработки.`;
     }
@@ -56,7 +65,7 @@ function generateReply(text: string, role: string, userId: number): string {
     return `🔴 *...сигнал из Изнанки...*\n\nПривет! Я — твой проводник в мире карьерного роста. Тьма вокруг, но путь к вершине виден только тем, кто не останавливается.\n\nЧем могу помочь сегодня?`;
   }
   if (q.includes('балл') || q.includes('очк') || q.includes('рейтинг') || q.includes('уровен')) {
-    if (pts) {
+    if (pts && pts.totalPoints !== undefined) {
       return `⚡ Твой текущий уровень: **${pts.levelName}** (${pts.totalPoints} баллов)\n\nДо следующего уровня: **${pts.pointsToNextLevel} баллов**\nПозиция в рейтинге: **#${pts.rank}**\n\nВ Изнанке продвигаются те, кто не стоит на месте. Пройди тест или выполни задание — и ты станешь ближе к цели 🌒`;
     }
     return `⚡ Твои баллы пока не определены. Начни с первого задания — и путь откроется!`;
@@ -114,6 +123,23 @@ export function AIAgentPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const { data: allUsers = [] } = useUsers();
+  const { data: quizResults = [] } = useQuizResults();
+  const { data: quizzes = [] } = useQuizzes();
+  const { data: activities = [] } = useActivities();
+  const { data: allAssignments = [] } = useChallengeJuniors();
+  const { data: userPoints } = useUserPoints(user.id);
+
+  const juniorActivityStats = allUsers.filter(u => u.role === 'JUNIOR').map(u => {
+    const ua = allAssignments.filter(a => a.junior_id === u.id);
+    const done = ua.filter(a => a.progress === 'DONE').length;
+    const skipped = ua.filter(a => a.progress === 'SKIPPED').length;
+    const total = ua.length;
+    return { userId: u.id, done, skipped, totalChallenges: total, completionRate: total ? Math.round(done / total * 100) : 0 };
+  });
+
+  const replyCtx: ReplyContext = { allUsers, userPoints, quizResults, quizzes, activities, juniorActivityStats };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
@@ -132,7 +158,7 @@ export function AIAgentPage() {
 
     const delay = 800 + Math.random() * 700;
     setTimeout(() => {
-      const reply = generateReply(text, user.role, user.id);
+      const reply = generateReply(text, user.role, replyCtx);
       const assistantMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

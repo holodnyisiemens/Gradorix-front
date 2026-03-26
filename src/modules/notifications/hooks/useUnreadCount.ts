@@ -1,9 +1,9 @@
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { getNotificationsForUser } from '@shared/api/mockData';
+import { useNotifications } from '@shared/hooks/useApi';
 
 export function useUnreadCount(): number {
   const user = useAuthStore((s) => s.user);
-  if (!user) return 0;
-  const notifications = getNotificationsForUser(user.id);
-  return notifications.filter((n) => !n.is_read).length;
+  const { data } = useNotifications(user?.id);
+  if (!user || !data) return 0;
+  return data.filter((n) => !n.is_read).length;
 }

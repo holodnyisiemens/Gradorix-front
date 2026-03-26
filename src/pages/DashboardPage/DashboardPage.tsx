@@ -4,11 +4,10 @@ import { ru } from 'date-fns/locale';
 import { Users, Zap, Link2, Bell, ChevronRight, Trophy, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import {
-  getChallengesForJunior, getJuniorsForMentor, getNotificationsForUser,
-  getCalendarEventsForJunior, getAchievementsForJunior, getJuniorActivityStats,
-  MOCK_ALL_USERS, MOCK_CHALLENGES, MOCK_MENTOR_JUNIOR, MOCK_CHALLENGE_JUNIOR,
-  getUserById, getUserPoints, getQuizResultsForUser,
-} from '@shared/api/mockData';
+  useChallenges, useChallengeJuniors, useMentorJuniors, useNotifications,
+  useCalendarEvents, useUserAchievementsWithStatus, useUsers, useUserPoints,
+  useQuizResults, useActivities,
+} from '@shared/hooks/useApi';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { UserCard } from '@modules/users/components/UserCard';
 import { AchievementList } from '@modules/achievements/components/AchievementCard';
@@ -40,18 +39,30 @@ export function DashboardPage() {
 
 // ===== JUNIOR =====
 function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: { userId: number; firstName: string; greeting: string; dateLabel: string; navigate: ReturnType<typeof useNavigate> }) {
-  const challenges = getChallengesForJunior(userId);
-  const todayEvents = getCalendarEventsForJunior(userId).filter((e) => isToday(new Date(e.date)));
-  const notifications = getNotificationsForUser(userId);
+  const { data: challenges = [] } = useChallenges();
+  const { data: assignments = [] } = useChallengeJuniors({ junior_id: userId });
+  const { data: events = [] } = useCalendarEvents();
+  const { data: notifications = [] } = useNotifications(userId);
+  const { data: achievements = [] } = useUserAchievementsWithStatus(userId);
+  const { data: pts } = useUserPoints(userId);
+  const { data: quizResults = [] } = useQuizResults({ user_id: userId });
+
+  const todayEvents = events.filter((e) => isToday(new Date(e.date)));
   const unread = notifications.filter((n) => !n.is_read).length;
 
-  const done = challenges.filter((c) => c.progress === 'DONE').length;
-  const inProgress = challenges.filter((c) => c.progress === 'IN_PROGRESS').length;
-  const total = challenges.length;
+  // Enrich assignments with challenge data
+  const enriched = assignments.map((a) => {
+    const challenge = challenges.find((c) => c.id === a.challenge_id);
+    if (!challenge) return null;
+    return { ...challenge, progress: a.progress };
+  }).filter(Boolean) as (typeof challenges[number] & { progress: typeof assignments[number]['progress'] })[];
+
+  const done = enriched.filter((c) => c.progress === 'DONE').length;
+  const inProgress = enriched.filter((c) => c.progress === 'IN_PROGRESS').length;
+  const total = enriched.length;
   const progressPercent = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  const activeChallenges = challenges.filter((c) => c.progress === 'IN_PROGRESS' || c.progress === 'GOING');
-  const achievements = getAchievementsForJunior(userId);
+  const activeChallenges = enriched.filter((c) => c.progress === 'IN_PROGRESS' || c.progress === 'GOING');
   const earnedAchievements = achievements.filter((a) => a.earned);
   const totalXp = earnedAchievements.reduce((sum, a) => sum + a.xp, 0);
 
@@ -76,7 +87,6 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
         }
       />
       <div className={styles.page}>
-        {/* Greeting */}
         <div className={styles.greeting}>
           <p className={styles.greetingDate}>{dateLabel}</p>
           <h1 className={styles.greetingName}>
@@ -85,7 +95,6 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
           <p className={styles.greetingRole}>HiPo · Программа наставничества</p>
         </div>
 
-        {/* Today events */}
         <div className={styles.todaySection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Сегодня</h2>
@@ -116,7 +125,6 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
           )}
         </div>
 
-        {/* Stats */}
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <span className={`${styles.statValue} ${styles.statValueAccent}`}>{total}</span>
@@ -136,16 +144,14 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
           </div>
         </div>
 
-        {/* Charts */}
         <HiPoProgressChart
           done={done}
           total={total}
           completionRate={progressPercent}
-          quizCount={getQuizResultsForUser(userId).length}
-          points={getUserPoints(userId)?.totalPoints ?? 0}
+          quizCount={quizResults.length}
+          points={pts?.totalPoints ?? 0}
         />
 
-        {/* Progress */}
         <div style={{ marginBottom: 24 }}>
           <div className={styles.progressWrap}>
             <div className={styles.progressBar} style={{ width: `${progressPercent}%` }} />
@@ -156,7 +162,6 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
           </div>
         </div>
 
-        {/* Active challenges */}
         <div className={styles.recentSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Мои задачи</h2>
@@ -179,7 +184,6 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
           </div>
         </div>
 
-        {/* Achievements */}
         <div className={styles.recentSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
@@ -199,16 +203,17 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
 
 // ===== MENTOR =====
 function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: { userId: number; firstName: string; greeting: string; dateLabel: string; navigate: ReturnType<typeof useNavigate> }) {
-  const juniors = getJuniorsForMentor(userId);
-  const notifications = getNotificationsForUser(userId);
+  const { data: pairs = [] } = useMentorJuniors({ mentor_id: userId });
+  const { data: allUsers = [] } = useUsers();
+  const { data: notifications = [] } = useNotifications(userId);
+  const { data: allAssignments = [] } = useChallengeJuniors();
+
+  const juniors = pairs.map((p) => allUsers.find((u) => u.id === p.junior_id)).filter(Boolean) as typeof allUsers;
   const unread = notifications.filter((n) => !n.is_read).length;
 
-  const totalAssignments = MOCK_CHALLENGE_JUNIOR.filter((cj) =>
-    juniors.some((j) => j.id === cj.junior_id)
-  ).length;
-  const doneAssignments = MOCK_CHALLENGE_JUNIOR.filter((cj) =>
-    juniors.some((j) => j.id === cj.junior_id) && cj.progress === 'DONE'
-  ).length;
+  const juniorIds = juniors.map((j) => j.id);
+  const totalAssignments = allAssignments.filter((cj) => juniorIds.includes(cj.junior_id)).length;
+  const doneAssignments = allAssignments.filter((cj) => juniorIds.includes(cj.junior_id) && cj.progress === 'DONE').length;
 
   return (
     <>
@@ -258,7 +263,6 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
           </div>
         </div>
 
-        {/* Quick nav */}
         <div className={styles.quickActions}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Навигация</h2>
@@ -302,13 +306,29 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
 
 // ===== HR =====
 function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: string; greeting: string; dateLabel: string; navigate: ReturnType<typeof useNavigate> }) {
-  const totalUsers = MOCK_ALL_USERS.length;
-  const activeUsers = MOCK_ALL_USERS.filter((u) => u.is_active).length;
-  const mentors = MOCK_ALL_USERS.filter((u) => u.role === 'MENTOR').length;
-  const juniors = MOCK_ALL_USERS.filter((u) => u.role === 'JUNIOR').length;
-  const pairs = MOCK_MENTOR_JUNIOR.length;
-  const activeChallenges = MOCK_CHALLENGES.filter((c) => c.status === 'ACTIVE').length;
-  const activityStats = getJuniorActivityStats();
+  const { data: allUsers = [] } = useUsers();
+  const { data: pairs = [] } = useMentorJuniors();
+  const { data: challenges = [] } = useChallenges();
+  const { data: allAssignments = [] } = useChallengeJuniors();
+
+  const totalUsers = allUsers.length;
+  const activeUsers = allUsers.filter((u) => u.is_active).length;
+  const mentors = allUsers.filter((u) => u.role === 'MENTOR').length;
+  const juniors = allUsers.filter((u) => u.role === 'JUNIOR').length;
+  const pairsCount = pairs.length;
+  const activeChallengesCount = challenges.filter((c) => c.status === 'ACTIVE').length;
+
+  // Compute junior activity stats from assignments
+  const juniorUsers = allUsers.filter((u) => u.role === 'JUNIOR');
+  const activityStats = juniorUsers.map((u) => {
+    const userAssignments = allAssignments.filter((a) => a.junior_id === u.id);
+    const done = userAssignments.filter((a) => a.progress === 'DONE').length;
+    const inProgress = userAssignments.filter((a) => a.progress === 'IN_PROGRESS').length;
+    const going = userAssignments.filter((a) => a.progress === 'GOING').length;
+    const skipped = userAssignments.filter((a) => a.progress === 'SKIPPED').length;
+    const total = userAssignments.length;
+    return { userId: u.id, totalChallenges: total, done, inProgress, going, skipped, completionRate: total > 0 ? Math.round((done / total) * 100) : 0 };
+  }).sort((a, b) => b.completionRate - a.completionRate);
 
   return (
     <>
@@ -347,8 +367,8 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           </div>
           {[
             { icon: <Users size={20} />, iconClass: styles.actionIconBlue,   title: 'Пользователи', sub: `${totalUsers} человек`, to: '/users' },
-            { icon: <Zap size={20} />,   iconClass: styles.actionIconOrange,  title: 'Задачи', sub: `${activeChallenges} активных`, to: '/challenges' },
-            { icon: <Link2 size={20} />, iconClass: styles.actionIconGreen,   title: 'Пары ментор — HiPo', sub: `${pairs} назначено`, to: '/mentorships' },
+            { icon: <Zap size={20} />,   iconClass: styles.actionIconOrange,  title: 'Задачи', sub: `${activeChallengesCount} активных`, to: '/challenges' },
+            { icon: <Link2 size={20} />, iconClass: styles.actionIconGreen,   title: 'Пары ментор — HiPo', sub: `${pairsCount} назначено`, to: '/mentorships' },
             { icon: <TrendingUp size={20} />, iconClass: styles.actionIconRed, title: 'Активность HiPo', sub: 'Прогресс и статистика', to: '/dashboard' },
           ].map((item) => (
             <div key={item.title} className={styles.actionItem} onClick={() => navigate(item.to)}>
@@ -362,7 +382,6 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           ))}
         </div>
 
-        {/* HR Charts */}
         <div className={styles.recentSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
@@ -373,7 +392,6 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           <HRCharts />
         </div>
 
-        {/* Junior Activity Stats */}
         <div className={styles.recentSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
@@ -383,7 +401,7 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           </div>
           <div className={styles.list}>
             {activityStats.map((stat, idx) => {
-              const junior = getUserById(stat.userId);
+              const junior = allUsers.find((u) => u.id === stat.userId);
               if (!junior) return null;
               const isTop = idx === 0;
               const name = `${junior.firstname ?? ''} ${junior.lastname ?? ''}`.trim() || junior.username;

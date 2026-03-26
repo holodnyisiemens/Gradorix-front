@@ -4,37 +4,46 @@ import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
 import { Card } from '@shared/components/ui/Card/Card';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { MOCK_USERS, mockLogin } from '@modules/auth/mockUsers';
+import { authApi } from '@shared/api/services/auth';
 import styles from './LoginForm.module.css';
+
+const QUICK_LOGINS = [
+  { email: 'anna@gradorix.ru', password: 'hr1234', role: 'HR', name: 'Анна Соколова' },
+  { email: 'alex@gradorix.ru', password: 'mentor123', role: 'MENTOR', name: 'Алексей Воронов' },
+  { email: 'kate@gradorix.ru', password: 'junior123', role: 'JUNIOR', name: 'Катя Ефимова' },
+];
 
 export function LoginForm() {
   const login = useAuthStore((s) => s.login);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doLogin = async (e: string, p: string) => {
     setError('');
     setLoading(true);
-
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 600));
-
-    const user = mockLogin(username.trim(), password);
-    if (user) {
-      login(user);
-    } else {
-      setError('Неверный логин или пароль');
+    try {
+      const { access_token } = await authApi.login({ email: e, password: p });
+      localStorage.setItem('gradorix-token', access_token);
+      const user = await authApi.getMe();
+      login(user, access_token);
+    } catch {
+      setError('Неверный email или пароль');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const handleQuickLogin = (credIdx: number) => {
-    const cred = MOCK_USERS[credIdx];
-    login(cred.user);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await doLogin(email.trim(), password);
+  };
+
+  const handleQuickLogin = (idx: number) => {
+    const cred = QUICK_LOGINS[idx];
+    doLogin(cred.email, cred.password);
   };
 
   const roleLabels: Record<string, string> = { HR: 'HR', MENTOR: 'Ментор', JUNIOR: 'HiPo' };
@@ -48,7 +57,6 @@ export function LoginForm() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        {/* Logo */}
         <div className={styles.logoSection}>
           <h1 className={styles.appName}>
             Очень
@@ -58,7 +66,6 @@ export function LoginForm() {
           <p className={styles.tagline}>Система наставничества Gradorix</p>
         </div>
 
-        {/* Login form */}
         <Card>
           <form className={styles.form} onSubmit={handleSubmit}>
             <p className={styles.formTitle}>Войти</p>
@@ -71,11 +78,12 @@ export function LoginForm() {
             )}
 
             <Input
-              label="Логин"
-              placeholder="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
+              label="Email"
+              type="email"
+              placeholder="user@gradorix.ru"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               autoCapitalize="none"
             />
 
@@ -86,41 +94,37 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
-              iconRight={
-                showPassword ? <EyeOff size={18} /> : <Eye size={18} />
-              }
+              iconRight={showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               onIconRightClick={() => setShowPassword((v) => !v)}
             />
 
-            <Button type="submit" full loading={loading} disabled={!username || !password}>
+            <Button type="submit" full loading={loading} disabled={!email || !password}>
               Войти
             </Button>
           </form>
         </Card>
 
-        {/* Quick access for dev/demo */}
         <div className={styles.divider}>Быстрый вход</div>
         <div className={styles.quickAccess}>
-          {MOCK_USERS.map((cred, idx) => (
+          {QUICK_LOGINS.map((cred, idx) => (
             <button
-              key={cred.user.id}
+              key={cred.email}
               className={styles.quickBtn}
               onClick={() => handleQuickLogin(idx)}
               type="button"
+              disabled={loading}
             >
               <span
                 className={styles.roleIcon}
-                style={{ background: roleColors[cred.user.role] }}
+                style={{ background: roleColors[cred.role] }}
               >
-                {roleIcons[cred.user.role]}
+                {roleIcons[cred.role]}
               </span>
               <span>
-                <p className={styles.quickBtnRole}>{roleLabels[cred.user.role]}</p>
-                <p className={styles.quickBtnName}>
-                  {cred.user.firstname} {cred.user.lastname}
-                </p>
+                <p className={styles.quickBtnRole}>{roleLabels[cred.role]}</p>
+                <p className={styles.quickBtnName}>{cred.name}</p>
               </span>
-              <span className={styles.quickBtnHint}>{cred.username}</span>
+              <span className={styles.quickBtnHint}>{cred.email}</span>
             </button>
           ))}
         </div>

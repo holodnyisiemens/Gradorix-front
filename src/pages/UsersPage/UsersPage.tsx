@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { MOCK_ALL_USERS } from '@shared/api/mockData';
+import { useUsers } from '@shared/hooks/useApi';
 import { UserCard } from '@modules/users/components/UserCard';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Input } from '@shared/components/ui/Input/Input';
@@ -19,8 +19,9 @@ const ROLE_FILTERS: { key: RoleFilter; label: string }[] = [
 export function UsersPage() {
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+  const { data: allUsers = [], isLoading } = useUsers();
 
-  const filtered = MOCK_ALL_USERS.filter((u) => {
+  const filtered = allUsers.filter((u) => {
     const matchRole = roleFilter === 'all' || u.role === roleFilter;
     const q = query.toLowerCase();
     const matchQuery = !q || [u.username, u.firstname, u.lastname, u.email]
@@ -30,7 +31,7 @@ export function UsersPage() {
 
   return (
     <>
-      <PageHeader title="Пользователи" subtitle={`${filtered.length} из ${MOCK_ALL_USERS.length}`} />
+      <PageHeader title="Пользователи" subtitle={isLoading ? '...' : `${filtered.length} из ${allUsers.length}`} />
       <div className={styles.page}>
         <Input
           placeholder="Поиск по имени или логину..."
@@ -55,7 +56,7 @@ export function UsersPage() {
           {filtered.map((u) => (
             <UserCard key={u.id} user={u} />
           ))}
-          {filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <div className={styles.empty}>Ничего не найдено</div>
           )}
         </div>

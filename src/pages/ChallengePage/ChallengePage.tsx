@@ -3,11 +3,10 @@ import { ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { MOCK_CHALLENGES, MOCK_CHALLENGE_JUNIOR } from '@shared/api/mockData';
+import { useChallenge, useChallengeJuniors, useUpdateChallengeProgress } from '@shared/hooks/useApi';
 import { ChallengeStatusBadge, ProgressBadge } from '@shared/components/ui/Badge/Badge';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Card } from '@shared/components/ui/Card/Card';
-import { Button } from '@shared/components/ui/Button/Button';
 import type { ChallengeJuniorProgress } from '@shared/types';
 import styles from './ChallengePage.module.css';
 
@@ -23,7 +22,14 @@ export function ChallengePage() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user)!;
 
-  const challenge = MOCK_CHALLENGES.find((c) => c.id === Number(id));
+  const { data: challenge, isLoading } = useChallenge(Number(id));
+  const { data: assignments = [] } = useChallengeJuniors(
+    user.role === 'JUNIOR' ? { junior_id: user.id } : undefined
+  );
+  const updateProgress = useUpdateChallengeProgress();
+
+  if (isLoading) return null;
+
   if (!challenge) {
     return (
       <>
@@ -36,7 +42,7 @@ export function ChallengePage() {
   }
 
   const assignment = user.role === 'JUNIOR'
-    ? MOCK_CHALLENGE_JUNIOR.find((cj) => cj.challenge_id === challenge.id && cj.junior_id === user.id)
+    ? assignments.find((cj) => cj.challenge_id === challenge.id && cj.junior_id === user.id)
     : null;
 
   return (
@@ -68,7 +74,6 @@ export function ChallengePage() {
           </a>
         )}
 
-        {/* Progress update for Junior */}
         {assignment && (
           <div className={styles.progressSection}>
             <h3 className={styles.sectionTitle}>Обновить прогресс</h3>
@@ -81,9 +86,10 @@ export function ChallengePage() {
                     assignment.progress === opt.value ? styles.progressOptionActive : '',
                   ].join(' ')}
                   onClick={() => {
-                    // In real app, call API; here just mock
-                    assignment.progress = opt.value;
-                    navigate(-1);
+                    updateProgress.mutate(
+                      { challengeId: challenge.id, juniorId: user.id, progress: opt.value },
+                      { onSuccess: () => navigate(-1) }
+                    );
                   }}
                 >
                   <span className={styles.progressEmoji}>{opt.emoji}</span>

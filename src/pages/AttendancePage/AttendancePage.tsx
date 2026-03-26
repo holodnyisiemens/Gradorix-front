@@ -1,45 +1,43 @@
-import { useState } from 'react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
-import { getMeetingEvents, MOCK_ALL_USERS, MOCK_ATTENDANCE } from '@shared/api/mockData';
-import type { MeetingAttendance } from '@shared/api/mockData';
+import { useCalendarEvents, useUsers, useMeetingAttendance, useMarkAttendance, useUpdateAttendance } from '@shared/hooks/useApi';
+import type { MeetingAttendance } from '@shared/types';
 import styles from './AttendancePage.module.css';
 
 export function AttendancePage() {
   const user = useAuthStore((s) => s.user)!;
   const isHR = user.role === 'HR';
-  const meetings = getMeetingEvents();
-  const [attendance, setAttendance] = useState<MeetingAttendance[]>([...MOCK_ATTENDANCE]);
 
-  const hipoUsers = MOCK_ALL_USERS.filter(u => u.role === 'JUNIOR');
+  const { data: events = [] } = useCalendarEvents({ event_type: 'meeting' });
+  const { data: allUsers = [] } = useUsers();
+  const { data: attendance = [] } = useMeetingAttendance();
+  const markAttendance = useMarkAttendance();
+  const updateAttendance = useUpdateAttendance();
 
-  function markAttendance(eventId: number, userId: number, attended: boolean) {
-    setAttendance(prev => {
-      const existing = prev.find(a => a.eventId === eventId && a.userId === userId);
-      if (existing) {
-        return prev.map(a => a.eventId === eventId && a.userId === userId
-          ? { ...a, attended, markedAt: new Date().toISOString(), markedBy: isHR ? user.id : undefined }
-          : a
-        );
-      }
-      return [...prev, {
-        id: Date.now(),
-        eventId,
-        userId,
+  const meetings = events;
+  const hipoUsers = allUsers.filter(u => u.role === 'JUNIOR');
+
+  function handleMark(eventId: number, userId: number, attended: boolean) {
+    const existing = attendance.find((a: MeetingAttendance) => a.eventId === eventId && a.userId === userId);
+    if (existing) {
+      updateAttendance.mutate({ id: existing.id, data: { attended } });
+    } else {
+      markAttendance.mutate({
+        event_id: eventId,
+        user_id: userId,
         attended,
-        markedAt: new Date().toISOString(),
-        markedBy: isHR ? user.id : undefined,
-      }];
-    });
+        marked_by: isHR ? user.id : undefined,
+      });
+    }
   }
 
   function isAttended(eventId: number, userId: number) {
-    return attendance.find(a => a.eventId === eventId && a.userId === userId)?.attended ?? false;
+    return attendance.find((a: MeetingAttendance) => a.eventId === eventId && a.userId === userId)?.attended ?? false;
   }
 
   function hasRecord(eventId: number, userId: number) {
-    return attendance.some(a => a.eventId === eventId && a.userId === userId);
+    return attendance.some((a: MeetingAttendance) => a.eventId === eventId && a.userId === userId);
   }
 
   if (!isHR) {
@@ -57,14 +55,18 @@ export function AttendancePage() {
                   <p className={styles.meetingTitle}>{meeting.title}</p>
                   <p className={styles.meetingDate}>{meeting.date} · {meeting.description}</p>
                 </div>
-                {attended ? (
-                  <span className={styles.attendedBadge}>✓ Присутствовал</span>
-                ) : hasRec ? (
-                  <span className={styles.absentBadge}>✗ Отсутствовал</span>
-                ) : isPast ? (
-                  <Button size="sm" variant="secondary" onClick={() => markAttendance(meeting.id, user.id, true)}>
-                    Отметиться
-                  </Button>
+                {isPast || hasRec ? (
+                  <button
+                    onClick={() => handleMark(meeting.id, user.id, !attended)}
+                    style={{
+                      padding: '4px 12px', borderRadius: 6, border: '1px solid', cursor: 'pointer', fontSize: 12,
+                      borderColor: attended ? 'var(--color-success-bright)' : 'var(--border-subtle)',
+                      background: attended ? 'rgba(61,189,106,0.12)' : 'transparent',
+                      color: attended ? 'var(--color-success-bright)' : 'var(--text-muted)',
+                    }}
+                  >
+                    {attended ? '✓ Присутствовал' : '✗ Отсутствовал'}
+                  </button>
                 ) : (
                   <span className={styles.futureBadge}>Предстоит</span>
                 )}
@@ -105,7 +107,7 @@ export function AttendancePage() {
                   return (
                     <td key={m.id} className={styles.td} style={{ textAlign: 'center' }}>
                       <button
-                        onClick={() => markAttendance(m.id, u.id, !att)}
+                        onClick={() => handleMark(m.id, u.id, !att)}
                         style={{
                           width: 28, height: 28, borderRadius: '50%',
                           border: '1px solid',

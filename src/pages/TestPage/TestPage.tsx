@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MOCK_QUIZZES, getQuizResultsForUser } from '@shared/api/mockData';
+import { useQuiz, useQuizResults, useSubmitQuizResult } from '@shared/hooks/useApi';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
 import { useAuthStore } from '@modules/auth/store/authStore';
@@ -12,16 +12,19 @@ export function TestPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user)!;
-  const quiz = MOCK_QUIZZES.find((q) => q.id === Number(id));
-  const prevResult = getQuizResultsForUser(user.id).find((r) => r.quizId === Number(id));
+  const { data: quiz, isLoading } = useQuiz(Number(id));
+  const { data: allResults = [] } = useQuizResults({ user_id: user.id });
+  const submitResult = useSubmitQuizResult();
+
+  const prevResult = allResults.find((r) => r.quizId === Number(id));
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
-  // selected answers: Set of option indices (or string for text)
   const [answers, setAnswers] = useState<(number[] | string)[]>([]);
   const [finalScore, setFinalScore] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(0);
 
+  if (isLoading) return null;
   if (!quiz) return <div style={{ padding: 32, color: 'var(--text-muted)' }}>Тест не найден</div>;
 
   const question = quiz.questions[step];
@@ -50,12 +53,10 @@ export function TestPage() {
     if (step < quiz.questions.length - 1) {
       setStep((s) => s + 1);
     } else {
-      // Calculate score
       let correct = 0;
       quiz.questions.forEach((q, i) => {
         const ans = answers[i];
         if (q.type === 'text') {
-          // Text answers auto-score 50% (reviewed by mentor in real system)
           if (typeof ans === 'string' && ans.trim().length > 10) correct += 0.5;
         } else if (Array.isArray(ans) && q.correctAnswers) {
           const expected = [...q.correctAnswers].sort().join(',');
@@ -67,6 +68,13 @@ export function TestPage() {
       const earned = Math.round((score / 100) * quiz.points);
       setFinalScore(score);
       setPointsEarned(earned);
+      submitResult.mutate({
+        user_id: user.id,
+        quiz_id: quiz.id,
+        score,
+        completed_at: new Date().toISOString(),
+        points_earned: earned,
+      });
       setPhase('result');
     }
   }
@@ -148,7 +156,6 @@ export function TestPage() {
     );
   }
 
-  // Quiz phase
   const progress = ((step) / quiz.questions.length) * 100;
 
   return (
@@ -180,7 +187,7 @@ export function TestPage() {
               {question.options?.map((opt, idx) => {
                 const selected = Array.isArray(currentAnswer) && (currentAnswer as number[]).includes(idx);
                 return (
-                  <button
+<button
                     key={idx}
                     className={[styles.option, selected ? styles.optionSelected : ''].join(' ')}
                     onClick={() => toggleOption(idx)}

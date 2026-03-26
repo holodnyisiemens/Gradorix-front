@@ -4,28 +4,32 @@ import {
 } from 'recharts';
 import { Download } from 'lucide-react';
 import { exportChartAsPng, exportAsCSV } from './useChartExport';
-import { getJuniorActivityStats, MOCK_ALL_USERS, MOCK_USER_POINTS, MOCK_QUIZ_RESULTS, MOCK_QUIZZES } from '@shared/api/mockData';
+import { useUsers, useLeaderboard, useQuizzes, useQuizResults, useChallengeJuniors } from '@shared/hooks/useApi';
 import styles from './HRCharts.module.css';
 
-// --- Data preparation ---
 function useHRChartsData() {
-  const stats = getJuniorActivityStats();
-  const hipoUsers = MOCK_ALL_USERS.filter(u => u.role === 'JUNIOR');
+  const { data: allUsers = [] } = useUsers();
+  const { data: leaderboard = [] } = useLeaderboard();
+  const { data: quizzes = [] } = useQuizzes();
+  const { data: quizResults = [] } = useQuizResults();
+  const { data: allAssignments = [] } = useChallengeJuniors();
+
+  const hipoUsers = allUsers.filter(u => u.role === 'JUNIOR');
 
   // Bar chart: tasks completion per HiPo
   const tasksData = hipoUsers.map(u => {
-    const s = stats.find(x => x.userId === u.id);
+    const userAssignments = allAssignments.filter(a => a.junior_id === u.id);
     return {
       name: u.firstname ?? u.username,
-      done: s?.done ?? 0,
-      inProgress: s?.inProgress ?? 0,
-      going: s?.going ?? 0,
-      skipped: s?.skipped ?? 0,
+      done: userAssignments.filter(a => a.progress === 'DONE').length,
+      inProgress: userAssignments.filter(a => a.progress === 'IN_PROGRESS').length,
+      going: userAssignments.filter(a => a.progress === 'GOING').length,
+      skipped: userAssignments.filter(a => a.progress === 'SKIPPED').length,
     };
   });
 
   // Pie chart: activity status distribution
-  const totals = stats.reduce((acc, s) => {
+  const totals = tasksData.reduce((acc, s) => {
     acc.done += s.done;
     acc.inProgress += s.inProgress;
     acc.going += s.going;
@@ -41,14 +45,14 @@ function useHRChartsData() {
   ];
 
   // Bar chart: points leaderboard
-  const pointsData = MOCK_USER_POINTS.slice(0, 6).map(p => {
-    const u = MOCK_ALL_USERS.find(x => x.id === p.userId);
+  const pointsData = leaderboard.slice(0, 6).map(p => {
+    const u = allUsers.find(x => x.id === p.userId);
     return { name: u?.firstname ?? 'Участник', points: p.totalPoints, level: p.levelName };
   });
 
   // Quiz results
-  const quizData = MOCK_QUIZZES.map(q => {
-    const results = MOCK_QUIZ_RESULTS.filter(r => r.quizId === q.id);
+  const quizData = quizzes.map(q => {
+    const results = quizResults.filter(r => r.quizId === q.id);
     return {
       name: q.title.length > 12 ? q.title.slice(0, 12) + '…' : q.title,
       fullName: q.title,
@@ -107,7 +111,6 @@ export function HRCharts() {
 
   return (
     <div className={styles.grid}>
-      {/* Tasks by HiPo */}
       <ChartCard
         id="chart-tasks"
         title="Задачи по участникам"
@@ -127,7 +130,6 @@ export function HRCharts() {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Status distribution pie */}
       <ChartCard
         id="chart-pie"
         title="Распределение статусов"
@@ -147,7 +149,6 @@ export function HRCharts() {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Points leaderboard bar */}
       <ChartCard
         id="chart-points"
         title="Рейтинг баллов"
@@ -165,7 +166,6 @@ export function HRCharts() {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Quiz scores */}
       <ChartCard
         id="chart-quizzes"
         title="Средний балл по тестам"

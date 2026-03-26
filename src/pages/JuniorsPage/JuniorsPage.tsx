@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { getJuniorsForMentor, MOCK_CHALLENGE_JUNIOR } from '@shared/api/mockData';
+import { useMentorJuniors, useUsers, useChallengeJuniors } from '@shared/hooks/useApi';
 import { UserCard } from '@modules/users/components/UserCard';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Badge } from '@shared/components/ui/Badge/Badge';
@@ -9,7 +9,13 @@ import styles from './JuniorsPage.module.css';
 export function JuniorsPage() {
   const user = useAuthStore((s) => s.user)!;
   const navigate = useNavigate();
-  const juniors = getJuniorsForMentor(user.id);
+  const { data: pairs = [] } = useMentorJuniors({ mentor_id: user.id });
+  const { data: allUsers = [] } = useUsers();
+  const { data: allAssignments = [] } = useChallengeJuniors();
+
+  const juniors = pairs
+    .map((p) => allUsers.find((u) => u.id === p.junior_id))
+    .filter(Boolean) as typeof allUsers;
 
   return (
     <>
@@ -23,7 +29,7 @@ export function JuniorsPage() {
         ) : (
           <div className={styles.list}>
             {juniors.map((junior) => {
-              const assignments = MOCK_CHALLENGE_JUNIOR.filter((cj) => cj.junior_id === junior.id);
+              const assignments = allAssignments.filter((cj) => cj.junior_id === junior.id);
               const done = assignments.filter((a) => a.progress === 'DONE').length;
               const total = assignments.length;
               return (

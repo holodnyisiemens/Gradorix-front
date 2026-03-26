@@ -8,11 +8,10 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
-// Request interceptor — attach auth token when available
+// Request interceptor — attach auth token
 apiClient.interceptors.request.use((config) => {
-  // TODO: attach JWT when auth is implemented on backend
-  // const token = localStorage.getItem('token');
-  // if (token) config.headers.Authorization = `Bearer ${token}`;
+  const token = localStorage.getItem('gradorix-token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -21,7 +20,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // TODO: redirect to login when real auth is added
+      localStorage.removeItem('gradorix-token');
       localStorage.removeItem('gradorix-auth');
     }
     return Promise.reject(error);
