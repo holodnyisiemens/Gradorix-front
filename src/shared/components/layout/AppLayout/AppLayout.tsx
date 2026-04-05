@@ -14,8 +14,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   const user = useAuthStore((s) => s.user);
   const unreadCount = useUnreadCount();
 
-  if (!user) return null;
-
   return (
     <div className={styles.layout}>
       {/* Desktop: persistent sidebar */}
@@ -26,7 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </main>
 
       {/* Mobile: bottom navigation */}
-      <BottomNav role={user.role} unreadCount={unreadCount} />
+      <BottomNav role={user!.role} unreadCount={unreadCount} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
@@ -14,6 +15,7 @@ const QUICK_LOGINS = [
 ];
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -100,6 +102,15 @@ export function LoginForm() {
 
             <Button type="submit" full loading={loading} disabled={!email || !password}>
               Войти
+            </Button>
+
+            <Button 
+              type="button" 
+              full 
+              variant="secondary"
+              onClick={() => navigate('/register')}
+            >
+              Зарегистрироваться
             </Button>
           </form>
         </Card>

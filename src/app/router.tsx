@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@shared/components/layout/AppLayout/AppLayout';
+import { ProtectedRoute } from '@shared/components/routing/ProtectedRoute';
+import { PublicRoute } from '@shared/components/routing/PublicRoute';
 import { LoginPage } from '@pages/LoginPage/LoginPage';
+import { RegisterPage } from '@pages/RegisterPage/RegisterPage';
 import { DashboardPage } from '@pages/DashboardPage/DashboardPage';
 import { CalendarPage } from '@pages/CalendarPage/CalendarPage';
 import { ChallengesPage } from '@pages/ChallengesPage/ChallengesPage';
@@ -24,11 +27,27 @@ import { AttendancePage } from '@pages/AttendancePage/AttendancePage';
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: <LoginPage />,
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/register',
+    element: (
+      <PublicRoute>
+        <RegisterPage />
+      </PublicRoute>
+    ),
   },
   {
     path: '/',
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard',        element: <DashboardPage /> },
