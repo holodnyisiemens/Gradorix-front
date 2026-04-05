@@ -4,7 +4,7 @@
   background: var(--bg-overlay);
   z-index: 1000;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   animation: fade-in 0.2s ease;
   padding-bottom: env(safe-area-inset-bottom);
@@ -19,7 +19,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-bottom: none;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: var(--max-width);
   max-height: 90dvh;
