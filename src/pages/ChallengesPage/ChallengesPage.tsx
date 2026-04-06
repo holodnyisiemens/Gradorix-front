@@ -213,7 +213,7 @@ export function ChallengesPage() {
         </Modal>
       )}
 
-      {/* Назначить джуниорам */}
+      {/* Назначить HiPo */}
       {assignChallenge && (
         <Modal open={true} onClose={() => { setAssignChallenge(null); setSelectedJuniorIds([]); }} title={`Назначить: ${assignChallenge.title}`} type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

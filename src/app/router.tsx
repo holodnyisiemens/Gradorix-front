@@ -13,7 +13,6 @@ import { MentorshipsPage } from '@pages/MentorshipsPage/MentorshipsPage';
 import { NotificationsPage } from '@pages/NotificationsPage/NotificationsPage';
 import { JuniorsPage } from '@pages/JuniorsPage/JuniorsPage';
 import { ProfilePage } from '@pages/ProfilePage/ProfilePage';
-import { AIAgentPage } from '@pages/AIAgentPage/AIAgentPage';
 import { LeaderboardPage } from '@pages/LeaderboardPage/LeaderboardPage';
 import { TestsPage } from '@pages/TestsPage/TestsPage';
 import { TestPage } from '@pages/TestPage/TestPage';
@@ -59,7 +58,6 @@ export const router = createBrowserRouter([
       { path: 'notifications',    element: <NotificationsPage /> },
       { path: 'juniors',          element: <JuniorsPage /> },
       { path: 'profile',          element: <ProfilePage /> },
-      { path: 'ai-agent',         element: <AIAgentPage /> },
       { path: 'leaderboard',      element: <LeaderboardPage /> },
       { path: 'tests',            element: <TestsPage /> },
       { path: 'tests/:id',        element: <TestPage /> },

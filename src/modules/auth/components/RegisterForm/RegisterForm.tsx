@@ -10,7 +10,7 @@ import { authApi } from '@shared/api/services/auth';
 import styles from './RegisterForm.module.css';
 
 const ROLE_OPTIONS: SelectOption[] = [
-  { value: 'JUNIOR', label: 'Сотрудник' },
+  { value: 'JUNIOR', label: 'HiPo' },
   { value: 'HR', label: 'Администратор' },
   { value: 'MENTOR', label: 'Ментор' },
 ];

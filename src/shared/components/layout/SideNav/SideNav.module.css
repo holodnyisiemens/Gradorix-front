@@ -40,7 +40,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
+  overflow-y: auto;
 }
 
 .item {
@@ -167,6 +167,54 @@
   flex-shrink: 0;
 }
 .logoutBtn:hover { color: var(--accent-red-bright); }
+
+.themeBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 8px var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: var(--space-2);
+  transition: all var(--transition-fast);
+}
+.themeBtn:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+/* "Ещё" button */
+.moreBtn {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.moreBtn.moreOpen {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+.moreCaret {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+/* Secondary dropdown */
+.dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-left: 1px solid var(--border-subtle);
+  animation: fade-in-up 0.15s ease;
+}
 
 /* Hidden on mobile — must be AFTER .nav { display: flex } to override correctly */
 @media (max-width: 767px) {

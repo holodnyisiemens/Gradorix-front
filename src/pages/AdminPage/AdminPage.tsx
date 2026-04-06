@@ -363,7 +363,7 @@ export function AdminPage() {
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Роль</p>
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                {(['JUNIOR', 'MENTOR', 'HR'] as UserRole[]).map(r => (
+                {(['HIPO', 'MENTOR', 'HR'] as UserRole[]).map(r => (
                   <button
                     key={r}
                     onClick={() => setNewUser(p => ({ ...p, role: r }))}
