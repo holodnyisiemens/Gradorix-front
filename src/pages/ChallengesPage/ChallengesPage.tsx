@@ -105,7 +105,7 @@ export function ChallengesPage() {
     const existing = allAssignments.filter(a => a.challenge_id === assignChallenge.id).map(a => a.junior_id);
     const toAssign = selectedJuniorIds.filter(id => !existing.includes(id));
     await Promise.all(toAssign.map(juniorId =>
-      assignChallengeMut.mutateAsync({ challenge_id: assignChallenge.id, junior_id: juniorId, assigned_by: user.id })
+      assignChallengeMut.mutateAsync({ challenge_id: assignChallenge.id, junior_id: juniorId, assigned_by: user.id, progress: 'GOING' })
     ));
     setAssignChallenge(null);
     setSelectedJuniorIds([]);
