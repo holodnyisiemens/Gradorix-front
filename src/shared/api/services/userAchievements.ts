@@ -26,7 +26,14 @@ export const userAchievementsApi = {
   },
 
   create: async (data: UserAchievementCreateInput): Promise<UserAchievementRecord> => {
-    const res = await apiClient.post<UserAchievementRecord>('/user-achievements/', data);
+    const payload = {
+      ...data,
+      // backend expects date-only format YYYY-MM-DD, not full ISO string
+      earned_at: data.earned_at
+        ? data.earned_at.split('T')[0]
+        : new Date().toISOString().split('T')[0],
+    };
+    const res = await apiClient.post<UserAchievementRecord>('/user-achievements/', payload);
     return res.data;
   },
 

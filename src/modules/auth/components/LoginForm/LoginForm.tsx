@@ -9,9 +9,9 @@ import { authApi } from '@shared/api/services/auth';
 import styles from './LoginForm.module.css';
 
 const QUICK_LOGINS = [
-  { email: 'anna@gradorix.ru', password: 'hr1234', role: 'HR', name: 'Анна Соколова' },
-  { email: 'alex@gradorix.ru', password: 'mentor123', role: 'MENTOR', name: 'Алексей Воронов' },
-  { email: 'kate@gradorix.ru', password: 'junior123', role: 'JUNIOR', name: 'Катя Ефимова' },
+  { email: 'hr@test.com', password: 'hr1234', role: 'HR', name: 'Анна Соколова' },
+  { email: 'mentor@test.com', password: 'mentor123', role: 'MENTOR', name: 'Алексей Воронов' },
+  { email: 'junior@test.com', password: 'junior123', role: 'JUNIOR', name: 'Катя Ефимова' },
 ];
 
 export function LoginForm() {
@@ -104,14 +104,12 @@ export function LoginForm() {
               Войти
             </Button>
 
-            <Button 
-              type="button" 
-              full 
-              variant="secondary"
-              onClick={() => navigate('/register')}
-            >
-              Зарегистрироваться
-            </Button>
+            <p className={styles.navHint}>
+              Нет аккаунта?{' '}
+              <button type="button" className={styles.navLink} onClick={() => navigate('/register')}>
+                Зарегистрироваться
+              </button>
+            </p>
           </form>
         </Card>
 

@@ -107,7 +107,7 @@ export function CalendarPage() {
       </div>
 
       {/* Создать событие */}
-      <Modal isOpen={showCreate} onClose={() => { setShowCreate(false); setError(''); }} title="Добавить событие" type="sheet">
+      <Modal open={showCreate} onClose={() => { setShowCreate(false); setError(''); }} title="Добавить событие" type="dialog">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Input label="Название" placeholder="Встреча с ментором..." value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
           <Input label="Дата" type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
@@ -123,7 +123,7 @@ export function CalendarPage() {
 
       {/* Редактировать событие */}
       {editEvent && (
-        <Modal open={true} onClose={() => setEditEvent(null)} title="Редактировать событие" type="sheet">
+        <Modal open={true} onClose={() => setEditEvent(null)} title="Редактировать событие" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название" value={editEvent.title} onChange={e => setEditEvent(p => p && ({ ...p, title: e.target.value }))} />
             <Input label="Дата" type="date" value={editEvent.date} onChange={e => setEditEvent(p => p && ({ ...p, date: e.target.value }))} />
@@ -139,7 +139,7 @@ export function CalendarPage() {
 
       {/* Детали события (для не-HR) */}
       {detailEvent && (
-        <Modal open={true} onClose={() => setDetailEvent(null)} title="Мероприятие" type="sheet">
+        <Modal open={true} onClose={() => setDetailEvent(null)} title="Мероприятие" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
               <span style={{ fontSize: 32 }}>

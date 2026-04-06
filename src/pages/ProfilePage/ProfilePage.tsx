@@ -211,7 +211,7 @@ export function ProfilePage() {
       </div>
 
       {editModal && (
-        <Modal open={true} onClose={() => setEditModal(false)} title="Редактировать профиль" type="sheet">
+        <Modal open={true} onClose={() => setEditModal(false)} title="Редактировать профиль" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Имя" value={editForm.firstname} onChange={e => setEditForm(p => ({ ...p, firstname: e.target.value }))} />
             <Input label="Фамилия" value={editForm.lastname} onChange={e => setEditForm(p => ({ ...p, lastname: e.target.value }))} />

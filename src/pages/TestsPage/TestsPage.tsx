@@ -80,7 +80,7 @@ export function TestsPage() {
       </div>
 
       {createModal && (
-        <Modal open={true} onClose={() => setCreateModal(false)} title="Создать тест" type="sheet">
+        <Modal open={true} onClose={() => setCreateModal(false)} title="Создать тест" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
             <Input label="Описание" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />

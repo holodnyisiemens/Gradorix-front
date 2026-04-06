@@ -54,7 +54,7 @@ export function RegisterForm() {
     setError('');
     setLoading(true);
     try {
-      const { access_token } = await authApi.register({
+      await authApi.register({
         username: username.trim(),
         email: email.trim(),
         password,
@@ -62,12 +62,14 @@ export function RegisterForm() {
         lastname: lastname.trim(),
         role: role as 'HR' | 'MENTOR' | 'JUNIOR',
       });
+      // Backend returns {message}, not a token — login manually after register
+      const { access_token } = await authApi.login({ email: email.trim(), password });
       localStorage.setItem('gradorix-token', access_token);
       const user = await authApi.getMe();
       login(user, access_token);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ошибка регистрации';
-      setError(message || 'Не удалось зарегистрироваться. Возможно, такой электронный адрес уже используется.');
+    } catch (err: unknown) {
+      const axiosData = (err as { response?: { data?: { detail?: string } } })?.response?.data;
+      setError(axiosData?.detail || 'Не удалось зарегистрироваться. Возможно, такой электронный адрес уже используется.');
     } finally {
       setLoading(false);
     }
@@ -167,14 +169,12 @@ export function RegisterForm() {
               Зарегистрироваться
             </Button>
 
-            <Button 
-              type="button" 
-              full 
-              variant="secondary"
-              onClick={() => navigate('/login')}
-            >
-              Уже есть аккаунт?
-            </Button>
+            <p className={styles.navHint}>
+              Уже есть аккаунт?{' '}
+              <button type="button" className={styles.navLink} onClick={() => navigate('/login')}>
+                Войти
+              </button>
+            </p>
           </form>
         </Card>
       </div>

@@ -61,7 +61,7 @@ export function KnowledgePage() {
       </div>
 
       {newSectionModal && (
-        <Modal open={true} onClose={() => setNewSectionModal(false)} title="Создать раздел" type="sheet">
+        <Modal open={true} onClose={() => setNewSectionModal(false)} title="Создать раздел" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={newSection.title} onChange={e => setNewSection(p => ({ ...p, title: e.target.value }))} />
             <Input label="Порядок (число)" type="number" value={String(newSection.order)} onChange={e => setNewSection(p => ({ ...p, order: Number(e.target.value) }))} />
