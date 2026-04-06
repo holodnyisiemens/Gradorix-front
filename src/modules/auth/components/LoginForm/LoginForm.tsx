@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
@@ -8,12 +9,13 @@ import { authApi } from '@shared/api/services/auth';
 import styles from './LoginForm.module.css';
 
 const QUICK_LOGINS = [
-  { email: 'anna@gradorix.ru', password: 'hr1234', role: 'HR', name: 'Анна Соколова' },
-  { email: 'alex@gradorix.ru', password: 'mentor123', role: 'MENTOR', name: 'Алексей Воронов' },
-  { email: 'kate@gradorix.ru', password: 'junior123', role: 'JUNIOR', name: 'Катя Ефимова' },
+  { email: 'hr@test.com', password: 'hr1234', role: 'HR', name: 'Анна Соколова' },
+  { email: 'mentor@test.com', password: 'mentor123', role: 'MENTOR', name: 'Алексей Воронов' },
+  { email: 'junior@test.com', password: 'junior123', role: 'JUNIOR', name: 'Катя Ефимова' },
 ];
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -101,6 +103,13 @@ export function LoginForm() {
             <Button type="submit" full loading={loading} disabled={!email || !password}>
               Войти
             </Button>
+
+            <p className={styles.navHint}>
+              Нет аккаунта?{' '}
+              <button type="button" className={styles.navLink} onClick={() => navigate('/register')}>
+                Зарегистрироваться
+              </button>
+            </p>
           </form>
         </Card>
 

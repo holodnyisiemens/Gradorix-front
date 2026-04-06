@@ -114,7 +114,7 @@ export function TeamPage() {
 
         {/* Форма создания/редактирования */}
         {(createModal || editTeamId !== null) && (
-          <Modal open={true} onClose={() => { setCreateModal(false); setEditTeamId(null); }} title={editTeamId ? 'Редактировать команду' : 'Создать команду'} type="sheet">
+          <Modal open={true} onClose={() => { setCreateModal(false); setEditTeamId(null); }} title={editTeamId ? 'Редактировать команду' : 'Создать команду'} type="dialog">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <Input label="Название команды *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
               <Input label="Проект" value={form.project} onChange={e => setForm(p => ({ ...p, project: e.target.value }))} />

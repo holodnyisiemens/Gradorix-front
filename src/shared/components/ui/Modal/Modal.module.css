@@ -4,48 +4,67 @@
   background: var(--bg-overlay);
   z-index: 1000;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
   animation: fade-in 0.2s ease;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.overlayCenter {
+/* Sheet overlay — content anchored to bottom */
+.overlaySheet {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Dialog overlay — content centered */
+.overlayDialog {
   align-items: center;
+  justify-content: center;
   padding: var(--space-4);
 }
 
+/* ── Sheet (bottom drawer) ── */
 .sheet {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-bottom: none;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   width: 100%;
-  max-width: var(--max-width);
-  max-height: 90dvh;
+  max-height: 92dvh;
   overflow-y: auto;
-  animation: slide-up 0.3s ease;
   overscroll-behavior: contain;
+  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  /* Reserve space for home indicator on iOS */
+  padding-bottom: env(safe-area-inset-bottom);
+  /* Drag cursor hint */
+  touch-action: none;
 }
 
+/* ── Dialog (centered popup) ── */
 .dialog {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
   width: 100%;
+  max-width: 520px;
   max-height: 85dvh;
   overflow-y: auto;
   animation: fade-in-up 0.25s ease;
 }
 
+/* ── Drag handle ── */
 .handle {
   width: 40px;
   height: 4px;
   background: var(--border-strong);
   border-radius: var(--radius-full);
   margin: var(--space-3) auto var(--space-1);
+  flex-shrink: 0;
+  /* Visual affordance — slightly brighter on hover */
+  transition: background var(--transition-fast);
+}
+.sheet:hover > .handle {
+  background: var(--text-muted);
 }
 
+/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
@@ -73,12 +92,12 @@
   transition: all var(--transition-fast);
   flex-shrink: 0;
 }
-
 .close:hover {
   background: var(--bg-elevated);
   color: var(--text-primary);
 }
 
+/* ── Body ── */
 .body {
   padding: var(--space-4);
 }

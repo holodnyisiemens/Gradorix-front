@@ -246,7 +246,7 @@ export function AdminPage() {
 
       {/* Edit Activity Modal */}
       {editActivity && (
-        <Modal open={true} onClose={() => setEditActivity(null)} title="Редактировать активность" type="sheet">
+        <Modal open={true} onClose={() => setEditActivity(null)} title="Редактировать активность" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название" value={editActivity.title} onChange={e => setEditActivity(p => p && ({ ...p, title: e.target.value }))} />
             <Input label="Описание" value={editActivity.description} onChange={e => setEditActivity(p => p && ({ ...p, description: e.target.value }))} />
@@ -265,7 +265,7 @@ export function AdminPage() {
 
       {/* New Achievement Modal */}
       {newAchModal && (
-        <Modal open={true} onClose={() => setNewAchModal(false)} title="Создать достижение" type="sheet">
+        <Modal open={true} onClose={() => setNewAchModal(false)} title="Создать достижение" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название" value={newAch.title} onChange={e => setNewAch(p => ({ ...p, title: e.target.value }))} />
             <Input label="Описание" value={newAch.description} onChange={e => setNewAch(p => ({ ...p, description: e.target.value }))} />
@@ -278,7 +278,7 @@ export function AdminPage() {
 
       {/* Edit Achievement Modal */}
       {editAchievement && (
-        <Modal open={true} onClose={() => setEditAchievementId(null)} title="Редактировать достижение" type="sheet">
+        <Modal open={true} onClose={() => setEditAchievementId(null)} title="Редактировать достижение" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название" defaultValue={editAchievement.title} onChange={e => {}} id="ach-title" />
             <Input label="Описание" defaultValue={editAchievement.description} onChange={e => {}} id="ach-desc" />
@@ -297,7 +297,7 @@ export function AdminPage() {
 
       {/* New Event Modal */}
       {newEventModal && (
-        <Modal open={true} onClose={() => setNewEventModal(false)} title="Добавить мероприятие" type="sheet">
+        <Modal open={true} onClose={() => setNewEventModal(false)} title="Добавить мероприятие" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} />
             <Input label="Дата *" type="date" value={newEvent.date} onChange={e => setNewEvent(p => ({ ...p, date: e.target.value }))} />
@@ -325,7 +325,7 @@ export function AdminPage() {
 
       {/* Edit Event Modal */}
       {editEvent && (
-        <Modal open={true} onClose={() => setEditEvent(null)} title="Редактировать мероприятие" type="sheet">
+        <Modal open={true} onClose={() => setEditEvent(null)} title="Редактировать мероприятие" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={editEvent.title} onChange={e => setEditEvent(p => p && ({ ...p, title: e.target.value }))} />
             <Input label="Дата *" type="date" value={editEvent.date} onChange={e => setEditEvent(p => p && ({ ...p, date: e.target.value }))} />
@@ -353,7 +353,7 @@ export function AdminPage() {
 
       {/* New User Modal */}
       {newUserModal && (
-        <Modal open={true} onClose={() => { setNewUserModal(false); setNewUserError(''); }} title="Создать пользователя" type="sheet">
+        <Modal open={true} onClose={() => { setNewUserModal(false); setNewUserError(''); }} title="Создать пользователя" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Логин *" value={newUser.username} onChange={e => setNewUser(p => ({ ...p, username: e.target.value }))} />
             <Input label="Email *" type="email" value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
@@ -363,7 +363,7 @@ export function AdminPage() {
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Роль</p>
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                {(['JUNIOR', 'MENTOR', 'HR'] as UserRole[]).map(r => (
+                {(['HIPO', 'MENTOR', 'HR'] as UserRole[]).map(r => (
                   <button
                     key={r}
                     onClick={() => setNewUser(p => ({ ...p, role: r }))}
@@ -393,7 +393,7 @@ export function AdminPage() {
         const ach = achievements.find(a => a.id === awardModal);
         const juniors = allUsers.filter(u => u.role === 'JUNIOR');
         return (
-          <Modal open={true} onClose={() => setAwardModal(null)} title="Наградить участника" type="sheet">
+          <Modal open={true} onClose={() => setAwardModal(null)} title="Наградить участника" type="dialog">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               {ach && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}>

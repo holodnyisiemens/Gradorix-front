@@ -78,7 +78,14 @@ export const kbApi = {
     created_at?: string;
     author: string;
   }): Promise<KBArticle> => {
-    const res = await apiClient.post<KBArticleBackend>('/kb-articles/', data);
+    const payload = {
+      ...data,
+      // backend requires created_at (date-only YYYY-MM-DD), default to today
+      created_at: data.created_at
+        ? data.created_at.split('T')[0]
+        : new Date().toISOString().split('T')[0],
+    };
+    const res = await apiClient.post<KBArticleBackend>('/kb-articles/', payload);
     return mapArticle(res.data);
   },
 

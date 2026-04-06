@@ -5,7 +5,7 @@ export interface ChallengeJuniorCreateInput {
   challenge_id: number;
   junior_id: number;
   assigned_by: number;
-  progress?: ChallengeJuniorProgress;
+  progress: ChallengeJuniorProgress; // required by backend
 }
 
 export interface ChallengeJuniorUpdateInput {

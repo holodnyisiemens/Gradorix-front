@@ -40,7 +40,14 @@ export const quizResultsApi = {
   },
 
   create: async (data: QuizResultCreateInput): Promise<QuizResult> => {
-    const res = await apiClient.post<QuizResultBackend>('/quiz-results/', data);
+    const payload = {
+      ...data,
+      // backend expects date-only format YYYY-MM-DD, not full ISO string
+      completed_at: data.completed_at
+        ? data.completed_at.split('T')[0]
+        : new Date().toISOString().split('T')[0],
+    };
+    const res = await apiClient.post<QuizResultBackend>('/quiz-results/', payload);
     return mapQuizResult(res.data);
   },
 

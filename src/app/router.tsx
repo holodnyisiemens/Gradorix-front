@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@shared/components/layout/AppLayout/AppLayout';
+import { ProtectedRoute } from '@shared/components/routing/ProtectedRoute';
+import { PublicRoute } from '@shared/components/routing/PublicRoute';
 import { LoginPage } from '@pages/LoginPage/LoginPage';
+import { RegisterPage } from '@pages/RegisterPage/RegisterPage';
 import { DashboardPage } from '@pages/DashboardPage/DashboardPage';
 import { CalendarPage } from '@pages/CalendarPage/CalendarPage';
 import { ChallengesPage } from '@pages/ChallengesPage/ChallengesPage';
@@ -10,7 +13,6 @@ import { MentorshipsPage } from '@pages/MentorshipsPage/MentorshipsPage';
 import { NotificationsPage } from '@pages/NotificationsPage/NotificationsPage';
 import { JuniorsPage } from '@pages/JuniorsPage/JuniorsPage';
 import { ProfilePage } from '@pages/ProfilePage/ProfilePage';
-import { AIAgentPage } from '@pages/AIAgentPage/AIAgentPage';
 import { LeaderboardPage } from '@pages/LeaderboardPage/LeaderboardPage';
 import { TestsPage } from '@pages/TestsPage/TestsPage';
 import { TestPage } from '@pages/TestPage/TestPage';
@@ -24,11 +26,27 @@ import { AttendancePage } from '@pages/AttendancePage/AttendancePage';
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: <LoginPage />,
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/register',
+    element: (
+      <PublicRoute>
+        <RegisterPage />
+      </PublicRoute>
+    ),
   },
   {
     path: '/',
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard',        element: <DashboardPage /> },
@@ -40,7 +58,6 @@ export const router = createBrowserRouter([
       { path: 'notifications',    element: <NotificationsPage /> },
       { path: 'juniors',          element: <JuniorsPage /> },
       { path: 'profile',          element: <ProfilePage /> },
-      { path: 'ai-agent',         element: <AIAgentPage /> },
       { path: 'leaderboard',      element: <LeaderboardPage /> },
       { path: 'tests',            element: <TestsPage /> },
       { path: 'tests/:id',        element: <TestPage /> },

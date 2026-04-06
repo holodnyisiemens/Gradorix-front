@@ -105,7 +105,7 @@ export function ChallengesPage() {
     const existing = allAssignments.filter(a => a.challenge_id === assignChallenge.id).map(a => a.junior_id);
     const toAssign = selectedJuniorIds.filter(id => !existing.includes(id));
     await Promise.all(toAssign.map(juniorId =>
-      assignChallengeMut.mutateAsync({ challenge_id: assignChallenge.id, junior_id: juniorId, assigned_by: user.id })
+      assignChallengeMut.mutateAsync({ challenge_id: assignChallenge.id, junior_id: juniorId, assigned_by: user.id, progress: 'GOING' })
     ));
     setAssignChallenge(null);
     setSelectedJuniorIds([]);
@@ -157,7 +157,7 @@ export function ChallengesPage() {
 
       {/* Создать задачу */}
       {newModal && (
-        <Modal open={true} onClose={() => setNewModal(false)} title="Создать задачу" type="sheet">
+        <Modal open={true} onClose={() => setNewModal(false)} title="Создать задачу" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={newChallenge.title} onChange={e => setNewChallenge(p => ({ ...p, title: e.target.value }))} />
             <Input label="Описание" value={newChallenge.description} onChange={e => setNewChallenge(p => ({ ...p, description: e.target.value }))} />
@@ -186,7 +186,7 @@ export function ChallengesPage() {
 
       {/* Редактировать задачу */}
       {editChallenge && (
-        <Modal open={true} onClose={() => setEditChallenge(null)} title="Редактировать задачу" type="sheet">
+        <Modal open={true} onClose={() => setEditChallenge(null)} title="Редактировать задачу" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={editChallenge.title} onChange={e => setEditChallenge(p => p && ({ ...p, title: e.target.value }))} />
             <Input label="Описание" value={editChallenge.description ?? ''} onChange={e => setEditChallenge(p => p && ({ ...p, description: e.target.value }))} />
@@ -213,9 +213,9 @@ export function ChallengesPage() {
         </Modal>
       )}
 
-      {/* Назначить джуниорам */}
+      {/* Назначить HiPo */}
       {assignChallenge && (
-        <Modal open={true} onClose={() => { setAssignChallenge(null); setSelectedJuniorIds([]); }} title={`Назначить: ${assignChallenge.title}`} type="sheet">
+        <Modal open={true} onClose={() => { setAssignChallenge(null); setSelectedJuniorIds([]); }} title={`Назначить: ${assignChallenge.title}`} type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Выберите HiPo участников:</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', maxHeight: 280, overflowY: 'auto' }}>

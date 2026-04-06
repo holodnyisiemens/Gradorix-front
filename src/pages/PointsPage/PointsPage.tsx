@@ -146,7 +146,7 @@ export function PointsPage() {
       </div>
 
       {addModal && (
-        <Modal open={true} onClose={() => setAddModal(false)} title="Добавить достижение" type="sheet">
+        <Modal open={true} onClose={() => setAddModal(false)} title="Добавить достижение" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={newActivity.title} onChange={e => setNewActivity(p => ({ ...p, title: e.target.value }))} />
             <Input label="Описание" value={newActivity.description} onChange={e => setNewActivity(p => ({ ...p, description: e.target.value }))} />

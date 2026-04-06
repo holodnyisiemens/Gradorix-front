@@ -11,6 +11,7 @@
 }
 
 .section {
+  width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);

@@ -103,7 +103,7 @@ export function KnowledgeSectionPage() {
       </div>
 
       {newArticleModal && (
-        <Modal open={true} onClose={() => setNewArticleModal(false)} title="Создать статью" type="sheet">
+        <Modal open={true} onClose={() => setNewArticleModal(false)} title="Создать статью" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Заголовок *" value={newArticle.title} onChange={e => setNewArticle(p => ({ ...p, title: e.target.value }))} />
             <Input label="Автор" value={newArticle.author} onChange={e => setNewArticle(p => ({ ...p, author: e.target.value }))} />

@@ -11,6 +11,11 @@ export interface LoginResponse {
   token_type: string;
 }
 
+export interface RegisterResponse {
+  access_token: string;
+  token_type: string;
+}
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const res = await apiClient.post<LoginResponse>('/auth/login', data);
@@ -24,8 +29,8 @@ export const authApi = {
     role: string;
     firstname?: string;
     lastname?: string;
-  }) => {
-    const res = await apiClient.post('/auth/register', data);
+  }): Promise<RegisterResponse> => {
+    const res = await apiClient.post<RegisterResponse>('/auth/register', data);
     return res.data;
   },
 

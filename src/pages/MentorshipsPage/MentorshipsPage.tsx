@@ -97,7 +97,7 @@ export function MentorshipsPage() {
       </div>
 
       {pairModal && (
-        <Modal open={true} onClose={() => setPairModal(false)} title="Добавить пару" type="sheet">
+        <Modal open={true} onClose={() => setPairModal(false)} title="Добавить пару" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Ментор</p>
