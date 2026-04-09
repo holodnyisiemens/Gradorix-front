@@ -1,9 +1,17 @@
 services:
   frontend:
-    build:
-      context: .
-      network: host
+    build: .
     container_name: gradorix-front
     ports:
       - "80:80"
+      - "443:443"
     restart: unless-stopped
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
