@@ -109,6 +109,15 @@ export const useUpdateChallengeProgress = () => {
   });
 };
 
+export const useUpdateChallengeJunior = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ challengeId, juniorId, data }: { challengeId: number; juniorId: number; data: import('@shared/api/services/challengeJunior').ChallengeJuniorUpdateInput }) =>
+      challengeJuniorApi.update(challengeId, juniorId, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-junior'] }),
+  });
+};
+
 // ===== MENTOR-JUNIOR =====
 export const useMentorJuniors = (params?: { mentor_id?: number; junior_id?: number }) =>
   useQuery({
@@ -347,6 +356,15 @@ export const useCreateQuiz = () => {
   });
 };
 
+export const useUpdateQuiz = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<QuizCreateInput> }) =>
+      quizzesApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['quizzes'] }),
+  });
+};
+
 export const useDeleteQuiz = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -361,6 +379,15 @@ export const useQuizResults = (params?: { user_id?: number; quiz_id?: number }) 
     queryKey: ['quiz-results', params],
     queryFn: () => quizResultsApi.getAll(params),
   });
+
+export const useUpdateQuizResult = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: import('@shared/api/services/quizResults').QuizResultUpdateInput }) =>
+      quizResultsApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['quiz-results'] }),
+  });
+};
 
 export const useSubmitQuizResult = () => {
   const qc = useQueryClient();

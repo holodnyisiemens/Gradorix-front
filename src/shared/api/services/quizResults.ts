@@ -8,15 +8,18 @@ interface QuizResultBackend {
   score: number;
   completed_at: string;
   points_earned: number;
+  answers?: string[];
 }
 
 function mapQuizResult(b: QuizResultBackend): QuizResult {
   return {
+    id: b.id,
     userId: b.user_id,
     quizId: b.quiz_id,
     score: b.score,
     completedAt: b.completed_at,
     pointsEarned: b.points_earned,
+    answers: b.answers,
   };
 }
 
@@ -25,6 +28,12 @@ export interface QuizResultCreateInput {
   quiz_id: number;
   score: number;
   completed_at?: string;
+  points_earned?: number;
+  answers?: string[];
+}
+
+export interface QuizResultUpdateInput {
+  score?: number;
   points_earned?: number;
 }
 
@@ -42,12 +51,16 @@ export const quizResultsApi = {
   create: async (data: QuizResultCreateInput): Promise<QuizResult> => {
     const payload = {
       ...data,
-      // backend expects date-only format YYYY-MM-DD, not full ISO string
       completed_at: data.completed_at
         ? data.completed_at.split('T')[0]
         : new Date().toISOString().split('T')[0],
     };
     const res = await apiClient.post<QuizResultBackend>('/quiz-results/', payload);
+    return mapQuizResult(res.data);
+  },
+
+  update: async (id: number, data: QuizResultUpdateInput): Promise<QuizResult> => {
+    const res = await apiClient.patch<QuizResultBackend>(`/quiz-results/${id}`, data);
     return mapQuizResult(res.data);
   },
 

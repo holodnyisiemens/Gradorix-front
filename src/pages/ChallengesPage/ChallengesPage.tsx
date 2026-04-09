@@ -31,7 +31,7 @@ const HR_MENTOR_FILTERS: { key: Filter; label: string }[] = [
   { key: 'DRAFT',     label: 'Черновики' },
 ];
 
-const EMPTY_FORM = { title: '', description: '', status: 'DRAFT' as ChallengeStatus, date: '', url: '' };
+const EMPTY_FORM = { title: '', description: '', status: 'DRAFT' as ChallengeStatus, date: '', url: '', maxPoints: '' };
 
 export function ChallengesPage() {
   const user = useAuthStore((s) => s.user)!;
@@ -39,7 +39,7 @@ export function ChallengesPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [newModal, setNewModal] = useState(false);
   const [newChallenge, setNewChallenge] = useState(EMPTY_FORM);
-  const [editChallenge, setEditChallenge] = useState<Challenge | null>(null);
+  const [editChallenge, setEditChallenge] = useState<(Challenge & { maxPointsStr: string }) | null>(null);
   const [assignChallenge, setAssignChallenge] = useState<Challenge | null>(null);
   const [selectedJuniorIds, setSelectedJuniorIds] = useState<number[]>([]);
 
@@ -58,11 +58,15 @@ export function ChallengesPage() {
   const juniors = allUsers.filter(u => u.role === 'JUNIOR');
 
   const allChallenges = isJunior
-    ? assignments.map((a) => {
-        const challenge = challenges.find((c) => c.id === a.challenge_id);
-        if (!challenge) return null;
-        return { ...challenge, progress: a.progress };
-      }).filter(Boolean) as (typeof challenges[number] & { progress: ChallengeJuniorProgress })[]
+    ? assignments
+        .map((a) => {
+          const challenge = challenges.find((c) => c.id === a.challenge_id);
+          if (!challenge) return null;
+          // HiPo never sees DRAFT challenges
+          if (challenge.status === 'DRAFT') return null;
+          return { ...challenge, progress: a.progress };
+        })
+        .filter(Boolean) as (typeof challenges[number] & { progress: ChallengeJuniorProgress })[]
     : challenges;
 
   const filtered = filter === 'all'
@@ -74,12 +78,14 @@ export function ChallengesPage() {
 
   async function handleCreate() {
     if (!newChallenge.title) return;
+    const maxPts = newChallenge.maxPoints ? Number(newChallenge.maxPoints) : undefined;
     await createChallenge.mutateAsync({
       title: newChallenge.title,
       description: newChallenge.description || undefined,
       status: newChallenge.status,
       date: newChallenge.date || undefined,
       url: newChallenge.url || undefined,
+      max_points: maxPts,
     });
     setNewModal(false);
     setNewChallenge(EMPTY_FORM);
@@ -87,6 +93,7 @@ export function ChallengesPage() {
 
   async function handleEdit() {
     if (!editChallenge) return;
+    const maxPts = editChallenge.maxPointsStr ? Number(editChallenge.maxPointsStr) : undefined;
     await updateChallenge.mutateAsync({
       id: editChallenge.id,
       data: {
@@ -95,6 +102,7 @@ export function ChallengesPage() {
         status: editChallenge.status,
         date: editChallenge.date,
         url: editChallenge.url,
+        max_points: maxPts,
       },
     });
     setEditChallenge(null);
@@ -113,6 +121,10 @@ export function ChallengesPage() {
 
   function toggleJunior(id: number) {
     setSelectedJuniorIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
+
+  function openEdit(c: Challenge) {
+    setEditChallenge({ ...c, maxPointsStr: c.maxPoints != null ? String(c.maxPoints) : '' });
   }
 
   const title = isJunior ? 'Мои задачи' : 'Задачи';
@@ -139,18 +151,26 @@ export function ChallengesPage() {
           <div className={styles.empty}>Ничего не найдено</div>
         ) : (
           <div className={styles.list}>
-            {filtered.map((c) => (
-              <div key={c.id}>
-                <ChallengeCard challenge={c} showProgress={isJunior} onClick={() => navigate(`/challenges/${c.id}`)} />
-                {!isJunior && (
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)', marginBottom: 'var(--space-3)' }}>
-                    <Button size="sm" variant="ghost" onClick={() => setEditChallenge({ ...c })}>Редактировать</Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setAssignChallenge(c); setSelectedJuniorIds(allAssignments.filter(a => a.challenge_id === c.id).map(a => a.junior_id)); }}>Назначить</Button>
-                    <Button size="sm" variant="danger" onClick={() => deleteChallenge.mutate(c.id)}>Удалить</Button>
-                  </div>
-                )}
-              </div>
-            ))}
+            {filtered.map((c) => {
+              const isUpcoming = isJunior && c.status === 'UPCOMING';
+              return (
+                <div key={c.id}>
+                  <ChallengeCard
+                    challenge={c}
+                    showProgress={isJunior}
+                    locked={isUpcoming}
+                    onClick={isUpcoming ? undefined : () => navigate(`/challenges/${c.id}`)}
+                  />
+                  {!isJunior && (
+                    <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)', marginBottom: 'var(--space-3)' }}>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>Редактировать</Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setAssignChallenge(c); setSelectedJuniorIds(allAssignments.filter(a => a.challenge_id === c.id).map(a => a.junior_id)); }}>Назначить</Button>
+                      <Button size="sm" variant="danger" onClick={() => deleteChallenge.mutate(c.id)}>Удалить</Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -163,6 +183,7 @@ export function ChallengesPage() {
             <Input label="Описание" value={newChallenge.description} onChange={e => setNewChallenge(p => ({ ...p, description: e.target.value }))} />
             <Input label="Ссылка (URL)" value={newChallenge.url} onChange={e => setNewChallenge(p => ({ ...p, url: e.target.value }))} />
             <Input label="Дата дедлайна" type="date" value={newChallenge.date} onChange={e => setNewChallenge(p => ({ ...p, date: e.target.value }))} />
+            <Input label="Максимум баллов" type="number" value={newChallenge.maxPoints} onChange={e => setNewChallenge(p => ({ ...p, maxPoints: e.target.value }))} />
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Статус</p>
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -192,6 +213,7 @@ export function ChallengesPage() {
             <Input label="Описание" value={editChallenge.description ?? ''} onChange={e => setEditChallenge(p => p && ({ ...p, description: e.target.value }))} />
             <Input label="Ссылка (URL)" value={editChallenge.url ?? ''} onChange={e => setEditChallenge(p => p && ({ ...p, url: e.target.value }))} />
             <Input label="Дата дедлайна" type="date" value={editChallenge.date ?? ''} onChange={e => setEditChallenge(p => p && ({ ...p, date: e.target.value }))} />
+            <Input label="Максимум баллов" type="number" value={editChallenge.maxPointsStr} onChange={e => setEditChallenge(p => p && ({ ...p, maxPointsStr: e.target.value }))} />
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Статус</p>
               <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>

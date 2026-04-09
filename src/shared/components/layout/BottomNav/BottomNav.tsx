@@ -41,11 +41,10 @@ function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
 
 interface BottomNavProps {
   role: UserRole;
-  unreadCount?: number;
 }
 
-export function BottomNav({ role, unreadCount = 0 }: BottomNavProps) {
-  const items = getNavItems(role, unreadCount);
+export function BottomNav({ role }: BottomNavProps) {
+  const items = getNavItems(role, 0);
 
   return (
     <nav className={styles.nav}>

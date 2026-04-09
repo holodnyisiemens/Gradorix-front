@@ -107,6 +107,20 @@
   color: var(--text-muted);
   margin-top: 1px;
 }
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wsStatus {
+  display: flex;
+  align-items: center;
+  padding: 3px 5px;
+  border-radius: var(--radius-md);
+}
+.wsOnline  { color: var(--color-success-bright); }
+.wsOffline { color: var(--text-muted); }
+
 .closeBtn {
   background: none;
   border: none;

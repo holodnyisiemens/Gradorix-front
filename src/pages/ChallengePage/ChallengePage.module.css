@@ -98,6 +98,184 @@
 }
 .progressOptionActive .progressLabel { color: var(--accent-red-bright); }
 
+.maxPointsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-warning-bright);
+  font-family: var(--font-display);
+  background: rgba(255, 170, 64, 0.1);
+  border: 1px solid rgba(255, 170, 64, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+}
+
+.lockedNotice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(58, 154, 238, 0.08);
+  border: 1px solid rgba(58, 154, 238, 0.2);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  color: var(--color-info-bright);
+}
+
+.cancelledNotice {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(204, 0, 0, 0.08);
+  border: 1px solid rgba(204, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  color: var(--color-danger-bright);
+}
+
+/* ── Comment & links submission ── */
+.submissionSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.commentArea {
+  width: 100%;
+  min-height: 90px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  padding: var(--space-3);
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  box-sizing: border-box;
+}
+.commentArea:focus { border-color: var(--border-default); }
+
+.linkInputRow {
+  display: flex;
+  gap: var(--space-2);
+}
+.linkInput {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.linkInput:focus { border-color: var(--border-default); }
+
+.linkAddBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(204,0,0,0.1);
+  border: 1px solid rgba(204,0,0,0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-primary-bright);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+.linkAddBtn:hover { background: rgba(204,0,0,0.2); }
+
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.linkItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.linkItemUrl {
+  flex: 1;
+  color: var(--color-info-bright);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.linkItemUrl:hover { text-decoration: underline; }
+.linkRemoveBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.linkRemoveBtn:hover { color: var(--color-danger-bright); }
+
+/* Read-only display */
+.submissionReadonly {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+.submissionLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+.submissionText {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.submissionLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-info-bright);
+  text-decoration: none;
+}
+.submissionLink:hover { text-decoration: underline; }
+
+/* HR feedback block */
+.hrFeedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(61, 189, 106, 0.06);
+  border: 1px solid rgba(61, 189, 106, 0.2);
+  border-radius: var(--radius-lg);
+}
+.hrFeedbackPoints {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-success-bright);
+}
+
 @media (min-width: 768px) {
   .page { padding: var(--space-4) 0 var(--space-8); max-width: 700px; }
   .progressOptions { grid-template-columns: repeat(4, 1fr); }
