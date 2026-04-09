@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  Home, Calendar, Zap, Bell, Users, Link2, User, LogOut,
+  Home, Calendar, Zap, Users, Link2, User, LogOut,
   Trophy, BookOpen, FlaskConical, Star, Settings,
   CalendarCheck, Sun, Moon, MoreHorizontal, ChevronDown,
 } from 'lucide-react';
@@ -22,7 +22,7 @@ interface NavConfig {
   secondary: NavItem[];
 }
 
-function getNavConfig(role: UserRole, unreadCount: number): NavConfig {
+function getNavConfig(role: UserRole): NavConfig {
   switch (role) {
     case 'JUNIOR':
       return {
@@ -34,10 +34,10 @@ function getNavConfig(role: UserRole, unreadCount: number): NavConfig {
           { to: '/calendar',     icon: <Calendar size={18} />,      label: 'Календарь' },
         ],
         secondary: [
-          { to: '/knowledge',    icon: <BookOpen size={18} />,       label: 'База знаний' },
-          { to: '/team',         icon: <Users size={18} />,          label: 'Моя команда' },
-          { to: '/attendance',   icon: <CalendarCheck size={18} />,  label: 'Посещаемость' },
-          { to: '/notifications', icon: <Bell size={18} />,          label: 'Уведомления', badge: unreadCount },
+          { to: '/points',     icon: <Star size={18} />,          label: 'Мои достижения' },
+          { to: '/knowledge',  icon: <BookOpen size={18} />,      label: 'База знаний' },
+          { to: '/team',       icon: <Users size={18} />,         label: 'Моя команда' },
+          { to: '/attendance', icon: <CalendarCheck size={18} />, label: 'Посещаемость' },
         ],
       };
     case 'MENTOR':
@@ -50,8 +50,7 @@ function getNavConfig(role: UserRole, unreadCount: number): NavConfig {
           { to: '/leaderboard', icon: <Trophy size={18} />,    label: 'Рейтинг' },
         ],
         secondary: [
-          { to: '/knowledge',    icon: <BookOpen size={18} />,  label: 'База знаний' },
-          { to: '/notifications', icon: <Bell size={18} />,     label: 'Уведомления', badge: unreadCount },
+          { to: '/knowledge', icon: <BookOpen size={18} />, label: 'База знаний' },
         ],
       };
     case 'HR':
@@ -65,7 +64,7 @@ function getNavConfig(role: UserRole, unreadCount: number): NavConfig {
         ],
         secondary: [
           { to: '/knowledge', icon: <BookOpen size={18} />,  label: 'База знаний' },
-          { to: '/points',    icon: <Star size={18} />,      label: 'Баллы' },
+          { to: '/points',    icon: <Star size={18} />,      label: 'Управление баллами' },
           { to: '/admin',     icon: <Settings size={18} />,  label: 'Админ-панель' },
         ],
       };
@@ -78,9 +77,7 @@ const roleLabel: Record<UserRole, string> = {
   JUNIOR: 'HiPo',
 };
 
-interface SideNavProps {
-  unreadCount?: number;
-}
+interface SideNavProps {}
 
 function NavItems({ items }: { items: NavItem[] }) {
   return (
@@ -106,12 +103,12 @@ function NavItems({ items }: { items: NavItem[] }) {
   );
 }
 
-export function SideNav({ unreadCount = 0 }: SideNavProps) {
+export function SideNav(_: SideNavProps) {
   const user = useAuthStore((s) => s.user)!;
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const { theme, toggle } = useThemeStore();
-  const { primary, secondary } = getNavConfig(user.role, unreadCount);
+  const { primary, secondary } = getNavConfig(user.role);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const initials = ((user.firstname?.[0] ?? '') + (user.lastname?.[0] ?? '')).toUpperCase()

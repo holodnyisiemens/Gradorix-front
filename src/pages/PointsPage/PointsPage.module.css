@@ -1,7 +1,49 @@
 .page { padding-top: var(--space-4); }
 
-.filters { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
+/* ── Tabs (AdminPage style) ── */
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+.tab {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+}
+.tab:hover { color: var(--text-primary); }
+.tabActive {
+  background: rgba(204,0,0,0.1);
+  border-color: rgba(204,0,0,0.3);
+  color: var(--color-primary-bright);
+}
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 10px;
+  border-radius: 8px;
+  padding: 0 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
 
+/* ── Filters ── */
+.filters { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
 .filterBtn {
   padding: var(--space-1) var(--space-3);
   border-radius: 20px;
@@ -14,29 +56,259 @@
 }
 .filterBtn.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
 
+/* ── Lists ── */
 .list { display: flex; flex-direction: column; gap: var(--space-3); }
-
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4);
+.empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-lg);
 }
 
-.cardTop { display: flex; align-items: flex-start; gap: var(--space-2); margin-bottom: var(--space-2); }
+/* ── Card ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.cardTop { display: flex; align-items: flex-start; gap: var(--space-2); }
 .cardTitle { flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
 .statusBadge { font-size: 11px; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
-.pending { background: rgba(245,197,24,0.12); color: var(--color-warning-bright); border: 1px solid rgba(245,197,24,0.25); }
-.approved { background: rgba(61,189,106,0.1); color: var(--color-success-bright); border: 1px solid rgba(61,189,106,0.2); }
-.rejected { background: rgba(204,0,0,0.1); color: var(--color-primary-bright); border: 1px solid rgba(204,0,0,0.2); }
-.revision { background: rgba(245,100,20,0.1); color: #f56414; border: 1px solid rgba(245,100,20,0.2); }
+.pending  { background: rgba(245,197,24,0.12); color: var(--color-warning-bright); border: 1px solid rgba(245,197,24,0.25); }
+.approved { background: rgba(61,189,106,0.1);  color: var(--color-success-bright); border: 1px solid rgba(61,189,106,0.2); }
+.rejected { background: rgba(204,0,0,0.1);     color: var(--color-primary-bright); border: 1px solid rgba(204,0,0,0.2); }
+.revision { background: rgba(245,100,20,0.1);  color: #f56414;                     border: 1px solid rgba(245,100,20,0.2); }
 
-.cardDesc { font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-2); line-height: 1.5; }
-
+.cardDesc { font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.5; }
 .cardMeta { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
-.metaItem { font-size: 11px; color: var(--text-muted); }
+.metaItem { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
 .points { font-family: var(--font-display); font-size: var(--text-sm); color: var(--color-warning-bright); }
-.note { font-size: var(--text-xs); color: var(--color-info-bright); margin-top: var(--space-2); padding: var(--space-2); background: rgba(58,154,238,0.06); border-radius: var(--radius-sm); border-left: 2px solid var(--color-info-bright); }
-
-.actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
 .userName { font-size: var(--text-xs); color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+
+.note {
+  font-size: var(--text-xs);
+  color: var(--color-info-bright);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(58,154,238,0.06);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--color-info-bright);
+}
+
+.actions { display: flex; gap: var(--space-2); margin-top: var(--space-1); flex-wrap: wrap; align-items: center; }
+
+/* ── Score row (inline HR editing) ── */
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.scoreLabel { font-size: 11px; color: var(--text-muted); }
+.scoreInput {
+  width: 64px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-warning-bright);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-align: center;
+  padding: 4px 2px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  -moz-appearance: textfield;
+}
+.scoreInput::-webkit-inner-spin-button,
+.scoreInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+.scoreInput:focus { border-color: var(--border-default); }
+.maxLabel { font-size: 11px; color: var(--text-muted); }
+
+.feedbackArea {
+  width: 100%;
+  min-height: 70px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  box-sizing: border-box;
+}
+.feedbackArea:focus { border-color: var(--border-default); }
+.feedbackArea::placeholder { color: var(--text-muted); }
+
+/* ── Submission links list (small) ── */
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.linksItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-info-bright);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.linksItem:hover { text-decoration: underline; }
+
+/* ── Quiz cards (Tests tab) ── */
+.quizCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.quizInfo { flex: 1; }
+.quizTitle { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+.quizMeta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── Achievement award (Achievements tab) ── */
+.achieveGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.achieveCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.achieveCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.achieveCardHeader:hover { background: var(--bg-elevated); }
+.achieveIcon { font-size: 22px; flex-shrink: 0; }
+.achieveTitle { flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+.achieveXp { font-family: var(--font-display); font-size: var(--text-sm); color: var(--color-warning-bright); }
+.achieveBody {
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.juniorRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.juniorRow:last-child { border-bottom: none; }
+.juniorName { flex: 1; font-size: var(--text-sm); color: var(--text-primary); }
+.awardedBadge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(61,189,106,0.1);
+  color: var(--color-success-bright);
+  border: 1px solid rgba(61,189,106,0.2);
+}
+
+/* ── Attendance table (Events tab — same as AttendancePage) ── */
+.attendWrap { overflow-x: auto; }
+.attendTable { width: 100%; border-collapse: collapse; }
+.attendTh {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.attendTd {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* ── HiPo links input ── */
+.linkInputRow {
+  display: flex;
+  gap: var(--space-2);
+}
+.linkInput {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  padding: 8px var(--space-3);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.linkInput:focus { border-color: var(--border-default); }
+.linkAddBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(204,0,0,0.1);
+  border: 1px solid rgba(204,0,0,0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-primary-bright);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.linkAddBtn:hover { background: rgba(204,0,0,0.2); }
+
+.addedLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.addedLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.addedLinkUrl {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-info-bright);
+}
+.linkRemoveBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 1px;
+}
+.linkRemoveBtn:hover { color: var(--color-danger-bright); }

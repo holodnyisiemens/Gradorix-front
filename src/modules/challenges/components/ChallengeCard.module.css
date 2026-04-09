@@ -86,3 +86,19 @@
   text-decoration: none;
 }
 .link:hover { color: var(--accent-orange-bright); }
+
+.maxPoints {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--color-warning-bright);
+  font-family: var(--font-display);
+  white-space: nowrap;
+}
+
+.locked {
+  opacity: 0.6;
+  cursor: default;
+}
+.locked:hover { transform: none; box-shadow: none; border-color: var(--border-subtle); }

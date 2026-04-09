@@ -21,6 +21,7 @@ export interface Challenge {
   url?: string;
   status: ChallengeStatus;
   date?: string; // ISO date string for calendar events
+  maxPoints?: number;
 }
 
 export interface MentorJunior {
@@ -34,6 +35,10 @@ export interface ChallengeJunior {
   junior_id: number;
   assigned_by: number;
   progress: ChallengeJuniorProgress;
+  comment?: string;
+  links?: string[];
+  awarded_points?: number;
+  feedback?: string;
 }
 
 export interface Notification {
@@ -96,6 +101,7 @@ export interface TestQuestion {
   type: QuestionType;
   options?: string[];
   correctAnswers?: number[]; // indices into options
+  graded?: boolean;          // for 'text' type: HR manually grades this question
 }
 
 export interface Quiz {
@@ -110,11 +116,13 @@ export interface Quiz {
 }
 
 export interface QuizResult {
+  id: number;
   userId: number;
   quizId: number;
-  score: number; // percentage 0-100
+  score: number;         // percentage 0-100
   completedAt: string;
   pointsEarned: number;
+  answers?: string[];    // text answers per question index (for 'text' type questions)
 }
 
 // ===== KNOWLEDGE BASE =====
@@ -181,4 +189,6 @@ export interface Activity {
   submittedAt: string;
   reviewedAt?: string;
   reviewNote?: string;
+  links?: string[];
+  achievedDate?: string;
 }

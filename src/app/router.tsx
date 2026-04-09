@@ -16,6 +16,8 @@ import { ProfilePage } from '@pages/ProfilePage/ProfilePage';
 import { LeaderboardPage } from '@pages/LeaderboardPage/LeaderboardPage';
 import { TestsPage } from '@pages/TestsPage/TestsPage';
 import { TestPage } from '@pages/TestPage/TestPage';
+import { QuizBuilderPage } from '@pages/QuizBuilderPage/QuizBuilderPage';
+import { QuizReviewPage } from '@pages/QuizReviewPage/QuizReviewPage';
 import { KnowledgePage } from '@pages/KnowledgePage/KnowledgePage';
 import { KnowledgeSectionPage } from '@pages/KnowledgeSectionPage/KnowledgeSectionPage';
 import { TeamPage } from '@pages/TeamPage/TeamPage';
@@ -60,6 +62,9 @@ export const router = createBrowserRouter([
       { path: 'profile',          element: <ProfilePage /> },
       { path: 'leaderboard',      element: <LeaderboardPage /> },
       { path: 'tests',            element: <TestsPage /> },
+      { path: 'tests/new',         element: <QuizBuilderPage /> },
+      { path: 'tests/:id/edit',   element: <QuizBuilderPage /> },
+      { path: 'tests/:id/review', element: <QuizReviewPage /> },
       { path: 'tests/:id',        element: <TestPage /> },
       { path: 'knowledge',        element: <KnowledgePage /> },
       { path: 'knowledge/:sectionId', element: <KnowledgeSectionPage /> },

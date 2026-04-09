@@ -68,12 +68,17 @@ export function TestPage() {
       const earned = Math.round((score / 100) * quiz.points);
       setFinalScore(score);
       setPointsEarned(earned);
+      // Collect text answers for HR review
+      const textAnswers = quiz.questions.map((q, i) =>
+        q.type === 'text' ? (typeof answers[i] === 'string' ? (answers[i] as string) : '') : '',
+      );
       submitResult.mutate({
         user_id: user.id,
         quiz_id: quiz.id,
         score,
         completed_at: new Date().toISOString(),
         points_earned: earned,
+        answers: textAnswers,
       });
       setPhase('result');
     }

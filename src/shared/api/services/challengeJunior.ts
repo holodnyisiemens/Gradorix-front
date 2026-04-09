@@ -10,6 +10,10 @@ export interface ChallengeJuniorCreateInput {
 
 export interface ChallengeJuniorUpdateInput {
   progress?: ChallengeJuniorProgress;
+  comment?: string;
+  links?: string[];
+  awarded_points?: number;
+  feedback?: string;
 }
 
 export const challengeJuniorApi = {

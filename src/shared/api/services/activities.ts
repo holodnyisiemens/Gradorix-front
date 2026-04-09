@@ -13,6 +13,8 @@ interface ActivityBackend {
   submitted_at: string;
   reviewed_at?: string | null;
   review_note?: string | null;
+  links?: string[] | null;
+  achieved_date?: string | null;
 }
 
 function mapActivity(b: ActivityBackend): Activity {
@@ -28,6 +30,8 @@ function mapActivity(b: ActivityBackend): Activity {
     submittedAt: b.submitted_at,
     reviewedAt: b.reviewed_at ?? undefined,
     reviewNote: b.review_note ?? undefined,
+    links: b.links ?? undefined,
+    achievedDate: b.achieved_date ?? undefined,
   };
 }
 
@@ -37,6 +41,8 @@ export interface ActivityCreateInput {
   description: string;
   requested_points: number;
   activity_type: ActivityType;
+  links?: string[];
+  achieved_date?: string;
 }
 
 export interface ActivityUpdateInput {
@@ -47,6 +53,8 @@ export interface ActivityUpdateInput {
   status?: ActivityStatus;
   activity_type?: ActivityType;
   review_note?: string;
+  links?: string[];
+  achieved_date?: string;
 }
 
 export const activitiesApi = {

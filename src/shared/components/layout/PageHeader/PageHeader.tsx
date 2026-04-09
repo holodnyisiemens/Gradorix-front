@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { NotificationBell } from '@shared/components/ui/NotificationBell/NotificationBell';
 import styles from './PageHeader.module.css';
 
 interface PageHeaderProps {
@@ -27,6 +28,7 @@ export function PageHeader({ title, subtitle, showBack, onBack, actions }: PageH
         {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
       </div>
       {actions && <div className={styles.actions}>{actions}</div>}
+      <NotificationBell />
     </header>
   );
 }

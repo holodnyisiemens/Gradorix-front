@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Bot, X, Send, ChevronDown, Wifi, WifiOff } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useUsers, useQuizzes, useQuizResults, useActivities, useChallengeJuniors, useUserPoints } from '@shared/hooks/useApi';
 import type { ChatMessage } from '@shared/types';
 import { generateReply, HIPO_SUGGESTIONS, HR_SUGGESTIONS, type ReplyContext } from './agentEngine';
+import { useWebSocket } from '@shared/services/websocket/useWebSocket';
+import type { WsChatReplyOut, WsChatTypingOut } from '@shared/services/websocket/wsTypes';
 import styles from './AgentWidget.module.css';
 
 function renderContent(content: string) {
@@ -15,15 +17,67 @@ function renderContent(content: string) {
   );
 }
 
+function timestamp() {
+  return new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
 export function AgentWidget() {
   const user = useAuthStore((s) => s.user)!;
   const isHR = user.role === 'HR';
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ── WebSocket ────────────────────────────────────────────────────────────
+  const { isConnected, send, subscribe } = useWebSocket();
+
+  // Accumulates streaming chunks until done=true
+  const streamingIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return subscribe((msg) => {
+      // Typing indicator from server
+      if (msg.type === 'chat_typing') {
+        const { typing } = (msg as WsChatTypingOut).payload;
+        setIsTyping(typing);
+        return;
+      }
+
+      // AI reply — supports both streaming (done=false) and full (done=true)
+      if (msg.type === 'chat_reply') {
+        const { text, done } = (msg as WsChatReplyOut).payload;
+
+        setMessages((prev) => {
+          // If we already have a streaming message in progress, append to it
+          if (streamingIdRef.current) {
+            return prev.map((m) =>
+              m.id === streamingIdRef.current
+                ? { ...m, content: m.content + text }
+                : m,
+            );
+          }
+          // First chunk / full reply — create a new assistant message
+          const id = `ws-${Date.now()}`;
+          streamingIdRef.current = id;
+          return [
+            ...prev,
+            { id, role: 'assistant', content: text, timestamp: timestamp() },
+          ];
+        });
+
+        if (done) {
+          streamingIdRef.current = null;
+          setIsTyping(false);
+        }
+        return;
+      }
+    });
+  }, [subscribe]);
+
+  // ── Mock data for fallback ───────────────────────────────────────────────
   const { data: allUsers = [] } = useUsers();
   const { data: quizResults = [] } = useQuizResults();
   const { data: quizzes = [] } = useQuizzes();
@@ -42,35 +96,42 @@ export function AgentWidget() {
   const replyCtx: ReplyContext = { allUsers, userPoints, quizResults, quizzes, activities, juniorActivityStats };
   const suggestions = isHR ? HR_SUGGESTIONS : HIPO_SUGGESTIONS;
 
+  // ── Scroll ───────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (open) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (open) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping, open]);
 
-  function sendMessage(text: string) {
+  // ── Send message ─────────────────────────────────────────────────────────
+  const sendMessage = useCallback((text: string) => {
     if (!text.trim()) return;
+
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: text.trim(),
-      timestamp: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: timestamp(),
     };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
-    setIsTyping(true);
-    setTimeout(() => {
-      const reply = generateReply(text, user.role, replyCtx);
-      const assistantMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: reply,
-        timestamp: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setIsTyping(false);
-    }, 800 + Math.random() * 600);
-  }
+
+    if (isConnected) {
+      // ── Real path: delegate to backend via WebSocket ──────────────────
+      // Server will respond with chat_typing + chat_reply frames
+      send({ type: 'chat_message', payload: { text: text.trim() } });
+    } else {
+      // ── Fallback: local mock (until backend WS is ready) ──────────────
+      setIsTyping(true);
+      setTimeout(() => {
+        const reply = generateReply(text, user.role, replyCtx);
+        setMessages((prev) => [
+          ...prev,
+          { id: `mock-${Date.now()}`, role: 'assistant', content: reply, timestamp: timestamp() },
+        ]);
+        setIsTyping(false);
+      }, 800 + Math.random() * 600);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, send, user.role, replyCtx]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -79,9 +140,9 @@ export function AgentWidget() {
     }
   }
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className={styles.root}>
-      {/* Chat panel */}
       {open && (
         <div className={styles.panel}>
           {/* Header */}
@@ -93,9 +154,18 @@ export function AgentWidget() {
                 <p className={styles.headerSub}>{isHR ? 'Аналитика · HiPo' : 'Карьерный помощник'}</p>
               </div>
             </div>
-            <button className={styles.closeBtn} onClick={() => setOpen(false)} aria-label="Закрыть">
-              <ChevronDown size={20} />
-            </button>
+            <div className={styles.headerRight}>
+              {/* WS connection indicator */}
+              <span
+                className={[styles.wsStatus, isConnected ? styles.wsOnline : styles.wsOffline].join(' ')}
+                title={isConnected ? 'Онлайн' : 'Офлайн — mock режим'}
+              >
+                {isConnected ? <Wifi size={13} /> : <WifiOff size={13} />}
+              </span>
+              <button className={styles.closeBtn} onClick={() => setOpen(false)} aria-label="Закрыть">
+                <ChevronDown size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}

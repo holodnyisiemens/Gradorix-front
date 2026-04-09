@@ -86,3 +86,51 @@
   align-items: center;
   gap: 4px;
 }
+
+.hrActions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.reviewBtn {
+  background: rgba(61,189,106,0.15);
+  border: none;
+  border-radius: 4px;
+  color: var(--color-success-bright);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  transition: background var(--transition-fast);
+}
+.reviewBtn:hover { background: rgba(61,189,106,0.28); }
+
+.editBtn {
+  background: rgba(58,154,238,0.15);
+  border: none;
+  border-radius: 4px;
+  color: var(--color-info-bright);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  transition: background var(--transition-fast);
+}
+.editBtn:hover { background: rgba(58,154,238,0.28); }
+
+.deleteBtn {
+  background: rgba(204,0,0,0.8);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 6px;
+  transition: background var(--transition-fast);
+}
+.deleteBtn:hover { background: rgba(204,0,0,1); }

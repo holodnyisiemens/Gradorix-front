@@ -1,4 +1,4 @@
-import { Calendar, ExternalLink } from 'lucide-react';
+import { Calendar, ExternalLink, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { Challenge, ChallengeJuniorProgress } from '@shared/types';
@@ -9,6 +9,7 @@ interface ChallengeCardProps {
   challenge: Challenge & { progress?: ChallengeJuniorProgress };
   onClick?: () => void;
   showProgress?: boolean;
+  locked?: boolean;
 }
 
 const statusClass: Record<string, string> = {
@@ -19,14 +20,14 @@ const statusClass: Record<string, string> = {
   DRAFT:     styles.draft,
 };
 
-export function ChallengeCard({ challenge, onClick, showProgress = false }: ChallengeCardProps) {
+export function ChallengeCard({ challenge, onClick, showProgress = false, locked = false }: ChallengeCardProps) {
   return (
     <div
-      className={[styles.card, statusClass[challenge.status] ?? ''].join(' ')}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      className={[styles.card, statusClass[challenge.status] ?? '', locked ? styles.locked : ''].join(' ')}
+      onClick={locked ? undefined : onClick}
+      role={locked ? undefined : 'button'}
+      tabIndex={locked ? undefined : 0}
+      onKeyDown={(e) => !locked && e.key === 'Enter' && onClick?.()}
     >
       <div className={styles.header}>
         <p className={styles.title}>{challenge.title}</p>
@@ -44,12 +45,20 @@ export function ChallengeCard({ challenge, onClick, showProgress = false }: Chal
       )}
 
       <div className={styles.footer}>
-        {challenge.date && (
-          <span className={styles.date}>
-            <Calendar size={12} />
-            {format(new Date(challenge.date), 'd MMM', { locale: ru })}
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          {challenge.date && (
+            <span className={styles.date}>
+              <Calendar size={12} />
+              {format(new Date(challenge.date), 'd MMM', { locale: ru })}
+            </span>
+          )}
+          {challenge.maxPoints != null && challenge.maxPoints > 0 && (
+            <span className={styles.maxPoints}>
+              <Star size={11} />
+              до {challenge.maxPoints} баллов
+            </span>
+          )}
+        </div>
         {challenge.url && (
           <a
             className={styles.link}
