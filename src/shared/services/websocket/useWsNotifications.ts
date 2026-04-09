@@ -16,7 +16,9 @@ export function useWsNotifications() {
     return wsClient.onMessage((msg) => {
       if (msg.type !== 'notification') return;
 
-      const incoming = (msg as WsNotificationOut).payload;
+      const { title: _title, body, ...rest } = (msg as WsNotificationOut).payload;
+      // Normalize WS payload to match the REST Notification shape (message instead of body)
+      const incoming = { ...rest, message: body };
 
       // Prepend to every cached notifications list (different user_id queries)
       queryClient.setQueriesData<unknown[]>(
