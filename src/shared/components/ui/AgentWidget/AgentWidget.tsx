@@ -5,7 +5,7 @@ import { useUsers, useQuizzes, useQuizResults, useActivities, useChallengeJunior
 import type { ChatMessage } from '@shared/types';
 import { generateReply, HIPO_SUGGESTIONS, HR_SUGGESTIONS, type ReplyContext } from './agentEngine';
 import { useWebSocket } from '@shared/services/websocket/useWebSocket';
-import type { WsChatReplyOut, WsChatTypingOut } from '@shared/services/websocket/wsTypes';
+import type { WsChatReplyOut, WsChatTypingOut, WsErrorOut } from '@shared/services/websocket/wsTypes';
 import styles from './AgentWidget.module.css';
 
 function renderContent(content: string) {
@@ -31,6 +31,32 @@ export function AgentWidget() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ── Mock data for fallback ───────────────────────────────────────────────
+  const { data: allUsers = [] } = useUsers();
+  const { data: quizResults = [] } = useQuizResults();
+  const { data: quizzes = [] } = useQuizzes();
+  const { data: activities = [] } = useActivities();
+  const { data: allAssignments = [] } = useChallengeJuniors();
+  const { data: userPoints } = useUserPoints(user.id);
+
+  const juniorActivityStats = allUsers.filter(u => u.role === 'JUNIOR').map(u => {
+    const ua = allAssignments.filter(a => a.junior_id === u.id);
+    const done = ua.filter(a => a.progress === 'DONE').length;
+    const skipped = ua.filter(a => a.progress === 'SKIPPED').length;
+    const total = ua.length;
+    return { userId: u.id, done, skipped, totalChallenges: total, completionRate: total ? Math.round(done / total * 100) : 0 };
+  });
+
+  const replyCtx: ReplyContext = { allUsers, userPoints, quizResults, quizzes, activities, juniorActivityStats };
+  const suggestions = isHR ? HR_SUGGESTIONS : HIPO_SUGGESTIONS;
+
+  // Refs to keep latest context accessible in stable WS callbacks
+  const replyCtxRef = useRef(replyCtx);
+  replyCtxRef.current = replyCtx;
+  const lastSentRef = useRef('');
+  const userRef = useRef(user);
+  userRef.current = user;
+
   // ── WebSocket ────────────────────────────────────────────────────────────
   const { isConnected, send, subscribe } = useWebSocket();
 
@@ -43,6 +69,20 @@ export function AgentWidget() {
       if (msg.type === 'chat_typing') {
         const { typing } = (msg as WsChatTypingOut).payload;
         setIsTyping(typing);
+        return;
+      }
+
+      // Server-side error — fall back to local mock so chat never hangs
+      if (msg.type === 'error') {
+        const { code } = (msg as WsErrorOut).payload;
+        if (code === 'CHAT_ERROR' || code === 'INTERNAL_ERROR') {
+          const reply = generateReply(lastSentRef.current, userRef.current.role, replyCtxRef.current);
+          setMessages((prev) => [
+            ...prev,
+            { id: `fallback-${Date.now()}`, role: 'assistant', content: reply, timestamp: timestamp() },
+          ]);
+          setIsTyping(false);
+        }
         return;
       }
 
@@ -77,25 +117,6 @@ export function AgentWidget() {
     });
   }, [subscribe]);
 
-  // ── Mock data for fallback ───────────────────────────────────────────────
-  const { data: allUsers = [] } = useUsers();
-  const { data: quizResults = [] } = useQuizResults();
-  const { data: quizzes = [] } = useQuizzes();
-  const { data: activities = [] } = useActivities();
-  const { data: allAssignments = [] } = useChallengeJuniors();
-  const { data: userPoints } = useUserPoints(user.id);
-
-  const juniorActivityStats = allUsers.filter(u => u.role === 'JUNIOR').map(u => {
-    const ua = allAssignments.filter(a => a.junior_id === u.id);
-    const done = ua.filter(a => a.progress === 'DONE').length;
-    const skipped = ua.filter(a => a.progress === 'SKIPPED').length;
-    const total = ua.length;
-    return { userId: u.id, done, skipped, totalChallenges: total, completionRate: total ? Math.round(done / total * 100) : 0 };
-  });
-
-  const replyCtx: ReplyContext = { allUsers, userPoints, quizResults, quizzes, activities, juniorActivityStats };
-  const suggestions = isHR ? HR_SUGGESTIONS : HIPO_SUGGESTIONS;
-
   // ── Scroll ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (open) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -105,10 +126,13 @@ export function AgentWidget() {
   const sendMessage = useCallback((text: string) => {
     if (!text.trim()) return;
 
+    const trimmed = text.trim();
+    lastSentRef.current = trimmed;
+
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: text.trim(),
+      content: trimmed,
       timestamp: timestamp(),
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -116,13 +140,14 @@ export function AgentWidget() {
 
     if (isConnected) {
       // ── Real path: delegate to backend via WebSocket ──────────────────
-      // Server will respond with chat_typing + chat_reply frames
-      send({ type: 'chat_message', payload: { text: text.trim() } });
+      // Server will respond with chat_typing + chat_reply frames (or error → fallback)
+      setIsTyping(true);
+      send({ type: 'chat_message', payload: { text: trimmed } });
     } else {
       // ── Fallback: local mock (until backend WS is ready) ──────────────
       setIsTyping(true);
       setTimeout(() => {
-        const reply = generateReply(text, user.role, replyCtx);
+        const reply = generateReply(trimmed, user.role, replyCtxRef.current);
         setMessages((prev) => [
           ...prev,
           { id: `mock-${Date.now()}`, role: 'assistant', content: reply, timestamp: timestamp() },

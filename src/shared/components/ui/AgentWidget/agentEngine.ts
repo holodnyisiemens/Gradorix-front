@@ -20,6 +20,9 @@ export function generateReply(text: string, role: string, ctx: ReplyContext): st
   const pts = ctx.userPoints;
 
   if (role === 'HR') {
+    if (q.includes('привет') || q.includes('hello') || q.includes('hi')) {
+      return `👋 Привет! Я — аналитический ассистент Gradorix.\n\nЧем могу помочь?\n• 📊 Рейтинги и топ участников\n• 🧪 Статистика по тестам\n• ⏳ Ожидающие подтверждения\n• 📈 Общая активность HiPo`;
+    }
     if (q.includes('топ') || q.includes('рейтинг') || q.includes('лучш')) {
       const stats = ctx.juniorActivityStats.slice().sort((a, b) => b.completionRate - a.completionRate);
       const top = stats.slice(0, 3).map((s, i) => {
@@ -70,6 +73,12 @@ export function generateReply(text: string, role: string, ctx: ReplyContext): st
   }
   if (q.includes('тест') || q.includes('quiz')) {
     return `🧪 Тесты — это твои порталы в мир новых баллов!\n\nЗайди в раздел "Тесты" и выбери подходящий. Каждый пройденный тест — шаг из тьмы к свету 🔦`;
+  }
+  if (q.includes('план') || q.includes('развити') || q.includes('карьер') || q.includes('growth')) {
+    if (pts) {
+      return `🗺️ **Твой план развития:**\n\nСейчас ты на уровне **${pts.levelName}** (${pts.totalPoints} баллов).\n\nШаги вперёд:\n1. **Выполни задания** — раздел "Задачи", ищи активные\n2. **Пройди тесты** — быстрый способ набрать баллы\n3. **Добавь достижения** — фиксируй реальные успехи\n4. **Общайся с ментором** — согласуй цели на квартал\n\nДо следующего уровня: **${pts.pointsToNextLevel} баллов** 🌒`;
+    }
+    return `🗺️ **План развития в программе HiPo:**\n\n1. **Задания** — выполняй активные задачи от ментора\n2. **Тесты** — проходи доступные квизы\n3. **Достижения** — добавляй в профиль реальные результаты\n4. **Активность** — чем больше делаешь, тем выше уровень\n\nСпроси "какой у меня уровень" — расскажу подробнее 🔴`;
   }
   if (q.includes('совет') || q.includes('рекоменд') || q.includes('как')) {
     return `🌒 Мой совет:\n\n1. Не пропускай задания\n2. Проходи тесты сразу после изучения темы\n3. Добавляй свои достижения\n4. Общайся с ментором\n\nЧем конкретнее вопрос — тем точнее ответ 🔴`;

@@ -104,14 +104,22 @@ class WsClient {
     };
 
     ws.onmessage = (event: MessageEvent<string>) => {
+      let msg: WsOutbound;
       try {
-        const msg = JSON.parse(event.data) as WsOutbound;
-        // Silently swallow heartbeat — not for consumers
-        if (msg.type === 'pong') return;
-        this.messageHandlers.forEach((h) => h(msg));
+        msg = JSON.parse(event.data) as WsOutbound;
       } catch {
         console.warn('[WS] Unparseable message:', event.data);
+        return;
       }
+      // Silently swallow heartbeat — not for consumers
+      if (msg.type === 'pong') return;
+      this.messageHandlers.forEach((h) => {
+        try {
+          h(msg);
+        } catch (err) {
+          console.error('[WS] Handler error:', err);
+        }
+      });
     };
 
     ws.onerror = () => {
