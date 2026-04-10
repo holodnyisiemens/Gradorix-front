@@ -15,3 +15,8 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
+
+networks:
+  default:
+    name: gradorix-network
+    external: true
