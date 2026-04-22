@@ -8,12 +8,6 @@ import { useAuthStore } from '@modules/auth/store/authStore';
 import { authApi } from '@shared/api/services/auth';
 import styles from './LoginForm.module.css';
 
-const QUICK_LOGINS = [
-  { email: 'hr@test.com', password: 'hr1234', role: 'HR', name: 'Анна Соколова' },
-  { email: 'mentor@test.com', password: 'mentor123', role: 'MENTOR', name: 'Алексей Воронов' },
-  { email: 'junior@test.com', password: 'junior123', role: 'JUNIOR', name: 'Катя Ефимова' },
-];
-
 export function LoginForm() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
@@ -41,19 +35,6 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await doLogin(email.trim(), password);
-  };
-
-  const handleQuickLogin = (idx: number) => {
-    const cred = QUICK_LOGINS[idx];
-    doLogin(cred.email, cred.password);
-  };
-
-  const roleLabels: Record<string, string> = { HR: 'Администратор', MENTOR: 'Ментор', JUNIOR: 'Участник' };
-  const roleIcons: Record<string, string> = { HR: '👔', MENTOR: '🧑‍💻', JUNIOR: '⭐' };
-  const roleColors: Record<string, string> = {
-    HR: 'rgba(245, 197, 24, 0.15)',
-    MENTOR: 'rgba(58, 154, 238, 0.15)',
-    JUNIOR: 'rgba(45, 138, 78, 0.15)',
   };
 
   return (
@@ -113,30 +94,6 @@ export function LoginForm() {
           </form>
         </Card>
 
-        <div className={styles.divider}>Быстрый вход</div>
-        <div className={styles.quickAccess}>
-          {QUICK_LOGINS.map((cred, idx) => (
-            <button
-              key={cred.email}
-              className={styles.quickBtn}
-              onClick={() => handleQuickLogin(idx)}
-              type="button"
-              disabled={loading}
-            >
-              <span
-                className={styles.roleIcon}
-                style={{ background: roleColors[cred.role] }}
-              >
-                {roleIcons[cred.role]}
-              </span>
-              <span>
-                <p className={styles.quickBtnRole}>{roleLabels[cred.role]}</p>
-                <p className={styles.quickBtnName}>{cred.name}</p>
-              </span>
-              <span className={styles.quickBtnHint}>{cred.email}</span>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );

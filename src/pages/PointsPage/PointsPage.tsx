@@ -11,7 +11,7 @@ import {
   useChallenges, useChallengeJuniors, useUpdateChallengeJunior, useCreateNotification,
   useQuizzes, useQuizResults,
   useAchievements, useAllUserAchievements, useAwardAchievement, useRevokeAchievement,
-  useCalendarEvents, useMeetingAttendance, useMarkAttendance, useUpdateAttendance,
+  useCalendarEvents, useMeetingAttendance, useMarkAttendance, useUpdateAttendance, useDeleteAttendance,
 } from '@shared/hooks/useApi';
 import { ChevronDown, ChevronUp, Link2, Plus, X, Star, ClipboardCheck, Calendar, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -424,83 +424,120 @@ function EventsTab() {
   const { data: allUsers = [] } = useUsers();
   const markAttendance = useMarkAttendance();
   const updateAttendance = useUpdateAttendance();
+  const deleteAttendance = useDeleteAttendance();
+
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
 
   const juniors = allUsers.filter(u => u.role === 'JUNIOR');
-  const sorted = [...events].sort((a, b) => b.date.localeCompare(a.date));
+  const meetingEvents = [...events]
+    .filter(ev => ev.type === 'meeting')
+    .sort((a, b) => b.date.localeCompare(a.date));
 
-  if (events.length === 0) return <div className={styles.empty}>Нет мероприятий</div>;
+  if (meetingEvents.length === 0) return <div className={styles.empty}>Нет мероприятий</div>;
 
-  function isAttended(eventId: number, userId: number) {
-    return attendance.find(r => r.eventId === eventId && r.userId === userId)?.attended ?? false;
+  // Returns: null = no record, true = attended, false = not attended
+  function getRecord(eventId: number, userId: number) {
+    return attendance.find(r => r.eventId === eventId && r.userId === userId) ?? null;
   }
 
-  function handleMark(eventId: number, userId: number) {
-    const existing = attendance.find(r => r.eventId === eventId && r.userId === userId);
-    const current = existing?.attended ?? false;
-    if (existing) {
-      updateAttendance.mutate({ id: existing.id, data: { attended: !current } });
+  // Карусель HR: — → Не был → Был → — (удаление записи)
+  // При удалении сотрудник снова может сам выбрать статус в календаре
+  function handleCycle(eventId: number, userId: number) {
+    const rec = getRecord(eventId, userId);
+    if (!rec) {
+      markAttendance.mutate({ event_id: eventId, user_id: userId, attended: false });
+    } else if (!rec.attended) {
+      updateAttendance.mutate({ id: rec.id, data: { attended: true } });
     } else {
-      markAttendance.mutate({ event_id: eventId, user_id: userId, attended: true });
+      deleteAttendance.mutate(rec.id);
     }
   }
 
+  const filteredJuniors = juniors.filter(j => {
+    if (!search.trim()) return true;
+    const name = `${j.firstname ?? ''} ${j.lastname ?? ''}`.trim() || j.username;
+    return name.toLowerCase().includes(search.toLowerCase());
+  });
+
   return (
-    <div className={styles.attendWrap}>
-      <table className={styles.attendTable}>
-        <thead>
-          <tr>
-            <th className={styles.attendTh}>Участник</th>
-            {sorted.map(ev => (
-              <th key={ev.id} className={styles.attendTh} style={{ minWidth: 100 }}>
-                <span style={{ fontSize: 11 }}>{ev.title}</span>
-                <br />
-                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}>{ev.date}</span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {juniors.map(j => {
-            const name = `${j.firstname ?? ''} ${j.lastname ?? ''}`.trim() || j.username;
-            return (
-              <tr key={j.id}>
-                <td className={styles.attendTd}>
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>{name}</span>
-                </td>
-                {sorted.map(ev => {
-                  const att = isAttended(ev.id, j.id);
+    <div className={styles.achieveGrid}>
+      {meetingEvents.map(ev => {
+        const attendedCount = juniors.filter(j => (getRecord(ev.id, j.id)?.attended ?? false)).length;
+        const isOpen = expanded === ev.id;
+
+        return (
+          <div key={ev.id} className={styles.achieveCard}>
+            <div className={styles.achieveCardHeader} onClick={() => setExpanded(v => v === ev.id ? null : ev.id)}>
+              <span className={styles.achieveIcon}>🤝</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p className={styles.achieveTitle}>{ev.title}</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{ev.date}</p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
+                <span style={{
+                  fontSize: 12, fontFamily: 'var(--font-display)',
+                  color: attendedCount > 0 ? 'var(--color-success-bright)' : 'var(--text-muted)',
+                }}>
+                  {attendedCount}/{juniors.length}
+                </span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>присутств.</span>
+              </div>
+              {isOpen
+                ? <ChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                : <ChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />}
+            </div>
+
+            {isOpen && (
+              <div className={styles.achieveBody}>
+                {ev.description && (
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>{ev.description}</p>
+                )}
+                <input
+                  className={styles.evSearch}
+                  placeholder="Поиск по имени..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>
+                  <span>Сотрудник</span>
+                  <span>Статус</span>
+                </div>
+                {filteredJuniors.length === 0 && (
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: 'var(--space-3) 0' }}>Никого не найдено</p>
+                )}
+                {filteredJuniors.map(j => {
+                  const name = `${j.firstname ?? ''} ${j.lastname ?? ''}`.trim() || j.username;
+                  const initials = ((j.firstname?.[0] ?? '') + (j.lastname?.[0] ?? '')).toUpperCase() || j.username.slice(0, 2).toUpperCase();
+                  const rec = getRecord(ev.id, j.id);
+                  const state: 'none' | 'absent' | 'present' =
+                    !rec ? 'none' : rec.attended ? 'present' : 'absent';
+
                   return (
-                    <td key={ev.id} className={styles.attendTd} style={{ textAlign: 'center' }}>
+                    <div key={j.id} className={styles.juniorRow}>
+                      <div className={styles.evAvatar}>{initials}</div>
+                      <p className={styles.juniorName}>{name}</p>
                       <button
-                        onClick={() => handleMark(ev.id, j.id)}
-                        title={att ? 'Был · нажмите чтобы отменить' : 'Не был · нажмите чтобы отметить'}
-                        style={{
-                          width: 28, height: 28, borderRadius: '50%',
-                          border: '1px solid',
-                          borderColor: att ? 'var(--color-success-bright)' : 'var(--border-color)',
-                          background: att ? 'rgba(61,189,106,0.12)' : 'transparent',
-                          color: att ? 'var(--color-success-bright)' : 'var(--text-muted)',
-                          cursor: 'pointer', fontSize: 14,
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        }}
+                        className={[
+                          styles.evToggle,
+                          state === 'present' ? styles.evToggleOn : '',
+                          state === 'absent' ? styles.evToggleOff : '',
+                        ].join(' ')}
+                        onClick={() => handleCycle(ev.id, j.id)}
+                        title="Нажмите для смены статуса"
                       >
-                        {att ? '✓' : '–'}
+                        {state === 'none' && '—'}
+                        {state === 'absent' && '✗ Не был'}
+                        {state === 'present' && '✓ Был'}
                       </button>
-                    </td>
+                    </div>
                   );
                 })}
-              </tr>
-            );
-          })}
-          {juniors.length === 0 && (
-            <tr>
-              <td className={styles.attendTd} colSpan={sorted.length + 1} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                Нет Участник проектаов
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

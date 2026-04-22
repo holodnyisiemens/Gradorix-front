@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import styles from './Input.module.css';
 
@@ -34,6 +34,13 @@ export function DateInput({ label, value, onChange, error }: DateInputProps) {
 
   const [display, setDisplay] = useState(() => toDisplay(value));
   const inputRef = useRef<HTMLInputElement>(null);
+  const isFocused = useRef(false);
+
+  useEffect(() => {
+    if (!isFocused.current) {
+      setDisplay(toDisplay(value));
+    }
+  }, [value]);
 
   function handleChange(raw: string) {
     // Strip non-digits
@@ -53,15 +60,12 @@ export function DateInput({ label, value, onChange, error }: DateInputProps) {
   }
 
   function handleBlur() {
-    // Re-sync display from external value (e.g. cleared by parent)
+    isFocused.current = false;
     setDisplay(toDisplay(value));
   }
 
-  // Sync if parent resets value
-  const expectedDisplay = toDisplay(value);
-  if (display !== expectedDisplay && value === '') {
-    // Parent cleared the value
-    setDisplay('');
+  function handleFocus() {
+    isFocused.current = true;
   }
 
   const inputId = label?.toLowerCase().replace(/\s+/g, '-');
@@ -83,6 +87,7 @@ export function DateInput({ label, value, onChange, error }: DateInputProps) {
           className={[styles.input, styles.hasIcon, error ? styles.error : ''].filter(Boolean).join(' ')}
           value={display}
           onChange={e => handleChange(e.target.value)}
+          onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder="ДД.ММ.ГГГГ"
           inputMode="numeric"

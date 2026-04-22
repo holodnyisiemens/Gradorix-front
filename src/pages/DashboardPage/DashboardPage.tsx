@@ -115,19 +115,19 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
         </div>
 
         <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/challenges')}>
             <span className={`${styles.statValue} ${styles.statValueAccent}`}>{total}</span>
             <span className={styles.statLabel}>Всего задач</span>
           </div>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/challenges')}>
             <span className={`${styles.statValue} ${styles.statValueGreen}`}>{done}</span>
             <span className={styles.statLabel}>Выполнено</span>
           </div>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/challenges')}>
             <span className={`${styles.statValue} ${styles.statValueOrange}`}>{inProgress}</span>
             <span className={styles.statLabel}>В процессе</span>
           </div>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/points')}>
             <span className={`${styles.statValue} ${styles.statValueYellow}`}>{totalPoints}</span>
             <span className={styles.statLabel}>Баллов набрано</span>
           </div>

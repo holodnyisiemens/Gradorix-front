@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import {
   useChallenges, useChallengeJuniors, useCreateChallenge,
-  useUpdateChallenge, useDeleteChallenge, useAssignChallenge, useUsers, useCreateNotification,
+  useUpdateChallenge, useDeleteChallenge, useAssignChallenge, useUnassignChallenge, useUsers, useCreateNotification,
+  useCreateCalendarEvent,
 } from '@shared/hooks/useApi';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
@@ -57,7 +58,9 @@ export function ChallengesPage() {
   const updateChallenge = useUpdateChallenge();
   const deleteChallenge = useDeleteChallenge();
   const assignChallengeMut = useAssignChallenge();
+  const unassignChallengeMut = useUnassignChallenge();
   const createNotification = useCreateNotification();
+  const createCalendarEvent = useCreateCalendarEvent();
 
   const juniors = allUsers.filter(u => u.role === 'JUNIOR');
 
@@ -93,6 +96,15 @@ export function ChallengesPage() {
         url: newChallenge.url || undefined,
         max_points: maxPts,
       });
+      if (newChallenge.date) {
+        createCalendarEvent.mutate({
+          title: `Дедлайн: ${created.title}`,
+          date: newChallenge.date,
+          event_type: 'deadline',
+          challenge_id: created.id,
+          description: newChallenge.description || undefined,
+        });
+      }
       if (newChallenge.assignAll && juniors.length > 0) {
         await Promise.all(juniors.map(j =>
           assignChallengeMut.mutateAsync({ challenge_id: created.id, junior_id: j.id, assigned_by: user.id, progress: 'GOING' })
@@ -146,9 +158,13 @@ export function ChallengesPage() {
   }
 
   async function handleAssign() {
-    if (!assignChallenge || selectedJuniorIds.length === 0) return;
+    if (!assignChallenge) return;
     const existing = allAssignments.filter(a => a.challenge_id === assignChallenge.id).map(a => a.junior_id);
     const toAssign = selectedJuniorIds.filter(id => !existing.includes(id));
+    const toUnassign = existing.filter(id => !selectedJuniorIds.includes(id));
+    await Promise.all(toUnassign.map(juniorId =>
+      unassignChallengeMut.mutateAsync({ challengeId: assignChallenge.id, juniorId })
+    ));
     await Promise.all(toAssign.map(juniorId =>
       assignChallengeMut.mutateAsync({ challenge_id: assignChallenge.id, junior_id: juniorId, assigned_by: user.id, progress: 'GOING' })
     ));

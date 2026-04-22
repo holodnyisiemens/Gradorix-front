@@ -1,12 +1,18 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { useLeaderboard, useUsers } from '@shared/hooks/useApi';
+import { UserProfileModal } from '@pages/UsersPage/UsersPage';
+import type { User } from '@shared/types';
 import styles from './LeaderboardPage.module.css';
 
 const LEVEL_THRESHOLDS = [0, 200, 500, 900, 1400, 2000];
 
 export function LeaderboardPage() {
   const user = useAuthStore((s) => s.user)!;
+  const navigate = useNavigate();
+  const [profileUser, setProfileUser] = useState<User | null>(null);
   const { data: leaderboard = [] } = useLeaderboard();
   const { data: allUsers = [] } = useUsers();
 
@@ -67,7 +73,12 @@ export function LeaderboardPage() {
             const initials = ((u.firstname?.[0] ?? '') + (u.lastname?.[0] ?? '')).toUpperCase()
               || u.username.slice(0, 2).toUpperCase();
             return (
-              <div key={entry.userId} className={[styles.row, isMe ? styles.rowMe : ''].join(' ')}>
+              <div
+                key={entry.userId}
+                className={[styles.row, isMe ? styles.rowMe : ''].join(' ')}
+                style={{ cursor: 'pointer' }}
+                onClick={() => isMe ? navigate('/profile') : setProfileUser(u)}
+              >
                 <span className={[styles.rank, rankClass(entry.rank)].join(' ')}>
                   {rankEmoji(entry.rank)}
                 </span>
@@ -89,6 +100,8 @@ export function LeaderboardPage() {
           })}
         </div>
       </div>
+
+      {profileUser && <UserProfileModal user={profileUser} onClose={() => setProfileUser(null)} />}
     </>
   );
 }

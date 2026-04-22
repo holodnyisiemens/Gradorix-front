@@ -23,6 +23,18 @@ export function TestsPage() {
             + Создать тест
           </Button>
         )}
+        {!isHR && !isLoading && quizzes.length === 0 && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: 'var(--space-8) var(--space-4)', gap: 'var(--space-3)', textAlign: 'center',
+          }}>
+            <span style={{ fontSize: 48 }}>📝</span>
+            <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Скоро здесь появятся тесты</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 260, lineHeight: 1.6 }}>
+              HR готовит задания — как только они будут готовы, вы сразу увидите их здесь
+            </p>
+          </div>
+        )}
         <div className={styles.grid}>
           {quizzes.map((quiz) => {
             const result = myResults.find((r) => r.quizId === quiz.id);

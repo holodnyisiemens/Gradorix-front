@@ -101,6 +101,15 @@ export const useAssignChallenge = () => {
   });
 };
 
+export const useUnassignChallenge = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ challengeId, juniorId }: { challengeId: number; juniorId: number }) =>
+      challengeJuniorApi.delete(challengeId, juniorId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-junior'] }),
+  });
+};
+
 export const useUpdateChallengeProgress = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -467,6 +476,14 @@ export const useUpdateAttendance = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: { attended?: boolean } }) =>
       meetingAttendanceApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['meeting-attendance'] }),
+  });
+};
+
+export const useDeleteAttendance = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => meetingAttendanceApi.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['meeting-attendance'] }),
   });
 };

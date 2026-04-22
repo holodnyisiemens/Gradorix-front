@@ -136,7 +136,6 @@ export function AdminPage() {
   }
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: 'activities', label: 'Активности' },
     { key: 'achievements', label: 'Достижения' },
     { key: 'events', label: 'Мероприятия' },
     { key: 'users', label: 'Участники' },
@@ -157,9 +156,6 @@ export function AdminPage() {
         {/* ACTIVITIES TAB */}
         {tab === 'activities' && (
           <div>
-          <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setNewActivityModal(true)}>
-            + Добавить активность
-          </Button>
           <div className={styles.list}>
             {activities.map(act => {
               const actUser = allUsers.find(u => u.id === act.userId);
@@ -180,7 +176,6 @@ export function AdminPage() {
                         <Button size="sm" variant="danger" onClick={() => updateActivityStatus(act.id, 'rejected', 'Не соответствует критериям')}>Отклонить</Button>
                       </>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => setEditActivity({ ...act })}>Редактировать</Button>
                   </div>
                 </div>
               );
@@ -309,10 +304,10 @@ export function AdminPage() {
       {editAchievement && (
         <Modal open={true} onClose={() => setEditAchievementId(null)} title="Редактировать достижение" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <Input label="Название" defaultValue={editAchievement.title} onChange={e => {}} id="ach-title" />
-            <Input label="Описание" defaultValue={editAchievement.description} onChange={e => {}} id="ach-desc" />
-            <Input label="Иконка" defaultValue={editAchievement.icon} onChange={e => {}} id="ach-icon" />
-            <Input label="XP" type="number" defaultValue={String(editAchievement.xp)} onChange={e => {}} id="ach-xp" />
+            <Input label="Название" defaultValue={editAchievement.title} onChange={() => {}} id="ach-title" />
+            <Input label="Описание" defaultValue={editAchievement.description} onChange={() => {}} id="ach-desc" />
+            <Input label="Иконка" defaultValue={editAchievement.icon} onChange={() => {}} id="ach-icon" />
+            <Input label="XP" type="number" defaultValue={String(editAchievement.xp)} onChange={() => {}} id="ach-xp" />
             <Button full onClick={() => {
               const title = (document.getElementById('ach-title') as HTMLInputElement)?.value ?? editAchievement.title;
               const description = (document.getElementById('ach-desc') as HTMLInputElement)?.value ?? editAchievement.description;
@@ -331,20 +326,6 @@ export function AdminPage() {
             <Input label="Название *" value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} />
             <DateInput label="Дата *" value={newEvent.date} onChange={date => setNewEvent(p => ({ ...p, date }))} />
             <Input label="Описание" value={newEvent.description} onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))} />
-            <div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Тип</p>
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                {(['meeting', 'challenge', 'deadline'] as CalendarEvent['type'][]).map(t => (
-                  <button key={t} onClick={() => setNewEvent(p => ({ ...p, type: t }))}
-                    style={{ flex: 1, padding: '8px', borderRadius: 6, border: '1px solid', cursor: 'pointer', fontSize: 12,
-                      borderColor: newEvent.type === t ? 'var(--color-primary)' : 'var(--border-subtle)',
-                      background: newEvent.type === t ? 'rgba(204,0,0,0.15)' : 'transparent',
-                      color: newEvent.type === t ? 'var(--color-primary-bright)' : 'var(--text-muted)',
-                    }}
-                  >{t === 'meeting' ? 'Встреча' : t === 'challenge' ? 'Задание' : 'Дедлайн'}</button>
-                ))}
-              </div>
-            </div>
             <Button full onClick={createNewEvent} disabled={createEvent.isPending}>
               {createEvent.isPending ? 'Создание...' : 'Создать мероприятие'}
             </Button>
@@ -359,20 +340,6 @@ export function AdminPage() {
             <Input label="Название *" value={editEvent.title} onChange={e => setEditEvent(p => p && ({ ...p, title: e.target.value }))} />
             <DateInput label="Дата *" value={editEvent.date} onChange={date => setEditEvent(p => p && ({ ...p, date }))} />
             <Input label="Описание" value={editEvent.description ?? ''} onChange={e => setEditEvent(p => p && ({ ...p, description: e.target.value }))} />
-            <div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Тип</p>
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                {(['meeting', 'challenge', 'deadline'] as CalendarEvent['type'][]).map(t => (
-                  <button key={t} onClick={() => setEditEvent(p => p && ({ ...p, type: t }))}
-                    style={{ flex: 1, padding: '8px', borderRadius: 6, border: '1px solid', cursor: 'pointer', fontSize: 12,
-                      borderColor: editEvent.type === t ? 'var(--color-primary)' : 'var(--border-subtle)',
-                      background: editEvent.type === t ? 'rgba(204,0,0,0.15)' : 'transparent',
-                      color: editEvent.type === t ? 'var(--color-primary-bright)' : 'var(--text-muted)',
-                    }}
-                  >{t === 'meeting' ? 'Встреча' : t === 'challenge' ? 'Задание' : 'Дедлайн'}</button>
-                ))}
-              </div>
-            </div>
             <Button full onClick={() => updateEvent.mutate({ id: editEvent.id, data: { title: editEvent.title, date: editEvent.date, event_type: editEvent.type, description: editEvent.description } }, { onSuccess: () => setEditEvent(null) })} disabled={updateEvent.isPending}>
               {updateEvent.isPending ? 'Сохранение...' : 'Сохранить'}
             </Button>
