@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useThemeStore } from '@shared/store/themeStore';
 import { authApi } from '@shared/api/services/auth';
+import { registerPushSubscription } from '@shared/services/push';
 import { router } from './router';
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ function AppInner() {
           const user = await authApi.getMe();
           login(user, token);
           console.log('Auth initialized successfully');
+          registerPushSubscription(user.id);
         } catch (error) {
           // Token is invalid, remove it
           localStorage.removeItem('gradorix-token');
