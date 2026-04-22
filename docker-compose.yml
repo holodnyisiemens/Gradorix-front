@@ -1,6 +1,7 @@
 services:
   frontend:
     build: .
+    image: gradorix-front
     container_name: gradorix-front
     ports:
       - "80:80"
