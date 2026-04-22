@@ -59,3 +59,13 @@
 }
 
 .read .message { color: var(--text-secondary); }
+
+.clickable { cursor: pointer; }
+
+.arrow {
+  font-size: 18px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: var(--space-1);
+}

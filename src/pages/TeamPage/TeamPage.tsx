@@ -83,7 +83,7 @@ export function TeamPage() {
   if (isHR) {
     return (
       <>
-        <PageHeader title="Команды" subtitle={`${teams.length} команд`} />
+        <PageHeader title="Команды" showBack subtitle={`${teams.length} команд`} />
         <div className={styles.page}>
           <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setCreateModal(true)}>
             + Создать команду
@@ -155,7 +155,7 @@ export function TeamPage() {
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Участники HiPo</p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Участники проекта</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 150, overflowY: 'auto' }}>
                   {juniors.map(j => {
                     const sel = form.member_ids.includes(j.id);
@@ -185,7 +185,7 @@ export function TeamPage() {
   if (!team) {
     return (
       <>
-        <PageHeader title="Моя команда" />
+        <PageHeader title="Моя команда" showBack />
         <div className={styles.page}>
           <div className={styles.empty}><span>👥</span><p>Вы ещё не добавлены в команду</p></div>
         </div>
@@ -198,7 +198,7 @@ export function TeamPage() {
 
   return (
     <>
-      <PageHeader title="Моя команда" subtitle={team.project} />
+      <PageHeader title="Моя команда" showBack subtitle={team.project} />
       <div className={styles.page}>
         <Card accent>
           <div className={styles.teamHeader}>
@@ -246,7 +246,7 @@ export function TeamPage() {
                       <p className={styles.memberName}>{m.firstname} {m.lastname}{isMe ? ' (вы)' : ''}</p>
                       <p className={styles.memberRole}>@{m.username}</p>
                     </div>
-                    <Badge color="green">HiPo</Badge>
+                    <Badge color="green">Участник</Badge>
                   </div>
                 </Card>
               );

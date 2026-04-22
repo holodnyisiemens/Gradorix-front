@@ -106,7 +106,7 @@ export function TestPage() {
   if (phase === 'intro') {
     return (
       <>
-        <PageHeader title={quiz.title} subtitle={quiz.category} />
+        <PageHeader title={quiz.title} showBack subtitle={quiz.category} />
         <div className={styles.page}>
           <div className={styles.results}>
             <div className={styles.resultHero}>
@@ -139,7 +139,7 @@ export function TestPage() {
   if (phase === 'result') {
     return (
       <>
-        <PageHeader title="Результат" />
+        <PageHeader title="Результат" showBack />
         <div className={styles.page}>
           <div className={styles.results}>
             <div className={styles.resultHero}>
@@ -165,7 +165,7 @@ export function TestPage() {
 
   return (
     <>
-      <PageHeader title={quiz.title} subtitle={`Вопрос ${step + 1} из ${quiz.questions.length}`} />
+      <PageHeader title={quiz.title} showBack subtitle={`Вопрос ${step + 1} из ${quiz.questions.length}`} />
       <div className={styles.page}>
         <div className={styles.progress}>
           <div className={styles.progressFill} style={{ width: `${progress}%` }} />

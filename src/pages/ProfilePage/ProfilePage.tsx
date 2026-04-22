@@ -23,14 +23,12 @@ function getExtraLinks(role: string): ExtraLink[] {
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
         { to: '/attendance',    icon: <ClipboardList size={18} />,label: 'Посещаемость' },
         { to: '/points',        icon: <Trophy size={18} />,       label: 'Мои баллы' },
-        { to: '/notifications', icon: <Bell size={18} />,         label: 'Уведомления' },
         { to: '/team',          icon: <Users size={18} />,        label: 'Моя команда' },
       ];
     case 'MENTOR':
       return [
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
         { to: '/attendance',    icon: <ClipboardList size={18} />,label: 'Посещаемость' },
-        { to: '/notifications', icon: <Bell size={18} />,         label: 'Уведомления' },
         { to: '/team',          icon: <Users size={18} />,        label: 'Команды' },
       ];
     case 'HR':
@@ -41,8 +39,6 @@ function getExtraLinks(role: string): ExtraLink[] {
         { to: '/tests',         icon: <FlaskConical size={18} />, label: 'Тесты' },
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
         { to: '/attendance',    icon: <ClipboardList size={18} />,label: 'Посещаемость' },
-        { to: '/notifications', icon: <Bell size={18} />,         label: 'Уведомления' },
-        { to: '/team',          icon: <Users size={18} />,        label: 'Команды' },
       ];
     default:
       return [];

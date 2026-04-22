@@ -19,18 +19,23 @@ export function KnowledgePage() {
   const deleteSection = useDeleteKBSection();
 
   const [newSectionModal, setNewSectionModal] = useState(false);
-  const [newSection, setNewSection] = useState({ title: '', order: 0 });
+  const [newSection, setNewSection] = useState({ title: '' });
 
   async function handleCreateSection() {
     if (!newSection.title) return;
-    await createSection.mutateAsync({ title: newSection.title, order: newSection.order || undefined });
+    await createSection.mutateAsync({ title: newSection.title });
     setNewSectionModal(false);
-    setNewSection({ title: '', order: 0 });
+    setNewSection({ title: '' });
+  }
+
+  function handleDeleteSection(id: number, title: string) {
+    if (!window.confirm(`Удалить раздел «${title}»? Все статьи в нём будут удалены.`)) return;
+    deleteSection.mutate(id);
   }
 
   return (
     <>
-      <PageHeader title="База знаний" subtitle="Материалы программы HiPo" />
+      <PageHeader title="База знаний" subtitle="Материалы программы ОКД" />
       <div className={styles.page}>
         {isHR && (
           <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setNewSectionModal(true)}>
@@ -50,7 +55,7 @@ export function KnowledgePage() {
                 </button>
                 {isHR && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); deleteSection.mutate(section.id); }}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteSection(section.id, section.title); }}
                     style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(204,0,0,0.8)', border: 'none', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11, padding: '2px 6px' }}
                   >✕</button>
                 )}
@@ -64,7 +69,6 @@ export function KnowledgePage() {
         <Modal open={true} onClose={() => setNewSectionModal(false)} title="Создать раздел" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={newSection.title} onChange={e => setNewSection(p => ({ ...p, title: e.target.value }))} />
-            <Input label="Порядок (число)" type="number" value={String(newSection.order)} onChange={e => setNewSection(p => ({ ...p, order: Number(e.target.value) }))} />
             <Button full onClick={handleCreateSection} disabled={createSection.isPending}>
               {createSection.isPending ? 'Создание...' : 'Создать'}
             </Button>

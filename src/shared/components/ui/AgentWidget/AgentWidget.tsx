@@ -3,7 +3,7 @@ import { Bot, X, Send, ChevronDown, Wifi, WifiOff } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useUsers, useQuizzes, useQuizResults, useActivities, useChallengeJuniors, useUserPoints } from '@shared/hooks/useApi';
 import type { ChatMessage } from '@shared/types';
-import { generateReply, HIPO_SUGGESTIONS, HR_SUGGESTIONS, type ReplyContext } from './agentEngine';
+import { generateReply, HIPO_SUGGESTIONS, HR_SUGGESTIONS, MENTOR_SUGGESTIONS, type ReplyContext } from './agentEngine';
 import { useWebSocket } from '@shared/services/websocket/useWebSocket';
 import type { WsChatReplyOut, WsChatTypingOut, WsErrorOut } from '@shared/services/websocket/wsTypes';
 import styles from './AgentWidget.module.css';
@@ -24,6 +24,7 @@ function timestamp() {
 export function AgentWidget() {
   const user = useAuthStore((s) => s.user)!;
   const isHR = user.role === 'HR';
+  const isMentor = user.role === 'MENTOR';
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -48,7 +49,7 @@ export function AgentWidget() {
   });
 
   const replyCtx: ReplyContext = { allUsers, userPoints, quizResults, quizzes, activities, juniorActivityStats };
-  const suggestions = isHR ? HR_SUGGESTIONS : HIPO_SUGGESTIONS;
+  const suggestions = isHR ? HR_SUGGESTIONS : isMentor ? MENTOR_SUGGESTIONS : HIPO_SUGGESTIONS;
 
   // Refs to keep latest context accessible in stable WS callbacks
   const replyCtxRef = useRef(replyCtx);
@@ -176,7 +177,7 @@ export function AgentWidget() {
               <span className={styles.headerIcon}>🔴</span>
               <div>
                 <p className={styles.headerTitle}>AI Агент</p>
-                <p className={styles.headerSub}>{isHR ? 'Аналитика · HiPo' : 'Карьерный помощник'}</p>
+                <p className={styles.headerSub}>{isHR ? 'Аналитика' : isMentor ? 'Помощник ментора' : 'Карьерный помощник'}</p>
               </div>
             </div>
             <div className={styles.headerRight}>
@@ -199,7 +200,9 @@ export function AgentWidget() {
               <div className={styles.welcome}>
                 <p className={styles.welcomeText}>
                   {isHR
-                    ? 'Аналитический помощник с доступом к данным программы HiPo.'
+                    ? 'Аналитический помощник с доступом к данным программы ОКД.'
+                    : isMentor
+                    ? 'Помощник ментора. Спрашивай про подопечных, задачи и планирование встреч.'
                     : 'Твой проводник по программе. Спрашивай про баллы, задания, тесты.'}
                 </p>
                 <div className={styles.suggestions}>

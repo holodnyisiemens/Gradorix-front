@@ -90,6 +90,7 @@ export const useChallengeJuniors = (params?: { junior_id?: number; assigned_by?:
   useQuery({
     queryKey: ['challenge-junior', params],
     queryFn: () => challengeJuniorApi.getAll(params),
+    staleTime: 0, // always refetch so juniors see HR feedback/points immediately
   });
 
 export const useAssignChallenge = () => {
@@ -165,6 +166,9 @@ export const useDeleteNotification = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
   });
 };
+
+export const useCreateNotification = () =>
+  useMutation({ mutationFn: notificationsApi.create });
 
 // ===== CALENDAR EVENTS =====
 export const useCalendarEvents = (params?: { date?: string; event_type?: string }) =>

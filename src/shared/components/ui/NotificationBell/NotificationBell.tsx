@@ -18,6 +18,11 @@ export function NotificationBell() {
 
   const unread = notifications.filter((n) => !n.is_read).length;
 
+  const sorted = [...notifications].sort((a, b) => {
+    if (a.is_read !== b.is_read) return a.is_read ? 1 : -1;
+    return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+  });
+
   // Close panel on outside click
   useEffect(() => {
     if (!open) return;
@@ -84,7 +89,7 @@ export function NotificationBell() {
             </div>
           ) : (
             <div className={styles.list}>
-              {notifications.map((n) => (
+              {sorted.map((n) => (
                 <NotificationItem
                   key={n.id}
                   notification={n}

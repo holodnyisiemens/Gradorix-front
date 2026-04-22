@@ -4,16 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
+import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import {
   useActivities, useAchievements, useUsers, useLeaderboard,
-  useUpdateActivity, useDeleteAchievement, useCreateUser,
+  useUpdateActivity, useCreateActivity, useDeleteAchievement, useCreateUser,
   useCalendarEvents, useCreateCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent,
   useAwardAchievement, useAllUserAchievements,
 } from '@shared/hooks/useApi';
 import { achievementsApi } from '@shared/api/services/achievements';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Activity, CalendarEvent, UserRole } from '@shared/types';
+import type { Activity, ActivityStatus, CalendarEvent, UserRole } from '@shared/types';
+
+const STATUS_LABEL: Record<ActivityStatus, string> = {
+  pending: 'На проверке',
+  approved: 'Одобрено',
+  revision: 'На доработку',
+  rejected: 'Отклонено',
+};
 import styles from './AdminPage.module.css';
 
 type Tab = 'achievements' | 'activities' | 'users' | 'events';
@@ -33,6 +41,8 @@ export function AdminPage() {
   const [newUserError, setNewUserError] = useState('');
   const [newEventModal, setNewEventModal] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', description: '', type: 'meeting' as CalendarEvent['type'] });
+  const [newActivityModal, setNewActivityModal] = useState(false);
+  const [newActivity, setNewActivity] = useState({ title: '', description: '', requested_points: '100', userId: 0 });
   const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
   const [awardModal, setAwardModal] = useState<number | null>(null); // achievement id
   const [awardUserId, setAwardUserId] = useState<number | null>(null);
@@ -43,6 +53,7 @@ export function AdminPage() {
   const { data: leaderboard = [] } = useLeaderboard();
   const { data: events = [] } = useCalendarEvents();
   const updateActivity = useUpdateActivity();
+  const createActivity = useCreateActivity();
   const deleteAchievement = useDeleteAchievement();
   const createUser = useCreateUser();
   const createEvent = useCreateCalendarEvent();
@@ -104,6 +115,19 @@ export function AdminPage() {
     setEditAchievementId(null);
   }
 
+  async function createNewActivity() {
+    if (!newActivity.title || !newActivity.userId) return;
+    await createActivity.mutateAsync({
+      user_id: newActivity.userId,
+      title: newActivity.title,
+      description: newActivity.description,
+      requested_points: Number(newActivity.requested_points) || 0,
+      activity_type: 'custom',
+    });
+    setNewActivityModal(false);
+    setNewActivity({ title: '', description: '', requested_points: '100', userId: 0 });
+  }
+
   async function createNewEvent() {
     if (!newEvent.title || !newEvent.date) return;
     await createEvent.mutateAsync({ title: newEvent.title, date: newEvent.date, event_type: newEvent.type, description: newEvent.description || undefined });
@@ -120,7 +144,7 @@ export function AdminPage() {
 
   return (
     <>
-      <PageHeader title="Админ-панель" subtitle="Управление программой HiPo" />
+      <PageHeader title="Админ-панель" showBack subtitle="Управление участниками" />
       <div className={styles.page}>
         <div className={styles.tabs}>
           {TABS.map(t => (
@@ -132,6 +156,10 @@ export function AdminPage() {
 
         {/* ACTIVITIES TAB */}
         {tab === 'activities' && (
+          <div>
+          <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setNewActivityModal(true)}>
+            + Добавить активность
+          </Button>
           <div className={styles.list}>
             {activities.map(act => {
               const actUser = allUsers.find(u => u.id === act.userId);
@@ -139,7 +167,7 @@ export function AdminPage() {
                 <div key={act.id} className={styles.item}>
                   <div className={styles.itemTop}>
                     <p className={styles.itemTitle}>{act.title}</p>
-                    <span className={[styles.status, styles[act.status]].join(' ')}>{act.status}</span>
+                    <span className={[styles.status, styles[act.status]].join(' ')}>{STATUS_LABEL[act.status]}</span>
                   </div>
                   <p className={styles.itemSub}>👤 {actUser?.firstname} {actUser?.lastname} · {act.submittedAt} · +{act.requestedPoints} бал.</p>
                   <p className={styles.itemDesc}>{act.description}</p>
@@ -157,6 +185,7 @@ export function AdminPage() {
                 </div>
               );
             })}
+          </div>
           </div>
         )}
 
@@ -300,7 +329,7 @@ export function AdminPage() {
         <Modal open={true} onClose={() => setNewEventModal(false)} title="Добавить мероприятие" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} />
-            <Input label="Дата *" type="date" value={newEvent.date} onChange={e => setNewEvent(p => ({ ...p, date: e.target.value }))} />
+            <DateInput label="Дата *" value={newEvent.date} onChange={date => setNewEvent(p => ({ ...p, date }))} />
             <Input label="Описание" value={newEvent.description} onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))} />
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Тип</p>
@@ -328,7 +357,7 @@ export function AdminPage() {
         <Modal open={true} onClose={() => setEditEvent(null)} title="Редактировать мероприятие" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название *" value={editEvent.title} onChange={e => setEditEvent(p => p && ({ ...p, title: e.target.value }))} />
-            <Input label="Дата *" type="date" value={editEvent.date} onChange={e => setEditEvent(p => p && ({ ...p, date: e.target.value }))} />
+            <DateInput label="Дата *" value={editEvent.date} onChange={date => setEditEvent(p => p && ({ ...p, date }))} />
             <Input label="Описание" value={editEvent.description ?? ''} onChange={e => setEditEvent(p => p && ({ ...p, description: e.target.value }))} />
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Тип</p>
@@ -363,7 +392,7 @@ export function AdminPage() {
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Роль</p>
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                {(['HIPO', 'MENTOR', 'HR'] as UserRole[]).map(r => (
+                {(['JUNIOR', 'MENTOR', 'HR'] as UserRole[]).map(r => (
                   <button
                     key={r}
                     onClick={() => setNewUser(p => ({ ...p, role: r }))}
@@ -375,7 +404,7 @@ export function AdminPage() {
                       cursor: 'pointer', fontSize: 12, fontFamily: 'var(--font-display)',
                     }}
                   >
-                    {r}
+                    {{ JUNIOR: 'Участник', MENTOR: 'Ментор', HR: 'HR' }[r] ?? r}
                   </button>
                 ))}
               </div>
@@ -443,6 +472,34 @@ export function AdminPage() {
           </Modal>
         );
       })()}
+
+      {/* New Activity Modal */}
+      {newActivityModal && (
+        <Modal open={true} onClose={() => setNewActivityModal(false)} title="Добавить активность" type="dialog">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <Input label="Название *" value={newActivity.title} onChange={e => setNewActivity(p => ({ ...p, title: e.target.value }))} />
+            <Input label="Описание" value={newActivity.description} onChange={e => setNewActivity(p => ({ ...p, description: e.target.value }))} />
+            <Input label="Баллов" type="number" value={newActivity.requested_points} onChange={e => setNewActivity(p => ({ ...p, requested_points: e.target.value }))} />
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Участник</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 160, overflowY: 'auto' }}>
+                {allUsers.filter(u => u.role === 'JUNIOR').map(u => (
+                  <button key={u.id} onClick={() => setNewActivity(p => ({ ...p, userId: u.id }))}
+                    style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid', textAlign: 'left', cursor: 'pointer', fontSize: 12,
+                      borderColor: newActivity.userId === u.id ? 'var(--color-primary)' : 'var(--border-subtle)',
+                      background: newActivity.userId === u.id ? 'rgba(204,0,0,0.15)' : 'transparent',
+                      color: 'var(--text-primary)',
+                    }}
+                  >{newActivity.userId === u.id ? '✓ ' : ''}{u.firstname} {u.lastname} <span style={{ color: 'var(--text-muted)' }}>@{u.username}</span></button>
+                ))}
+              </div>
+            </div>
+            <Button full onClick={createNewActivity} disabled={createActivity.isPending || !newActivity.title || !newActivity.userId}>
+              {createActivity.isPending ? 'Создание...' : 'Создать'}
+            </Button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

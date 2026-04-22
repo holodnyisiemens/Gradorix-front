@@ -7,6 +7,7 @@ import styles from './ChallengeCard.module.css';
 
 interface ChallengeCardProps {
   challenge: Challenge & { progress?: ChallengeJuniorProgress };
+  awardedPoints?: number | null;
   onClick?: () => void;
   showProgress?: boolean;
   locked?: boolean;
@@ -20,7 +21,7 @@ const statusClass: Record<string, string> = {
   DRAFT:     styles.draft,
 };
 
-export function ChallengeCard({ challenge, onClick, showProgress = false, locked = false }: ChallengeCardProps) {
+export function ChallengeCard({ challenge, awardedPoints, onClick, showProgress = false, locked = false }: ChallengeCardProps) {
   return (
     <div
       className={[styles.card, statusClass[challenge.status] ?? '', locked ? styles.locked : ''].join(' ')}
@@ -53,9 +54,11 @@ export function ChallengeCard({ challenge, onClick, showProgress = false, locked
             </span>
           )}
           {challenge.maxPoints != null && challenge.maxPoints > 0 && (
-            <span className={styles.maxPoints}>
+            <span className={[styles.maxPoints, awardedPoints != null ? styles.maxPointsAwarded : ''].join(' ')}>
               <Star size={11} />
-              до {challenge.maxPoints} баллов
+              {awardedPoints != null
+                ? `${awardedPoints} из ${challenge.maxPoints} баллов`
+                : `до ${challenge.maxPoints} баллов`}
             </span>
           )}
         </div>

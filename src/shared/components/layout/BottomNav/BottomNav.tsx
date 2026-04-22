@@ -23,7 +23,7 @@ function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
     case 'MENTOR':
       return [
         { to: '/dashboard',   icon: <Home size={20} />,    label: 'Главная' },
-        { to: '/juniors',     icon: <Users size={20} />,   label: 'HiPo' },
+        { to: '/juniors',     icon: <Users size={20} />,   label: 'Подопечные' },
         { to: '/challenges',  icon: <Zap size={20} />,     label: 'Задачи' },
         { to: '/calendar',    icon: <Calendar size={20} />, label: 'Календарь' },
         { to: '/profile',     icon: <User size={20} />,    label: 'Профиль' },

@@ -31,6 +31,7 @@ export function KnowledgeSectionPage() {
   const deleteArticle = useDeleteKBArticle();
 
   const [selected, setSelected] = useState<KBArticle | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<KBArticle | null>(null);
   const [newArticleModal, setNewArticleModal] = useState(false);
   const [newArticle, setNewArticle] = useState({ title: '', content: '', author: user.firstname ? `${user.firstname} ${user.lastname}` : user.username });
 
@@ -52,7 +53,7 @@ export function KnowledgeSectionPage() {
   if (selected) {
     return (
       <>
-        <PageHeader title={selected.title} subtitle={`${section.icon || '📄'} ${section.title}`} />
+        <PageHeader title={selected.title} showBack subtitle={`${section.icon || '📄'} ${section.title}`} />
         <div className={styles.page}>
           <div className={styles.articleView}>
             <div className={styles.articleContent}>
@@ -60,7 +61,7 @@ export function KnowledgeSectionPage() {
             </div>
             {isHR && (
               <div className={styles.hrActions}>
-                <Button variant="danger" size="sm" onClick={() => { deleteArticle.mutate(selected.id); setSelected(null); }}>Удалить статью</Button>
+                <Button variant="danger" size="sm" onClick={() => setDeleteTarget(selected)}>Удалить статью</Button>
               </div>
             )}
             <Button variant="ghost" onClick={() => setSelected(null)}>← Назад к разделу</Button>
@@ -72,7 +73,7 @@ export function KnowledgeSectionPage() {
 
   return (
     <>
-      <PageHeader title={section.title} subtitle={`${articles.length} материалов`} />
+      <PageHeader title={section.title} showBack subtitle={`${articles.length} материалов`} />
       <div className={styles.page}>
         {isHR && (
           <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setNewArticleModal(true)}>
@@ -87,7 +88,7 @@ export function KnowledgeSectionPage() {
                 <p className={styles.articleMeta}>{article.author} · {article.createdAt}</p>
               </button>
               {isHR && (
-                <button onClick={() => deleteArticle.mutate(article.id)}
+                <button onClick={() => setDeleteTarget(article)}
                   style={{ background: 'none', border: 'none', color: 'var(--color-danger-bright)', cursor: 'pointer', fontSize: 16, flexShrink: 0 }}
                 >✕</button>
               )}
@@ -101,6 +102,29 @@ export function KnowledgeSectionPage() {
           ← К разделам
         </Button>
       </div>
+
+      {deleteTarget && (
+        <Modal open={true} onClose={() => setDeleteTarget(null)} title="Удалить статью?" type="dialog">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+              Статья <strong>«{deleteTarget.title}»</strong> будет удалена без возможности восстановления.
+            </p>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <Button full variant="ghost" onClick={() => setDeleteTarget(null)}>Отмена</Button>
+              <Button full variant="danger" disabled={deleteArticle.isPending} onClick={() => {
+                deleteArticle.mutate(deleteTarget.id, {
+                  onSuccess: () => {
+                    if (selected?.id === deleteTarget.id) setSelected(null);
+                    setDeleteTarget(null);
+                  },
+                });
+              }}>
+                {deleteArticle.isPending ? 'Удаление...' : 'Удалить'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {newArticleModal && (
         <Modal open={true} onClose={() => setNewArticleModal(false)} title="Создать статью" type="dialog">

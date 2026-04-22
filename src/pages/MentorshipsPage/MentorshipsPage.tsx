@@ -40,7 +40,7 @@ export function MentorshipsPage() {
 
   return (
     <>
-      <PageHeader title="Пары" subtitle="Ментор — HiPo" />
+      <PageHeader title="Пары" showBack subtitle="Ментор — участник" />
       <div className={styles.page}>
         {isHR && (
           <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setPairModal(true)}>
@@ -119,7 +119,7 @@ export function MentorshipsPage() {
               </div>
             </div>
             <div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>HiPo участник</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Участник проекта</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', maxHeight: 180, overflowY: 'auto' }}>
                 {juniors.map(j => (
                   <button

@@ -16,7 +16,7 @@ export function TestsPage() {
 
   return (
     <>
-      <PageHeader title="Тесты" subtitle={isLoading ? '...' : `${quizzes.length} доступно`} />
+      <PageHeader title="Тесты" showBack subtitle={isLoading ? '...' : `${quizzes.length} доступно`} />
       <div className={styles.page}>
         {isHR && (
           <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => navigate('/tests/new')}>

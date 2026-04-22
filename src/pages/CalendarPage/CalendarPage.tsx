@@ -5,6 +5,7 @@ import { Calendar } from '@modules/calendar/components/Calendar';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import { Input } from '@shared/components/ui/Input/Input';
+import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Button } from '@shared/components/ui/Button/Button';
 import type { CalendarEvent } from '@shared/types';
 import styles from './CalendarPage.module.css';
@@ -70,16 +71,15 @@ export function CalendarPage() {
 
   return (
     <>
-      <PageHeader title="Календарь" subtitle="Мои события и задачи"
+      <PageHeader title="Календарь" showBack subtitle="Мои события и задачи"
         actions={
           <button onClick={() => setShowCreate(true)}
             style={{
-              background: 'var(--color-primary)', border: 'none', borderRadius: '50%',
-              width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: '#fff', fontSize: 20, lineHeight: 1,
+              background: 'var(--color-primary)', border: 'none', borderRadius: 8,
+              padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6,
+              cursor: 'pointer', color: '#fff', fontSize: 13, fontFamily: 'var(--font-display)',
             }}
-            aria-label="Добавить событие"
-          >+</button>
+          >+ Добавить событие</button>
         }
       />
       <div className={styles.page}>
@@ -110,7 +110,7 @@ export function CalendarPage() {
       <Modal open={showCreate} onClose={() => { setShowCreate(false); setError(''); }} title="Добавить событие" type="dialog">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Input label="Название" placeholder="Встреча с ментором..." value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
-          <Input label="Дата" type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
+          <DateInput label="Дата" value={form.date} onChange={date => setForm(f => ({ ...f, date }))} />
           <div>
             <label style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Тип</label>
             {TYPE_BUTTONS(form.type, (t) => setForm(f => ({ ...f, type: t })))}
@@ -126,7 +126,7 @@ export function CalendarPage() {
         <Modal open={true} onClose={() => setEditEvent(null)} title="Редактировать событие" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Название" value={editEvent.title} onChange={e => setEditEvent(p => p && ({ ...p, title: e.target.value }))} />
-            <Input label="Дата" type="date" value={editEvent.date} onChange={e => setEditEvent(p => p && ({ ...p, date: e.target.value }))} />
+            <DateInput label="Дата" value={editEvent.date} onChange={date => setEditEvent(p => p && ({ ...p, date }))} />
             <div>
               <label style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Тип</label>
               {TYPE_BUTTONS(editEvent.type, (t) => setEditEvent(p => p && ({ ...p, type: t })))}
@@ -159,6 +159,9 @@ export function CalendarPage() {
             {detailEvent.description && (
               <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{detailEvent.description}</p>
             )}
+            <Button variant="ghost" size="sm" onClick={() => { setEditEvent({ ...detailEvent }); setDetailEvent(null); }}>
+              ✏️ Редактировать
+            </Button>
           </div>
         </Modal>
       )}

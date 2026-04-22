@@ -19,12 +19,12 @@ export function JuniorsPage() {
 
   return (
     <>
-      <PageHeader title="Мои HiPo" subtitle={`${juniors.length} участника`} />
+      <PageHeader title="Подопечные в проекте" showBack subtitle={`${juniors.length} участника`} />
       <div className={styles.page}>
         {juniors.length === 0 ? (
           <div className={styles.empty}>
             <span>👥</span>
-            <p>HiPo сотрудники ещё не назначены</p>
+            <p>Подопечные ещё не назначены</p>
           </div>
         ) : (
           <div className={styles.list}>

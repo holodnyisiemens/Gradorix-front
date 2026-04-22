@@ -28,7 +28,7 @@ export function LeaderboardPage() {
 
   return (
     <>
-      <PageHeader title="Рейтинг" subtitle="Участники программы HiPo" />
+      <PageHeader title="Рейтинг" showBack subtitle="Участники программы ОКД" />
       <div className={styles.page}>
         {myPoints && (
           <div className={styles.myCard}>

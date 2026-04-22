@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { Notification } from '@shared/types';
@@ -9,34 +10,48 @@ interface NotificationItemProps {
 }
 
 function getNotificationEmoji(message: string): string {
+  if (message.startsWith('📋')) return '📋';
+  if (message.startsWith('⭐')) return '⭐';
   if (message.startsWith('🎯') || message.startsWith('⚡')) return '🎯';
   if (message.startsWith('✅')) return '✅';
   if (message.startsWith('📅')) return '📅';
   if (message.startsWith('⚠️')) return '⚠️';
   if (message.startsWith('👤')) return '👤';
   if (message.startsWith('📊')) return '📊';
+  if (message.startsWith('❌')) return '❌';
   return '🔔';
 }
 
 export function NotificationItem({ notification, onRead }: NotificationItemProps) {
+  const navigate = useNavigate();
+
+  const [displayMessage, link] = notification.message.split('||');
+
   const timeAgo = notification.created_at
     ? formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: ru })
     : null;
+
+  function handleClick() {
+    if (!notification.is_read) onRead?.(notification.id);
+    if (link) navigate(link);
+  }
 
   return (
     <div
       className={[
         styles.item,
         !notification.is_read ? styles.unread : styles.read,
+        link ? styles.clickable : '',
       ].join(' ')}
-      onClick={() => !notification.is_read && onRead?.(notification.id)}
+      onClick={handleClick}
     >
       {!notification.is_read && <span className={styles.unreadDot} />}
-      <span className={styles.icon}>{getNotificationEmoji(notification.message)}</span>
+      <span className={styles.icon}>{getNotificationEmoji(displayMessage)}</span>
       <div className={styles.content}>
-        <p className={styles.message}>{notification.message}</p>
+        <p className={styles.message}>{displayMessage}</p>
         {timeAgo && <p className={styles.time}>{timeAgo}</p>}
       </div>
+      {link && <span className={styles.arrow}>›</span>}
     </div>
   );
 }

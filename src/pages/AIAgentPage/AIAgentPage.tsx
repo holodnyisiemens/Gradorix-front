@@ -191,7 +191,7 @@ export function AIAgentPage() {
 
   return (
     <>
-      <PageHeader title="AI Агент" subtitle={isHR ? 'Аналитика · GigaChat' : 'Карьерный помощник · GigaChat'} />
+      <PageHeader title="AI Агент" showBack subtitle={isHR ? "Аналитика · GigaChat" : "Карьерный помощник · GigaChat"} />
       <div className={styles.page}>
         <div className={styles.messages}>
           {messages.length === 0 && (

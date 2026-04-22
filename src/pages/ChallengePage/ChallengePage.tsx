@@ -1,27 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ExternalLink, Calendar, Star, Link2, Plus, X, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { useChallenge, useChallengeJuniors, useUpdateChallengeProgress, useUpdateChallengeJunior } from '@shared/hooks/useApi';
+import { useChallenge, useChallengeJuniors, useUsers, useUpdateChallengeProgress, useUpdateChallengeJunior, useCreateNotification } from '@shared/hooks/useApi';
 import { ChallengeStatusBadge, ProgressBadge } from '@shared/components/ui/Badge/Badge';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Card } from '@shared/components/ui/Card/Card';
 import { Button } from '@shared/components/ui/Button/Button';
-import type { ChallengeJuniorProgress } from '@shared/types';
 import styles from './ChallengePage.module.css';
-
-const PROGRESS_OPTIONS: { value: ChallengeJuniorProgress; label: string; emoji: string }[] = [
-  { value: 'GOING',       label: 'Не начал',   emoji: '⏸' },
-  { value: 'IN_PROGRESS', label: 'В процессе', emoji: '🔥' },
-  { value: 'DONE',        label: 'Выполнил',   emoji: '✅' },
-  { value: 'SKIPPED',     label: 'Пропустил',  emoji: '⏭' },
-];
 
 export function ChallengePage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user)!;
   const isJunior = user.role === 'JUNIOR';
 
@@ -31,16 +22,17 @@ export function ChallengePage() {
   );
   const updateProgress = useUpdateChallengeProgress();
   const updateJunior = useUpdateChallengeJunior();
+  const createNotification = useCreateNotification();
+  const { data: allUsers = [] } = useUsers();
 
   const assignment = isJunior
     ? assignments.find((cj) => cj.challenge_id === Number(id) && cj.junior_id === user.id)
     : null;
 
-  // Comment & links state (editable only when ACTIVE)
   const [comment, setComment] = useState('');
   const [links, setLinks] = useState<string[]>([]);
   const [linkInput, setLinkInput] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<'draft' | 'submit' | null>(null);
 
   // Sync state from assignment when loaded
   useEffect(() => {
@@ -79,7 +71,10 @@ export function ChallengePage() {
   const isActive    = challenge.status === 'ACTIVE';
   const isCompleted = challenge.status === 'COMPLETED';
   const isCancelled = challenge.status === 'CANCELLED';
-  const isReadOnly  = !isActive; // UPCOMING / COMPLETED / CANCELLED all read-only for HiPo
+  const isReadOnly  = !isActive;
+
+  const currentProgress = assignment?.progress;
+  const isSubmitted = currentProgress === 'DONE';
 
   function addLink() {
     const trimmed = linkInput.trim();
@@ -92,24 +87,54 @@ export function ChallengePage() {
     setLinks(prev => prev.filter(l => l !== url));
   }
 
-  async function saveProgress(progress: ChallengeJuniorProgress) {
-    await updateProgress.mutateAsync({ challengeId: challenge!.id, juniorId: user.id, progress });
-    navigate(-1);
+  function getFinalLinks() {
+    const trimmed = linkInput.trim();
+    if (trimmed && !links.includes(trimmed)) return [...links, trimmed];
+    return links;
   }
 
-  async function saveCommentAndLinks() {
+  async function saveDraft() {
     if (!assignment) return;
-    setSaving(true);
+    const finalLinks = getFinalLinks();
+    if (linkInput.trim()) { setLinks(finalLinks); setLinkInput(''); }
+    setSaving('draft');
     await updateJunior.mutateAsync({
       challengeId: challenge!.id,
       juniorId: user.id,
-      data: { comment: comment || undefined, links: links.length ? links : undefined },
+      data: {
+        comment: comment || undefined,
+        links: finalLinks.length ? finalLinks : undefined,
+        progress: 'IN_PROGRESS',
+      },
     });
-    setSaving(false);
+    setSaving(null);
   }
 
-  const currentProgress = assignment?.progress;
-  const commentDirty = comment !== (assignment?.comment ?? '') || JSON.stringify(links) !== JSON.stringify(assignment?.links ?? []);
+  async function submitForReview() {
+    if (!assignment) return;
+    const finalLinks = getFinalLinks();
+    if (linkInput.trim()) { setLinks(finalLinks); setLinkInput(''); }
+    setSaving('submit');
+    await updateJunior.mutateAsync({
+      challengeId: challenge!.id,
+      juniorId: user.id,
+      data: {
+        comment: comment || undefined,
+        links: finalLinks.length ? finalLinks : undefined,
+        progress: 'DONE',
+      },
+    });
+    // Notify all HR users
+    const juniorName = [user.firstname, user.lastname].filter(Boolean).join(' ') || user.username;
+    const hrUsers = allUsers.filter(u => u.role === 'HR');
+    await Promise.all(hrUsers.map(hr =>
+      createNotification.mutateAsync({
+        user_id: hr.id,
+        message: `📋 Участник ${juniorName} отправил задачу «${challenge!.title}» на проверку||/points`,
+      })
+    ));
+    setSaving(null);
+  }
 
   return (
     <>
@@ -119,9 +144,11 @@ export function ChallengePage() {
           <ChallengeStatusBadge status={challenge.status} />
           {assignment && <ProgressBadge progress={currentProgress ?? assignment.progress} />}
           {challenge.maxPoints != null && challenge.maxPoints > 0 && (
-            <span className={styles.maxPointsBadge}>
+            <span className={[styles.maxPointsBadge, isJunior && assignment?.awarded_points != null ? styles.maxPointsBadgeAwarded : ''].join(' ')}>
               <Star size={13} />
-              до {challenge.maxPoints} баллов
+              {isJunior && assignment?.awarded_points != null
+                ? `${assignment.awarded_points} из ${challenge.maxPoints} баллов`
+                : `до ${challenge.maxPoints} баллов`}
             </span>
           )}
         </div>
@@ -161,31 +188,8 @@ export function ChallengePage() {
           </a>
         )}
 
-        {/* Progress buttons — only for HiPo when ACTIVE */}
-        {isJunior && assignment && isActive && (
-          <div className={styles.progressSection}>
-            <h3 className={styles.sectionTitle}>Обновить прогресс</h3>
-            <div className={styles.progressOptions}>
-              {PROGRESS_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  className={[
-                    styles.progressOption,
-                    currentProgress === opt.value ? styles.progressOptionActive : '',
-                  ].join(' ')}
-                  onClick={() => saveProgress(opt.value)}
-                  disabled={updateProgress.isPending}
-                >
-                  <span className={styles.progressEmoji}>{opt.emoji}</span>
-                  <span className={styles.progressLabel}>{opt.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Comment & links — only for HiPo when ACTIVE */}
-        {isJunior && assignment && isActive && (
+        {/* Editable comment & links — for junior on ACTIVE challenge, not yet submitted */}
+        {isJunior && assignment && isActive && !isSubmitted && (
           <div className={styles.submissionSection}>
             <h3 className={styles.sectionTitle}>Комментарий</h3>
             <textarea
@@ -224,12 +228,45 @@ export function ChallengePage() {
               </div>
             )}
 
-            {commentDirty && (
-              <Button full onClick={saveCommentAndLinks} disabled={saving} style={{ marginTop: 'var(--space-3)' }}>
-                {saving ? 'Сохранение...' : 'Сохранить комментарий и ссылки'}
+            <div className={styles.submitActions}>
+              <Button
+                variant="secondary"
+                onClick={saveDraft}
+                disabled={saving !== null}
+              >
+                {saving === 'draft' ? 'Сохранение...' : 'Сохранить черновик'}
               </Button>
-            )}
+              <Button
+                onClick={submitForReview}
+                disabled={saving !== null}
+              >
+                {saving === 'submit' ? 'Отправка...' : 'Отправить на проверку'}
+              </Button>
+            </div>
           </div>
+        )}
+
+        {/* Read-only submitted view — junior already sent for review */}
+        {isJunior && assignment && isActive && isSubmitted && (
+          <>
+            {assignment.comment && (
+              <div className={styles.submissionReadonly}>
+                <p className={styles.submissionLabel}>Ваш комментарий</p>
+                <p className={styles.submissionText}>{assignment.comment}</p>
+              </div>
+            )}
+            {(assignment.links ?? []).length > 0 && (
+              <div className={styles.submissionReadonly}>
+                <p className={styles.submissionLabel}>Ссылки</p>
+                {(assignment.links ?? []).map(url => (
+                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className={styles.submissionLink}>
+                    <Link2 size={13} />
+                    {url}
+                  </a>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* Read-only comment & links display when COMPLETED/CANCELLED */}
@@ -255,7 +292,14 @@ export function ChallengePage() {
           </>
         )}
 
-        {/* HR feedback & awarded points (visible to HiPo) */}
+        {/* "Submitted, waiting for HR review" notice */}
+        {isJunior && assignment && isActive && isSubmitted && assignment.feedback == null && assignment.awarded_points == null && (
+          <div className={styles.pendingReviewNotice}>
+            ✅ Задача отправлена на проверку. Ожидайте обратной связи от HR.
+          </div>
+        )}
+
+        {/* HR feedback & awarded points (visible to junior) */}
         {isJunior && assignment && (assignment.feedback || assignment.awarded_points != null) && (
           <div className={styles.hrFeedback}>
             {assignment.awarded_points != null && (
@@ -273,7 +317,7 @@ export function ChallengePage() {
           </div>
         )}
 
-        {/* HR/Mentor: show submitted comments and links from all juniors */}
+        {/* HR/Mentor: read-only status */}
         {!isJunior && isReadOnly && (
           <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', padding: 'var(--space-4) 0' }}>
             Статус: <strong style={{ color: 'var(--text-primary)' }}>{challenge.status}</strong>

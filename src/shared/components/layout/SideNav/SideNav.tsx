@@ -44,7 +44,7 @@ function getNavConfig(role: UserRole): NavConfig {
       return {
         primary: [
           { to: '/dashboard',   icon: <Home size={18} />,      label: 'Главная' },
-          { to: '/juniors',     icon: <Users size={18} />,     label: 'Мои HiPo' },
+          { to: '/juniors',     icon: <Users size={18} />,     label: 'Подопечные' },
           { to: '/challenges',  icon: <Zap size={18} />,       label: 'Задачи' },
           { to: '/calendar',    icon: <Calendar size={18} />,  label: 'Календарь' },
           { to: '/leaderboard', icon: <Trophy size={18} />,    label: 'Рейтинг' },
@@ -60,6 +60,7 @@ function getNavConfig(role: UserRole): NavConfig {
           { to: '/users',       icon: <Users size={18} />,         label: 'Пользователи' },
           { to: '/challenges',  icon: <Zap size={18} />,           label: 'Задачи' },
           { to: '/mentorships', icon: <Link2 size={18} />,         label: 'Пары' },
+          { to: '/calendar',    icon: <Calendar size={18} />,      label: 'Календарь' },
           { to: '/attendance',  icon: <CalendarCheck size={18} />, label: 'Посещаемость' },
         ],
         secondary: [
@@ -74,7 +75,7 @@ function getNavConfig(role: UserRole): NavConfig {
 const roleLabel: Record<UserRole, string> = {
   HR: 'HR',
   MENTOR: 'Ментор',
-  JUNIOR: 'HiPo',
+  JUNIOR: 'Участник',
 };
 
 interface SideNavProps {}

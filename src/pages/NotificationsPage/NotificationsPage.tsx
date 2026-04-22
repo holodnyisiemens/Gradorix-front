@@ -15,6 +15,11 @@ export function NotificationsPage() {
 
   const unread = notifications.filter((n) => !n.is_read).length;
 
+  const sorted = [...notifications].sort((a, b) => {
+    if (a.is_read !== b.is_read) return a.is_read ? 1 : -1;
+    return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+  });
+
   const handleRead = (id: number) => {
     markRead.mutate(id);
   };
@@ -30,6 +35,7 @@ export function NotificationsPage() {
     <>
       <PageHeader
         title="Уведомления"
+        showBack
         subtitle={unread > 0 ? `${unread} непрочитанных` : 'Всё прочитано'}
         actions={
           unread > 0 ? (
@@ -47,7 +53,7 @@ export function NotificationsPage() {
           </div>
         ) : (
           <div className={styles.list}>
-            {notifications.map((n) => (
+            {sorted.map((n) => (
               <NotificationItem key={n.id} notification={n} onRead={handleRead} />
             ))}
           </div>

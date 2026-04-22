@@ -43,7 +43,7 @@ export function AttendancePage() {
   if (!isHR) {
     return (
       <>
-        <PageHeader title="Встречи" subtitle="Посещаемость мероприятий" />
+        <PageHeader title="Встречи" showBack subtitle="Посещаемость мероприятий" />
         <div style={{ padding: 'var(--space-4) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {meetings.map(meeting => {
             const attended = isAttended(meeting.id, user.id);
@@ -81,7 +81,7 @@ export function AttendancePage() {
   // HR view: matrix of users × meetings
   return (
     <>
-      <PageHeader title="Посещаемость" subtitle="Управление посещением встреч" />
+      <PageHeader title="Посещаемость" showBack subtitle="Управление посещением встреч" />
       <div style={{ padding: 'var(--space-4) 0', overflowX: 'auto' }}>
         <table className={styles.table}>
           <thead>

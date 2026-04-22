@@ -25,3 +25,8 @@ dist-ssr
 
 # Cert
 certbot
+
+# Local dev overrides (not for production)
+.env
+docker-compose.local.yml
+nginx.local.conf

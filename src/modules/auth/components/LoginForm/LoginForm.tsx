@@ -48,7 +48,7 @@ export function LoginForm() {
     doLogin(cred.email, cred.password);
   };
 
-  const roleLabels: Record<string, string> = { HR: 'HR', MENTOR: 'Ментор', JUNIOR: 'HiPo' };
+  const roleLabels: Record<string, string> = { HR: 'Администратор', MENTOR: 'Ментор', JUNIOR: 'Участник' };
   const roleIcons: Record<string, string> = { HR: '👔', MENTOR: '🧑‍💻', JUNIOR: '⭐' };
   const roleColors: Record<string, string> = {
     HR: 'rgba(245, 197, 24, 0.15)',
@@ -65,7 +65,7 @@ export function LoginForm() {
             <span className={styles.appNameAccent}>карьерные</span>
             дела
           </h1>
-          <p className={styles.tagline}>Система наставничества Gradorix</p>
+          <p className={styles.tagline}>Программа развития сотрудников</p>
         </div>
 
         <Card>

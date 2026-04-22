@@ -46,7 +46,7 @@ export function RoleBadge({ role }: { role: UserRole }) {
   const map: Record<UserRole, { color: BadgeColor; label: string }> = {
     HR:     { color: 'yellow', label: 'HR' },
     MENTOR: { color: 'blue',   label: 'Ментор' },
-    JUNIOR: { color: 'green',  label: 'HiPo' },
+    JUNIOR: { color: 'green',  label: 'Участник' },
   };
   const { color, label } = map[role];
   return <Badge color={color}>{label}</Badge>;

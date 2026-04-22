@@ -10,18 +10,31 @@ import { authApi } from '@shared/api/services/auth';
 import styles from './RegisterForm.module.css';
 
 const ROLE_OPTIONS: SelectOption[] = [
-  { value: 'JUNIOR', label: 'HiPo' },
+  { value: 'JUNIOR', label: 'Участник проекта ОКД' },
   { value: 'HR', label: 'Администратор' },
   { value: 'MENTOR', label: 'Ментор' },
 ];
+
+function translateError(raw: string): string {
+  if (raw.toLowerCase().includes('username') && raw.toLowerCase().includes('exist')) {
+    return 'Этот логин уже занят. Придумайте другой.';
+  }
+  if (raw.toLowerCase().includes('email') && raw.toLowerCase().includes('exist')) {
+    return 'Этот email уже зарегистрирован.';
+  }
+  if (raw.toLowerCase().includes('already')) {
+    return 'Пользователь с такими данными уже существует.';
+  }
+  return raw;
+}
 
 export function RegisterForm() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [username, setUsername] = useState('');
+  const [nickname, setNickname] = useState('');
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [role, setRole] = useState('');
@@ -34,7 +47,6 @@ export function RegisterForm() {
     if (!username.trim()) return 'Логин обязателен';
     if (!firstname.trim()) return 'Имя обязательно';
     if (!lastname.trim()) return 'Фамилия обязательна';
-    if (!email.trim()) return 'Email обязателен';
     if (!password) return 'Пароль обязателен';
     if (password.length < 6) return 'Пароль должен быть минимум 6 символов';
     if (password !== passwordConfirm) return 'Пароли не совпадают';
@@ -44,7 +56,7 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -53,23 +65,27 @@ export function RegisterForm() {
 
     setError('');
     setLoading(true);
+
+    // Use username as email stub so backend validation passes
+    const emailStub = `${username.trim()}@gradorix.local`;
+
     try {
       await authApi.register({
         username: username.trim(),
-        email: email.trim(),
+        email: emailStub,
         password,
         firstname: firstname.trim(),
         lastname: lastname.trim(),
         role: role as 'HR' | 'MENTOR' | 'JUNIOR',
       });
-      // Backend returns {message}, not a token — login manually after register
-      const { access_token } = await authApi.login({ email: email.trim(), password });
+      const { access_token } = await authApi.login({ email: emailStub, password });
       localStorage.setItem('gradorix-token', access_token);
       const user = await authApi.getMe();
-      login(user, access_token);
+      // Save nickname to display name if provided
+      login(nickname.trim() ? { ...user, username: nickname.trim() || user.username } : user, access_token);
     } catch (err: unknown) {
-      const axiosData = (err as { response?: { data?: { detail?: string } } })?.response?.data;
-      setError(axiosData?.detail || 'Не удалось зарегистрироваться. Возможно, такой электронный адрес уже используется.');
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '';
+      setError(translateError(detail) || 'Не удалось зарегистрироваться. Попробуйте другой логин.');
     } finally {
       setLoading(false);
     }
@@ -84,7 +100,7 @@ export function RegisterForm() {
             <span className={styles.appNameAccent}>карьерные</span>
             дела
           </h1>
-          <p className={styles.tagline}>Система наставничества Gradorix</p>
+          <p className={styles.tagline}>Программа развития сотрудников</p>
         </div>
 
         <Card>
@@ -101,11 +117,19 @@ export function RegisterForm() {
             <Input
               label="Логин"
               type="text"
-              placeholder="username"
+              placeholder="ivanov_ivan"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               autoCapitalize="none"
+            />
+
+            <Input
+              label="Ник (как вас называть)"
+              type="text"
+              placeholder="Иван Грозный, Капитан, ..."
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
             />
 
             <Input
@@ -124,16 +148,6 @@ export function RegisterForm() {
               value={lastname}
               onChange={(e) => setLastname(e.target.value)}
               autoComplete="family-name"
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              placeholder="user@gradorix.ru"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              autoCapitalize="none"
             />
 
             <Input
@@ -165,7 +179,12 @@ export function RegisterForm() {
               onChange={(e) => setRole(e.target.value)}
             />
 
-            <Button type="submit" full loading={loading} disabled={!username || !firstname || !lastname || !email || !password || !passwordConfirm || !role}>
+            <Button
+              type="submit"
+              full
+              loading={loading}
+              disabled={!username || !firstname || !lastname || !password || !passwordConfirm || !role}
+            >
               Зарегистрироваться
             </Button>
 

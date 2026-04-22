@@ -4,10 +4,11 @@ import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
+import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import {
   useActivities, useUsers, useUpdateActivity, useCreateActivity, useDeleteActivity,
-  useChallenges, useChallengeJuniors, useUpdateChallengeJunior,
+  useChallenges, useChallengeJuniors, useUpdateChallengeJunior, useCreateNotification,
   useQuizzes, useQuizResults,
   useAchievements, useAllUserAchievements, useAwardAchievement, useRevokeAchievement,
   useCalendarEvents, useMeetingAttendance, useMarkAttendance, useUpdateAttendance,
@@ -38,12 +39,13 @@ function TasksTab() {
   const { data: assignments = [] } = useChallengeJuniors();
   const { data: allUsers = [] } = useUsers();
   const updateJunior = useUpdateChallengeJunior();
+  const createNotification = useCreateNotification();
 
   // Local state per assignment (challengeId+juniorId key)
   const [editing, setEditing] = useState<Record<string, { points: number; feedback: string }>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
 
-  const reviewable = assignments.filter(a => a.progress === 'DONE' || a.progress === 'IN_PROGRESS');
+  const reviewable = assignments.filter(a => a.progress === 'DONE');
 
   function key(a: typeof assignments[number]) { return `${a.challenge_id}-${a.junior_id}`; }
 
@@ -65,13 +67,19 @@ function TasksTab() {
     const st = getState(a);
     const challenge = challenges.find(c => c.id === a.challenge_id);
     const maxPts = challenge?.maxPoints;
+    const finalPoints = maxPts != null ? Math.min(st.points, maxPts) : st.points;
     await updateJunior.mutateAsync({
       challengeId: a.challenge_id,
       juniorId: a.junior_id,
       data: {
-        awarded_points: maxPts != null ? Math.min(st.points, maxPts) : st.points,
+        awarded_points: finalPoints,
         feedback: st.feedback || undefined,
       },
+    });
+    // Notify the junior
+    await createNotification.mutateAsync({
+      user_id: a.junior_id,
+      message: `⭐ HR проверил вашу задачу «${challenge?.title ?? `#${a.challenge_id}`}» — начислено ${finalPoints} баллов${st.feedback ? '. Есть обратная связь' : ''}||/challenges/${a.challenge_id}`,
     });
     setSaved(prev => ({ ...prev, [k]: true }));
     setTimeout(() => setSaved(prev => ({ ...prev, [k]: false })), 2000);
@@ -128,7 +136,7 @@ function TasksTab() {
 
             <textarea
               className={styles.feedbackArea}
-              placeholder="Обратная связь для HiPo..."
+              placeholder="Обратная связь для участника..."
               value={st.feedback}
               onChange={e => update(a, { feedback: e.target.value })}
             />
@@ -366,7 +374,7 @@ function AchievementsTab() {
 
           {expanded === ach.id && (
             <div className={styles.achieveBody}>
-              {juniors.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Нет HiPo участников</p>}
+              {juniors.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Нет Участник проектаов</p>}
               {juniors.map(j => {
                 const earned = hasAchievement(j.id, ach.id);
                 const name = `${j.firstname ?? ''} ${j.lastname ?? ''}`.trim() || j.username;
@@ -487,7 +495,7 @@ function EventsTab() {
           {juniors.length === 0 && (
             <tr>
               <td className={styles.attendTd} colSpan={sorted.length + 1} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                Нет HiPo участников
+                Нет Участник проектаов
               </td>
             </tr>
           )}
@@ -522,6 +530,7 @@ function HrPointsPage() {
     <>
       <PageHeader
         title="Управление баллами"
+        showBack
         subtitle={`${pendingTasks + pendingPersonal} ожидают проверки`}
       />
       <div className={styles.page}>
@@ -605,6 +614,7 @@ function HiPoAchievementsPage() {
     <>
       <PageHeader
         title="Мои достижения"
+        showBack
         subtitle={`${activities.length} отправлено`}
       />
       <div className={styles.page}>
@@ -690,11 +700,10 @@ function HiPoAchievementsPage() {
               value={form.description}
               onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
             />
-            <Input
+            <DateInput
               label="Дата получения"
-              type="date"
               value={form.achievedDate}
-              onChange={e => setForm(p => ({ ...p, achievedDate: e.target.value }))}
+              onChange={date => setForm(p => ({ ...p, achievedDate: date }))}
             />
 
             <div>

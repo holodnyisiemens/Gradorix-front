@@ -97,6 +97,11 @@
   white-space: nowrap;
 }
 
+.maxPointsAwarded {
+  color: var(--color-success-bright);
+  font-weight: 600;
+}
+
 .locked {
   opacity: 0.6;
   cursor: default;

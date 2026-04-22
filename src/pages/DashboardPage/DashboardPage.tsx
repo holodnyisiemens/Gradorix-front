@@ -1,18 +1,21 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Users, Zap, Link2, Bell, ChevronRight, Trophy, TrendingUp } from 'lucide-react';
+import { Users, Zap, Link2, ChevronRight, Trophy, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import {
-  useChallenges, useChallengeJuniors, useMentorJuniors, useNotifications,
+  useChallenges, useChallengeJuniors, useMentorJuniors,
   useCalendarEvents, useUserAchievementsWithStatus, useUsers, useUserPoints,
-  useQuizResults, useActivities,
+  useQuizResults,
 } from '@shared/hooks/useApi';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { UserCard } from '@modules/users/components/UserCard';
 import { AchievementList } from '@modules/achievements/components/AchievementCard';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { HRCharts } from '@modules/charts/HRCharts';
+import { UserProfileModal } from '@pages/UsersPage/UsersPage';
+import type { User } from '@shared/types';
 import { HiPoProgressChart } from '@modules/charts/HiPoProgressChart';
 import styles from './DashboardPage.module.css';
 
@@ -42,13 +45,11 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
   const { data: challenges = [] } = useChallenges();
   const { data: assignments = [] } = useChallengeJuniors({ junior_id: userId });
   const { data: events = [] } = useCalendarEvents();
-  const { data: notifications = [] } = useNotifications(userId);
   const { data: achievements = [] } = useUserAchievementsWithStatus(userId);
   const { data: pts } = useUserPoints(userId);
   const { data: quizResults = [] } = useQuizResults({ user_id: userId });
 
   const todayEvents = events.filter((e) => isToday(new Date(e.date)));
-  const unread = notifications.filter((n) => !n.is_read).length;
 
   // Enrich assignments with challenge data
   const enriched = assignments.map((a) => {
@@ -64,35 +65,18 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
 
   const activeChallenges = enriched.filter((c) => c.progress === 'IN_PROGRESS' || c.progress === 'GOING');
   const earnedAchievements = achievements.filter((a) => a.earned);
-  const totalXp = earnedAchievements.reduce((sum, a) => sum + a.xp, 0);
+  const totalPoints = pts?.totalPoints ?? earnedAchievements.reduce((sum, a) => sum + a.xp, 0);
 
   return (
     <>
-      <PageHeader
-        title="Главная"
-        actions={
-          <button
-            onClick={() => navigate('/notifications')}
-            style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 8 }}
-          >
-            <Bell size={22} />
-            {unread > 0 && (
-              <span style={{
-                position: 'absolute', top: 4, right: 4, width: 8, height: 8,
-                background: 'var(--accent-red)', borderRadius: '50%',
-                border: '1.5px solid var(--bg-base)',
-              }} />
-            )}
-          </button>
-        }
-      />
+      <PageHeader title="Главная" />
       <div className={styles.page}>
         <div className={styles.greeting}>
           <p className={styles.greetingDate}>{dateLabel}</p>
           <h1 className={styles.greetingName}>
             {greeting} <span className={styles.greetingAccent}>{firstName}</span>
           </h1>
-          <p className={styles.greetingRole}>HiPo · Программа наставничества</p>
+          <p className={styles.greetingRole}>Участник проекта ОКД</p>
         </div>
 
         <div className={styles.todaySection}>
@@ -107,11 +91,16 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
           ) : (
             <div className={styles.list}>
               {todayEvents.map((event) => (
-                <div key={event.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 14px', background: 'var(--bg-card)',
-                  border: '1px solid var(--border-subtle)', borderRadius: 10,
-                }}>
+                <div
+                  key={event.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', background: 'var(--bg-card)',
+                    border: '1px solid var(--border-subtle)', borderRadius: 10,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => navigate('/calendar')}
+                >
                   <span style={{ fontSize: 20 }}>
                     {event.type === 'challenge' ? '⚡' : event.type === 'meeting' ? '👥' : '🚨'}
                   </span>
@@ -139,8 +128,8 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
             <span className={styles.statLabel}>В процессе</span>
           </div>
           <div className={styles.statCard}>
-            <span className={`${styles.statValue} ${styles.statValueYellow}`}>{totalXp}</span>
-            <span className={styles.statLabel}>XP набрано</span>
+            <span className={`${styles.statValue} ${styles.statValueYellow}`}>{totalPoints}</span>
+            <span className={styles.statLabel}>Баллов набрано</span>
           </div>
         </div>
 
@@ -190,9 +179,14 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
               <Trophy size={16} style={{ color: 'var(--accent-yellow)', marginRight: 6, verticalAlign: 'middle' }} />
               Достижения
             </h2>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {earnedAchievements.length}/{achievements.length} открыто
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                {earnedAchievements.length}/{achievements.length} открыто
+              </span>
+              <a className={styles.seeAll} onClick={() => navigate('/points')}>
+                + Добавить <ChevronRight size={14} />
+              </a>
+            </div>
           </div>
           <AchievementList achievements={achievements} />
         </div>
@@ -205,11 +199,9 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
 function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: { userId: number; firstName: string; greeting: string; dateLabel: string; navigate: ReturnType<typeof useNavigate> }) {
   const { data: pairs = [] } = useMentorJuniors({ mentor_id: userId });
   const { data: allUsers = [] } = useUsers();
-  const { data: notifications = [] } = useNotifications(userId);
   const { data: allAssignments = [] } = useChallengeJuniors();
 
   const juniors = pairs.map((p) => allUsers.find((u) => u.id === p.junior_id)).filter(Boolean) as typeof allUsers;
-  const unread = notifications.filter((n) => !n.is_read).length;
 
   const juniorIds = juniors.map((j) => j.id);
   const totalAssignments = allAssignments.filter((cj) => juniorIds.includes(cj.junior_id)).length;
@@ -217,37 +209,20 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
 
   return (
     <>
-      <PageHeader
-        title="Главная"
-        actions={
-          <button
-            onClick={() => navigate('/notifications')}
-            style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 8 }}
-          >
-            <Bell size={22} />
-            {unread > 0 && (
-              <span style={{
-                position: 'absolute', top: 4, right: 4, width: 8, height: 8,
-                background: 'var(--accent-red)', borderRadius: '50%',
-                border: '1.5px solid var(--bg-base)',
-              }} />
-            )}
-          </button>
-        }
-      />
+      <PageHeader title="Главная" />
       <div className={styles.page}>
         <div className={styles.greeting}>
           <p className={styles.greetingDate}>{dateLabel}</p>
           <h1 className={styles.greetingName}>
             {greeting} <span className={styles.greetingAccent}>{firstName}</span>
           </h1>
-          <p className={styles.greetingRole}>Ментор · Программа наставничества</p>
+          <p className={styles.greetingRole}>Ментор</p>
         </div>
 
         <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/juniors')}>
             <span className={`${styles.statValue} ${styles.statValueAccent}`}>{juniors.length}</span>
-            <span className={styles.statLabel}>Моих HiPo</span>
+            <span className={styles.statLabel}>Подопечных</span>
           </div>
           <div className={styles.statCard}>
             <span className={`${styles.statValue} ${styles.statValueOrange}`}>{totalAssignments}</span>
@@ -257,9 +232,9 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
             <span className={`${styles.statValue} ${styles.statValueGreen}`}>{doneAssignments}</span>
             <span className={styles.statLabel}>Выполнено</span>
           </div>
-          <div className={styles.statCard}>
-            <span className={`${styles.statValue} ${styles.statValueBlue}`}>{unread}</span>
-            <span className={styles.statLabel}>Уведомлений</span>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/challenges')}>
+            <span className={`${styles.statValue} ${styles.statValueBlue}`}>{totalAssignments - doneAssignments}</span>
+            <span className={styles.statLabel}>В работе</span>
           </div>
         </div>
 
@@ -268,9 +243,8 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
             <h2 className={styles.sectionTitle}>Навигация</h2>
           </div>
           {[
-            { icon: <Users size={20} />, iconClass: styles.actionIconBlue, title: 'Мои HiPo', sub: `${juniors.length} участника`, to: '/juniors' },
+            { icon: <Users size={20} />, iconClass: styles.actionIconBlue, title: 'Подопечные в проекте', sub: `${juniors.length} участника`, to: '/juniors' },
             { icon: <Zap size={20} />, iconClass: styles.actionIconOrange, title: 'Все задачи', sub: 'Просмотр и назначение', to: '/challenges' },
-            { icon: <Bell size={20} />, iconClass: styles.actionIconRed, title: 'Уведомления', sub: unread > 0 ? `${unread} непрочитанных` : 'Всё прочитано', to: '/notifications' },
           ].map((item) => (
             <div key={item.to} className={styles.actionItem} onClick={() => navigate(item.to)}>
               <span className={`${styles.actionIcon} ${item.iconClass}`}>{item.icon}</span>
@@ -285,7 +259,7 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
 
         <div className={styles.recentSection}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Мои HiPo</h2>
+            <h2 className={styles.sectionTitle}>Подопечные в проекте</h2>
             <a className={styles.seeAll} onClick={() => navigate('/juniors')}>
               Все <ChevronRight size={14} />
             </a>
@@ -295,7 +269,7 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
               <UserCard key={junior.id} user={junior} onClick={() => navigate(`/juniors/${junior.id}`)} />
             ))}
             {juniors.length === 0 && (
-              <div className={styles.todayEmpty}>HiPo сотрудники ещё не назначены</div>
+              <div className={styles.todayEmpty}>Подопечные ещё не назначены</div>
             )}
           </div>
         </div>
@@ -306,6 +280,7 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
 
 // ===== HR =====
 function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: string; greeting: string; dateLabel: string; navigate: ReturnType<typeof useNavigate> }) {
+  const [profileUser, setProfileUser] = useState<User | null>(null);
   const { data: allUsers = [] } = useUsers();
   const { data: pairs = [] } = useMentorJuniors();
   const { data: challenges = [] } = useChallenges();
@@ -339,25 +314,25 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           <h1 className={styles.greetingName}>
             {greeting} <span className={styles.greetingAccent}>{firstName}</span>
           </h1>
-          <p className={styles.greetingRole}>HR · Управление программой</p>
+          <p className={styles.greetingRole}>Администратор</p>
         </div>
 
         <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/users')}>
             <span className={`${styles.statValue} ${styles.statValueAccent}`}>{totalUsers}</span>
             <span className={styles.statLabel}>Всего людей</span>
           </div>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/users')}>
             <span className={`${styles.statValue} ${styles.statValueGreen}`}>{activeUsers}</span>
             <span className={styles.statLabel}>Активных</span>
           </div>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/users')}>
             <span className={`${styles.statValue} ${styles.statValueBlue}`}>{mentors}</span>
             <span className={styles.statLabel}>Менторов</span>
           </div>
-          <div className={styles.statCard}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/users')}>
             <span className={`${styles.statValue} ${styles.statValueOrange}`}>{juniors}</span>
-            <span className={styles.statLabel}>HiPo</span>
+            <span className={styles.statLabel}>Участников</span>
           </div>
         </div>
 
@@ -368,8 +343,8 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           {[
             { icon: <Users size={20} />, iconClass: styles.actionIconBlue,   title: 'Пользователи', sub: `${totalUsers} человек`, to: '/users' },
             { icon: <Zap size={20} />,   iconClass: styles.actionIconOrange,  title: 'Задачи', sub: `${activeChallengesCount} активных`, to: '/challenges' },
-            { icon: <Link2 size={20} />, iconClass: styles.actionIconGreen,   title: 'Пары ментор — HiPo', sub: `${pairsCount} назначено`, to: '/mentorships' },
-            { icon: <TrendingUp size={20} />, iconClass: styles.actionIconRed, title: 'Активность HiPo', sub: 'Прогресс и статистика', to: '/dashboard' },
+            { icon: <Link2 size={20} />, iconClass: styles.actionIconGreen,   title: 'Пары ментор — участник', sub: `${pairsCount} назначено`, to: '/mentorships' },
+            { icon: <TrendingUp size={20} />, iconClass: styles.actionIconRed, title: 'Активность участников', sub: 'Прогресс и статистика', to: '/points' },
           ].map((item) => (
             <div key={item.title} className={styles.actionItem} onClick={() => navigate(item.to)}>
               <span className={`${styles.actionIcon} ${item.iconClass}`}>{item.icon}</span>
@@ -396,7 +371,7 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <TrendingUp size={16} style={{ color: 'var(--color-success-bright)', marginRight: 6, verticalAlign: 'middle' }} />
-              Активность HiPo
+              Активность участников
             </h2>
           </div>
           <div className={styles.list}>
@@ -406,7 +381,7 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
               const isTop = idx === 0;
               const name = `${junior.firstname ?? ''} ${junior.lastname ?? ''}`.trim() || junior.username;
               return (
-                <div key={stat.userId} className={styles.activityCard}>
+                <div key={stat.userId} className={styles.activityCard} onClick={() => setProfileUser(junior)} style={{ cursor: 'pointer' }}>
                   <div className={styles.activityHeader}>
                     <div className={styles.activityAvatar} style={{ background: isTop ? 'rgba(245,197,24,0.15)' : 'var(--bg-elevated)', borderColor: isTop ? 'rgba(245,197,24,0.4)' : 'var(--border-subtle)' }}>
                       {(junior.firstname?.[0] ?? junior.username[0]).toUpperCase()}
@@ -446,6 +421,8 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           </div>
         </div>
       </div>
+
+      {profileUser && <UserProfileModal user={profileUser} onClose={() => setProfileUser(null)} />}
     </>
   );
 }
