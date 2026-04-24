@@ -4,7 +4,7 @@ import { ExternalLink, Calendar, Star, Link2, Plus, X, Lock } from 'lucide-react
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { useChallenge, useChallengeJuniors, useUsers, useUpdateChallengeProgress, useUpdateChallengeJunior, useCreateNotification } from '@shared/hooks/useApi';
+import { useChallenge, useChallengeJuniors, useUpdateChallengeProgress, useUpdateChallengeJunior } from '@shared/hooks/useApi';
 import { ChallengeStatusBadge, ProgressBadge } from '@shared/components/ui/Badge/Badge';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Card } from '@shared/components/ui/Card/Card';
@@ -22,8 +22,7 @@ export function ChallengePage() {
   );
   const updateProgress = useUpdateChallengeProgress();
   const updateJunior = useUpdateChallengeJunior();
-  const createNotification = useCreateNotification();
-  const { data: allUsers = [] } = useUsers();
+
 
   const assignment = isJunior
     ? assignments.find((cj) => cj.challenge_id === Number(id) && cj.junior_id === user.id)
@@ -124,15 +123,6 @@ export function ChallengePage() {
         progress: 'DONE',
       },
     });
-    // Notify all HR users
-    const juniorName = [user.firstname, user.lastname].filter(Boolean).join(' ') || user.username;
-    const hrUsers = allUsers.filter(u => u.role === 'HR');
-    await Promise.all(hrUsers.map(hr =>
-      createNotification.mutateAsync({
-        user_id: hr.id,
-        message: `📋 Участник ${juniorName} отправил задачу «${challenge!.title}» на проверку||/points`,
-      })
-    ));
     setSaving(null);
   }
 

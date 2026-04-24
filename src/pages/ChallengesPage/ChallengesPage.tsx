@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import {
   useChallenges, useChallengeJuniors, useCreateChallenge,
-  useUpdateChallenge, useDeleteChallenge, useAssignChallenge, useUnassignChallenge, useUsers, useCreateNotification,
+  useUpdateChallenge, useDeleteChallenge, useAssignChallenge, useUnassignChallenge, useUsers,
   useCreateCalendarEvent,
 } from '@shared/hooks/useApi';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
@@ -59,7 +59,6 @@ export function ChallengesPage() {
   const deleteChallenge = useDeleteChallenge();
   const assignChallengeMut = useAssignChallenge();
   const unassignChallengeMut = useUnassignChallenge();
-  const createNotification = useCreateNotification();
   const createCalendarEvent = useCreateCalendarEvent();
 
   const juniors = allUsers.filter(u => u.role === 'JUNIOR');
@@ -109,12 +108,6 @@ export function ChallengesPage() {
         await Promise.all(juniors.map(j =>
           assignChallengeMut.mutateAsync({ challenge_id: created.id, junior_id: j.id, assigned_by: user.id, progress: 'GOING' })
         ));
-        await Promise.all(juniors.map(j =>
-          createNotification.mutateAsync({
-            user_id: j.id,
-            message: `📋 Вам назначена новая задача «${created.title}»||/challenges/${created.id}`,
-          })
-        ));
       }
       setNewModal(false);
       setNewChallenge(EMPTY_FORM);
@@ -145,12 +138,6 @@ export function ChallengesPage() {
         await Promise.all(toAssign.map(j =>
           assignChallengeMut.mutateAsync({ challenge_id: editChallenge.id, junior_id: j.id, assigned_by: user.id, progress: 'GOING' })
         ));
-        await Promise.all(toAssign.map(j =>
-          createNotification.mutateAsync({
-            user_id: j.id,
-            message: `📋 Вам назначена новая задача «${editChallenge.title}»||/challenges/${editChallenge.id}`,
-          })
-        ));
       }
     }
     setEditChallenge(null);
@@ -167,12 +154,6 @@ export function ChallengesPage() {
     ));
     await Promise.all(toAssign.map(juniorId =>
       assignChallengeMut.mutateAsync({ challenge_id: assignChallenge.id, junior_id: juniorId, assigned_by: user.id, progress: 'GOING' })
-    ));
-    await Promise.all(toAssign.map(juniorId =>
-      createNotification.mutateAsync({
-        user_id: juniorId,
-        message: `📋 Вам назначена новая задача «${assignChallenge.title}»||/challenges/${assignChallenge.id}`,
-      })
     ));
     setAssignChallenge(null);
     setSelectedJuniorIds([]);
@@ -217,7 +198,7 @@ export function ChallengesPage() {
                 <div key={c.id}>
                   <ChallengeCard
                     challenge={c}
-                    awardedPoints={isJunior && 'awardedPoints' in c ? c.awardedPoints : undefined}
+                    awardedPoints={isJunior && 'awardedPoints' in c ? (c.awardedPoints as number | null) : undefined}
                     showProgress={isJunior}
                     locked={isUpcoming}
                     onClick={isUpcoming ? undefined : () => navigate(`/challenges/${c.id}`)}
@@ -255,7 +236,7 @@ export function ChallengesPage() {
                       background: newChallenge.status === s ? 'rgba(204,0,0,0.15)' : 'transparent',
                       color: newChallenge.status === s ? 'var(--color-primary-bright)' : 'var(--text-muted)',
                     }}
-                  >{{ DRAFT: 'Черновик', UPCOMING: 'Скоро', ACTIVE: 'Активна' }[s]}</button>
+                  >{{ DRAFT: 'Черновик', UPCOMING: 'Скоро', ACTIVE: 'Активна' }[s as 'DRAFT' | 'UPCOMING' | 'ACTIVE']}</button>
                 ))}
               </div>
             </div>

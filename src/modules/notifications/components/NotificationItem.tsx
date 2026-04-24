@@ -25,7 +25,10 @@ function getNotificationEmoji(message: string): string {
 export function NotificationItem({ notification, onRead }: NotificationItemProps) {
   const navigate = useNavigate();
 
-  const [displayMessage, link] = notification.message.split('||');
+  // link field takes priority; fall back to legacy "message||/path" format for old records
+  const legacyParts = notification.message.split('||');
+  const displayMessage = legacyParts[0];
+  const link = notification.link ?? legacyParts[1];
 
   const timeAgo = notification.created_at
     ? formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: ru })

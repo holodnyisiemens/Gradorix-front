@@ -4,6 +4,7 @@ import type { Notification } from '@shared/types';
 export interface NotificationCreateInput {
   user_id: number;
   message: string;
+  link?: string;
   is_read?: boolean;
 }
 

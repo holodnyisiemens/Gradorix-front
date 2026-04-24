@@ -13,7 +13,7 @@ import {
   useAchievements, useAllUserAchievements, useAwardAchievement, useRevokeAchievement,
   useCalendarEvents, useMeetingAttendance, useMarkAttendance, useUpdateAttendance, useDeleteAttendance,
 } from '@shared/hooks/useApi';
-import { ChevronDown, ChevronUp, Link2, Plus, X, Star, ClipboardCheck, Calendar, CheckCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Link2, Plus, X, ClipboardCheck, Calendar, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { ActivityStatus } from '@shared/types';
@@ -79,7 +79,8 @@ function TasksTab() {
     // Notify the junior
     await createNotification.mutateAsync({
       user_id: a.junior_id,
-      message: `⭐ HR проверил вашу задачу «${challenge?.title ?? `#${a.challenge_id}`}» — начислено ${finalPoints} баллов${st.feedback ? '. Есть обратная связь' : ''}||/challenges/${a.challenge_id}`,
+      message: `⭐ HR проверил вашу задачу «${challenge?.title ?? `#${a.challenge_id}`}» — начислено ${finalPoints} баллов${st.feedback ? '. Есть обратная связь' : ''}`,
+      link: `/challenges/${a.challenge_id}`,
     });
     setSaved(prev => ({ ...prev, [k]: true }));
     setTimeout(() => setSaved(prev => ({ ...prev, [k]: false })), 2000);

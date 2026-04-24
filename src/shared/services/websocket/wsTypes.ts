@@ -68,6 +68,7 @@ export interface WsNotificationOut {
     user_id: number;
     title: string;
     body: string;
+    link?: string | null;
     is_read: boolean;        // always false on push
     created_at: string;      // ISO 8601, e.g. "2026-04-08T12:00:00Z"
   };

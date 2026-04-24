@@ -7,6 +7,7 @@ import { Select, type SelectOption } from '@shared/components/ui/Select/Select';
 import { Card } from '@shared/components/ui/Card/Card';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { authApi } from '@shared/api/services/auth';
+import { registerPushSubscription } from '@shared/services/push';
 import styles from './RegisterForm.module.css';
 
 const ROLE_OPTIONS: SelectOption[] = [
@@ -54,7 +55,7 @@ export function RegisterForm() {
     return '';
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -83,6 +84,7 @@ export function RegisterForm() {
       const user = await authApi.getMe();
       // Save nickname to display name if provided
       login(nickname.trim() ? { ...user, username: nickname.trim() || user.username } : user, access_token);
+      registerPushSubscription(user.id);
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '';
       setError(translateError(detail) || 'Не удалось зарегистрироваться. Попробуйте другой логин.');

@@ -6,6 +6,7 @@ import { Input } from '@shared/components/ui/Input/Input';
 import { Card } from '@shared/components/ui/Card/Card';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { authApi } from '@shared/api/services/auth';
+import { registerPushSubscription } from '@shared/services/push';
 import styles from './LoginForm.module.css';
 
 export function LoginForm() {
@@ -25,6 +26,7 @@ export function LoginForm() {
       localStorage.setItem('gradorix-token', access_token);
       const user = await authApi.getMe();
       login(user, access_token);
+      registerPushSubscription(user.id);
     } catch {
       setError('Неверный email или пароль');
     } finally {
@@ -32,7 +34,7 @@ export function LoginForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await doLogin(email.trim(), password);
   };
