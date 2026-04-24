@@ -33,9 +33,9 @@ export function RegisterForm() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [username, setUsername] = useState('');
-  const [nickname, setNickname] = useState('');
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [role, setRole] = useState('');
@@ -48,6 +48,7 @@ export function RegisterForm() {
     if (!username.trim()) return 'Логин обязателен';
     if (!firstname.trim()) return 'Имя обязательно';
     if (!lastname.trim()) return 'Фамилия обязательна';
+    if (!email.trim()) return 'Email обязателен';
     if (!password) return 'Пароль обязателен';
     if (password.length < 6) return 'Пароль должен быть минимум 6 символов';
     if (password !== passwordConfirm) return 'Пароли не совпадают';
@@ -66,28 +67,24 @@ export function RegisterForm() {
 
     setError('');
     setLoading(true);
-
-    // Use username as email stub so backend validation passes
-    const emailStub = `${username.trim()}@gradorix.local`;
-
     try {
       await authApi.register({
         username: username.trim(),
-        email: emailStub,
+        email: email.trim(),
         password,
         firstname: firstname.trim(),
         lastname: lastname.trim(),
         role: role as 'HR' | 'MENTOR' | 'JUNIOR',
       });
-      const { access_token } = await authApi.login({ email: emailStub, password });
+      // Backend returns {message}, not a token — login manually after register
+      const { access_token } = await authApi.login({ email: email.trim(), password });
       localStorage.setItem('gradorix-token', access_token);
       const user = await authApi.getMe();
-      // Save nickname to display name if provided
-      login(nickname.trim() ? { ...user, username: nickname.trim() || user.username } : user, access_token);
+      login(user, access_token);
       registerPushSubscription(user.id);
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '';
-      setError(translateError(detail) || 'Не удалось зарегистрироваться. Попробуйте другой логин.');
+      const axiosData = (err as { response?: { data?: { detail?: string } } })?.response?.data;
+      setError(axiosData?.detail || 'Не удалось зарегистрироваться. Возможно, такой электронный адрес уже используется.');
     } finally {
       setLoading(false);
     }
@@ -119,19 +116,11 @@ export function RegisterForm() {
             <Input
               label="Логин"
               type="text"
-              placeholder="ivanov_ivan"
+              placeholder="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               autoCapitalize="none"
-            />
-
-            <Input
-              label="Ник (как вас называть)"
-              type="text"
-              placeholder="Иван Грозный, Капитан, ..."
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
             />
 
             <Input
@@ -150,6 +139,16 @@ export function RegisterForm() {
               value={lastname}
               onChange={(e) => setLastname(e.target.value)}
               autoComplete="family-name"
+            />
+
+            <Input
+              label="Email"
+              type="email"
+              placeholder="user@gradorix.ru"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              autoCapitalize="none"
             />
 
             <Input
@@ -181,12 +180,7 @@ export function RegisterForm() {
               onChange={(e) => setRole(e.target.value)}
             />
 
-            <Button
-              type="submit"
-              full
-              loading={loading}
-              disabled={!username || !firstname || !lastname || !password || !passwordConfirm || !role}
-            >
+            <Button type="submit" full loading={loading} disabled={!username || !firstname || !lastname || !email || !password || !passwordConfirm || !role}>
               Зарегистрироваться
             </Button>
 
