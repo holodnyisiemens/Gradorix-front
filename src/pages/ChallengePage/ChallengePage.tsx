@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import {
-  useChallenge, useChallengeJuniors, useUpdateChallengeProgress, useUpdateChallengeJunior,
+  useChallenge, useChallengeJuniors, useUpdateChallengeProgress, useUpdateChallengeEmployee,
   useUpdateChallenge, useDeleteChallenge, useAssignChallenge, useUnassignChallenge,
   useUsers, useCreateNotification,
 } from '@shared/hooks/useApi';
@@ -75,16 +75,16 @@ export function ChallengePage() {
   const { id } = useParams<{ id: string }>();
   const user = useAuthStore((s) => s.user)!;
   const navigate = useNavigate();
-  const isJunior = user.role === 'JUNIOR';
+  const isEmployee = user.role === 'EMPLOYEE';
   const isHR = user.role === 'HR';
 
   const { data: challenge, isLoading } = useChallenge(Number(id));
   const { data: assignments = [] } = useChallengeJuniors(
-    isJunior ? { junior_id: user.id } : undefined
+    isEmployee ? { employee_id: user.id } : undefined
   );
   const { data: allUsers = [] } = useUsers();
   const updateProgress = useUpdateChallengeProgress();
-  const updateJunior = useUpdateChallengeJunior();
+  const updateJunior = useUpdateChallengeEmployee();
   const updateChallenge = useUpdateChallenge();
   const deleteChallenge = useDeleteChallenge();
   const assignChallengeMut = useAssignChallenge();
@@ -97,6 +97,7 @@ export function ChallengePage() {
   // HR: assign modal
   const [assignModal, setAssignModal] = useState(false);
   const [selectedJuniorIds, setSelectedJuniorIds] = useState<number[]>([]);
+  const [juniorSearch, setJuniorSearch] = useState('');
   // HR: stats + review accordions
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [reviewExpanded, setReviewExpanded] = useState(false);
@@ -106,29 +107,29 @@ export function ChallengePage() {
   const [editModeJuniors, setEditModeJuniors] = useState<Set<number>>(new Set());
 
   // Junior or HR-personal: comment & links
-  const assignment = isJunior
-    ? assignments.find((cj) => cj.challenge_id === Number(id) && cj.junior_id === user.id)
+  const assignment = isEmployee
+    ? assignments.find((cj) => cj.challenge_id === Number(id) && cj.employee_id === user.id)
     : null;
   const [comment, setComment] = useState('');
   const [links, setLinks] = useState<string[]>([]);
   const [linkInput, setLinkInput] = useState('');
   const [saving, setSaving] = useState<'draft' | 'submit' | null>(null);
 
-  const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
   const challengeAssignments = assignments.filter(a => a.challenge_id === Number(id));
 
   // personal = HR has assigned themselves and no one else is assigned
   const selfAssignment = isHR
-    ? challengeAssignments.find(a => a.junior_id === user.id) ?? null
+    ? challengeAssignments.find(a => a.employee_id === user.id) ?? null
     : null;
   const isPersonal = isHR &&
     challengeAssignments.length > 0 &&
-    challengeAssignments.every(a => a.junior_id === user.id);
+    challengeAssignments.every(a => a.employee_id === user.id);
 
   const activeAssignment = assignment ?? selfAssignment;
 
-  const awaitingReview = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points == null && a.junior_id !== user.id);
-  const alreadyReviewed = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points != null && a.junior_id !== user.id);
+  const awaitingReview = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points == null && a.employee_id !== user.id);
+  const alreadyReviewed = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points != null && a.employee_id !== user.id);
 
   const stats = (() => {
     if (!isHR || challengeAssignments.length === 0) return null;
@@ -151,7 +152,7 @@ export function ChallengePage() {
       setLinks(activeAssignment.links ?? []);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeAssignment?.challenge_id, activeAssignment?.junior_id]);
+  }, [activeAssignment?.challenge_id, activeAssignment?.employee_id]);
 
   useEffect(() => {
     if (
@@ -267,19 +268,19 @@ export function ChallengePage() {
   }
 
   function openAssign() {
-    setSelectedJuniorIds(challengeAssignments.map(a => a.junior_id));
+    setSelectedJuniorIds(challengeAssignments.map(a => a.employee_id));
     setAssignModal(true);
   }
 
   async function handleAssign() {
-    const existing = challengeAssignments.map(a => a.junior_id);
+    const existing = challengeAssignments.map(a => a.employee_id);
     const toAssign = selectedJuniorIds.filter(jid => !existing.includes(jid));
     const toUnassign = existing.filter(jid => !selectedJuniorIds.includes(jid));
     await Promise.all(toUnassign.map(juniorId =>
       unassignChallengeMut.mutateAsync({ challengeId: challenge.id, juniorId })
     ));
     await Promise.all(toAssign.map(juniorId =>
-      assignChallengeMut.mutateAsync({ challenge_id: challenge.id, junior_id: juniorId, assigned_by: user.id, progress: 'GOING' })
+      assignChallengeMut.mutateAsync({ challenge_id: challenge.id, employee_id: juniorId, assigned_by: user.id, progress: 'GOING' })
     ));
     setAssignModal(false);
   }
@@ -293,11 +294,11 @@ export function ChallengePage() {
   }
 
   function renderReviewForm(a: typeof assignments[number]) {
-    const junior = allUsers.find(u => u.id === a.junior_id);
-    const name = junior ? junior.username : `#${a.junior_id}`;
-    const st = getReviewState(a.junior_id, a.awarded_points ?? 0, a.feedback ?? '');
+    const junior = allUsers.find(u => u.id === a.employee_id);
+    const name = junior ? junior.username : `#${a.employee_id}`;
+    const st = getReviewState(a.employee_id, a.awarded_points ?? 0, a.feedback ?? '');
     const maxPts = challenge?.maxPoints;
-    const isSaved = saved[a.junior_id];
+    const isSaved = saved[a.employee_id];
 
     return (
       <div style={{
@@ -335,7 +336,7 @@ export function ChallengePage() {
             className={styles.scoreInput}
             onChange={e => setReviewing(prev => ({
               ...prev,
-              [a.junior_id]: { ...st, points: Math.max(0, maxPts != null ? Math.min(Number(e.target.value), maxPts) : Number(e.target.value)) },
+              [a.employee_id]: { ...st, points: Math.max(0, maxPts != null ? Math.min(Number(e.target.value), maxPts) : Number(e.target.value)) },
             }))}
           />
           {maxPts != null && <span className={styles.maxLabel}>/ {maxPts}</span>}
@@ -343,7 +344,7 @@ export function ChallengePage() {
         <textarea
           placeholder="Обратная связь для участника..."
           value={st.feedback}
-          onChange={e => setReviewing(prev => ({ ...prev, [a.junior_id]: { ...st, feedback: e.target.value } }))}
+          onChange={e => setReviewing(prev => ({ ...prev, [a.employee_id]: { ...st, feedback: e.target.value } }))}
           style={{
             width: '100%', minHeight: 72, background: 'var(--bg-elevated)',
             border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)',
@@ -360,22 +361,22 @@ export function ChallengePage() {
   }
 
   async function saveReview(a: typeof assignments[number]) {
-    const st = getReviewState(a.junior_id, a.awarded_points ?? 0, a.feedback ?? '');
+    const st = getReviewState(a.employee_id, a.awarded_points ?? 0, a.feedback ?? '');
     const maxPts = challenge.maxPoints;
     const finalPoints = maxPts != null ? Math.min(st.points, maxPts) : st.points;
     await updateJunior.mutateAsync({
       challengeId: challenge.id,
-      juniorId: a.junior_id,
+      juniorId: a.employee_id,
       data: { awarded_points: finalPoints, feedback: st.feedback || undefined },
     });
     createNotification.mutate({
-      user_id: a.junior_id,
+      user_id: a.employee_id,
       message: `⭐ HR проверил вашу задачу «${challenge.title}» — начислено ${finalPoints} баллов${st.feedback ? '. Есть обратная связь' : ''}`,
       link: `/challenges/${challenge.id}`,
     });
-    setSaved(prev => ({ ...prev, [a.junior_id]: true }));
-    setEditModeJuniors(prev => { const next = new Set(prev); next.delete(a.junior_id); return next; });
-    setTimeout(() => setSaved(prev => ({ ...prev, [a.junior_id]: false })), 2000);
+    setSaved(prev => ({ ...prev, [a.employee_id]: true }));
+    setEditModeJuniors(prev => { const next = new Set(prev); next.delete(a.employee_id); return next; });
+    setTimeout(() => setSaved(prev => ({ ...prev, [a.employee_id]: false })), 2000);
   }
 
   return (
@@ -388,7 +389,7 @@ export function ChallengePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             {!isPersonal && (
               <Button size="sm" variant="ghost" onClick={openAssign} style={{ flex: 1 }}>
-                Назначить ({challengeAssignments.filter(a => a.junior_id !== user.id).length})
+                Назначить ({challengeAssignments.filter(a => a.employee_id !== user.id).length})
               </Button>
             )}
             {isPersonal && (
@@ -409,9 +410,9 @@ export function ChallengePage() {
           <ChallengeStatusBadge status={challenge.status} />
           {activeAssignment && <ProgressBadge progress={currentProgress ?? activeAssignment.progress} />}
           {challenge.maxPoints != null && challenge.maxPoints > 0 && !isPersonal && (
-            <span className={[styles.maxPointsBadge, isJunior && activeAssignment?.awarded_points != null ? styles.maxPointsBadgeAwarded : ''].join(' ')}>
+            <span className={[styles.maxPointsBadge, isEmployee && activeAssignment?.awarded_points != null ? styles.maxPointsBadgeAwarded : ''].join(' ')}>
               <Star size={13} />
-              {isJunior && activeAssignment?.awarded_points != null
+              {isEmployee && activeAssignment?.awarded_points != null
                 ? `${activeAssignment.awarded_points} из ${challenge.maxPoints} баллов`
                 : `до ${challenge.maxPoints} баллов`}
             </span>
@@ -524,7 +525,7 @@ export function ChallengePage() {
             {reviewExpanded && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
                 {awaitingReview.map(a => (
-                  <div key={a.junior_id}>{renderReviewForm(a)}</div>
+                  <div key={a.employee_id}>{renderReviewForm(a)}</div>
                 ))}
               </div>
             )}
@@ -551,13 +552,13 @@ export function ChallengePage() {
             {reviewedExpanded && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
                 {alreadyReviewed.map(a => {
-                  const inEditMode = editModeJuniors.has(a.junior_id);
-                  if (inEditMode) return <div key={a.junior_id}>{renderReviewForm(a)}</div>;
+                  const inEditMode = editModeJuniors.has(a.employee_id);
+                  if (inEditMode) return <div key={a.employee_id}>{renderReviewForm(a)}</div>;
 
-                  const junior = allUsers.find(u => u.id === a.junior_id);
-                  const name = junior ? junior.username : `#${a.junior_id}`;
+                  const junior = allUsers.find(u => u.id === a.employee_id);
+                  const name = junior ? junior.username : `#${a.employee_id}`;
                   return (
-                    <div key={a.junior_id} style={{
+                    <div key={a.employee_id} style={{
                       padding: 'var(--space-3) var(--space-4)',
                       background: 'rgba(61,189,106,0.05)', border: '1px solid rgba(61,189,106,0.2)',
                       borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)',
@@ -566,7 +567,7 @@ export function ChallengePage() {
                         <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-primary)' }}>
                           👤 {name}
                         </p>
-                        <Button size="sm" variant="ghost" onClick={() => setEditModeJuniors(prev => new Set([...prev, a.junior_id]))}>
+                        <Button size="sm" variant="ghost" onClick={() => setEditModeJuniors(prev => new Set([...prev, a.employee_id]))}>
                           Редактировать
                         </Button>
                       </div>
@@ -590,7 +591,7 @@ export function ChallengePage() {
         )}
 
         {/* Junior / HR-personal: editable submission */}
-        {(isJunior || isPersonal) && activeAssignment && isActive && !isSubmitted && (
+        {(isEmployee || isPersonal) && activeAssignment && isActive && !isSubmitted && (
           <div className={styles.submissionSection}>
             <h3 className={styles.sectionTitle}>Комментарий</h3>
             <textarea
@@ -641,7 +642,7 @@ export function ChallengePage() {
         )}
 
         {/* Junior / HR-personal: read-only submitted view */}
-        {(isJunior || isPersonal) && activeAssignment && isActive && isSubmitted && (
+        {(isEmployee || isPersonal) && activeAssignment && isActive && isSubmitted && (
           <>
             {activeAssignment.comment && (
               <div className={styles.submissionReadonly}>
@@ -664,7 +665,7 @@ export function ChallengePage() {
         )}
 
         {/* Junior / HR-personal: completed/cancelled read-only */}
-        {(isJunior || isPersonal) && activeAssignment && (isCompleted || isCancelled) && (
+        {(isEmployee || isPersonal) && activeAssignment && (isCompleted || isCancelled) && (
           <>
             {activeAssignment.comment && (
               <div className={styles.submissionReadonly}>
@@ -686,13 +687,13 @@ export function ChallengePage() {
           </>
         )}
 
-        {isJunior && assignment && isActive && isSubmitted && assignment.feedback == null && assignment.awarded_points == null && (
+        {isEmployee && assignment && isActive && isSubmitted && assignment.feedback == null && assignment.awarded_points == null && (
           <div className={styles.pendingReviewNotice}>
             ✅ Задача отправлена на проверку. Ожидайте обратной связи от HR.
           </div>
         )}
 
-        {isJunior && assignment && (assignment.feedback || assignment.awarded_points != null) && (
+        {isEmployee && assignment && (assignment.feedback || assignment.awarded_points != null) && (
           <div className={styles.hrFeedback}>
             {assignment.awarded_points != null && (
               <div className={styles.hrFeedbackPoints}>
@@ -746,28 +747,36 @@ export function ChallengePage() {
 
       {/* Assign modal */}
       {assignModal && (
-        <Modal open={true} onClose={() => { setAssignModal(false); setSelectedJuniorIds([]); }} title={`Назначить: ${challenge.title}`} type="dialog">
+        <Modal open={true} onClose={() => { setAssignModal(false); setSelectedJuniorIds([]); setJuniorSearch(''); }} title={`Назначить: ${challenge.title}`} type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Выберите участников:</p>
+            <Input
+              placeholder="Поиск участников..."
+              value={juniorSearch}
+              onChange={e => setJuniorSearch(e.target.value)}
+            />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', maxHeight: 280, overflowY: 'auto' }}>
-              {juniors.map(j => {
-                const isSelected = selectedJuniorIds.includes(j.id);
-                return (
-                  <button key={j.id} onClick={() => toggleJunior(j.id)}
-                    style={{
-                      padding: '10px 12px', borderRadius: 6, border: '1px solid', textAlign: 'left',
-                      cursor: 'pointer',
-                      borderColor: isSelected ? 'var(--color-primary)' : 'var(--border-subtle)',
-                      background: isSelected ? 'rgba(204,0,0,0.15)' : 'transparent',
-                      color: 'var(--text-primary)', fontSize: 13,
-                    }}
-                  >
-                    {isSelected ? '✓ ' : ''}{j.username}
-                  </button>
-                );
-              })}
-              {juniors.length === 0 && (
-                <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Нет доступных участников</p>
+              {juniors
+                .filter(j => j.username.toLowerCase().includes(juniorSearch.toLowerCase()))
+                .map(j => {
+                  const isSelected = selectedJuniorIds.includes(j.id);
+                  return (
+                    <button key={j.id} onClick={() => toggleJunior(j.id)}
+                      style={{
+                        padding: '10px 12px', borderRadius: 6, border: '1px solid', textAlign: 'left',
+                        cursor: 'pointer',
+                        borderColor: isSelected ? 'var(--color-primary)' : 'var(--border-subtle)',
+                        background: isSelected ? 'rgba(204,0,0,0.15)' : 'transparent',
+                        color: 'var(--text-primary)', fontSize: 13,
+                      }}
+                    >
+                      {isSelected ? '✓ ' : ''}{j.username}
+                    </button>
+                  );
+                })}
+              {juniors.filter(j => j.username.toLowerCase().includes(juniorSearch.toLowerCase())).length === 0 && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                  {juniors.length === 0 ? 'Нет доступных участников' : 'Ничего не найдено'}
+                </p>
               )}
             </div>
             <Button full onClick={handleAssign} disabled={assignChallengeMut.isPending || unassignChallengeMut.isPending}>

@@ -17,7 +17,7 @@ type ExtraLink = { to: string; icon: React.ReactNode; label: string };
 
 function getExtraLinks(role: string): ExtraLink[] {
   switch (role) {
-    case 'JUNIOR':
+    case 'EMPLOYEE':
       return [
         { to: '/challenges',    icon: <Zap size={18} />,          label: 'Задачи' },
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
@@ -65,11 +65,11 @@ export function ProfilePage() {
   const initials = user.username.slice(0, 2).toUpperCase();
 
   const { data: pts } = useUserPoints(user.id);
-  const isHiPo = user.role === 'JUNIOR';
+  const isHiPo = user.role === 'EMPLOYEE';
   const { data: achievements = [] } = useUserAchievementsWithStatus(isHiPo ? user.id : undefined);
   const earnedAch = achievements.filter((a) => a.earned);
   const { data: quizResults = [] } = useQuizResults(isHiPo ? { user_id: user.id } : undefined);
-  const { data: assignments = [] } = useChallengeJuniors(isHiPo ? { junior_id: user.id } : undefined);
+  const { data: assignments = [] } = useChallengeJuniors(isHiPo ? { employee_id: user.id } : undefined);
   const doneChallenges = assignments.filter((c) => c.progress === 'DONE').length;
 
   const levelPct = pts

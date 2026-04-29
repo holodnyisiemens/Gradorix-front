@@ -14,7 +14,7 @@ export function JuniorsPage() {
   const { data: allAssignments = [] } = useChallengeJuniors();
 
   const juniors = pairs
-    .map((p) => allUsers.find((u) => u.id === p.junior_id))
+    .map((p) => allUsers.find((u) => u.id === p.employee_id))
     .filter(Boolean) as typeof allUsers;
 
   return (
@@ -29,7 +29,7 @@ export function JuniorsPage() {
         ) : (
           <div className={styles.list}>
             {juniors.map((junior) => {
-              const assignments = allAssignments.filter((cj) => cj.junior_id === junior.id);
+              const assignments = allAssignments.filter((cj) => cj.employee_id === junior.id);
               const done = assignments.filter((a) => a.progress === 'DONE').length;
               const total = assignments.length;
               return (

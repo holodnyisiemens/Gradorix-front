@@ -2,8 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   usersApi,
   challengesApi,
-  challengeJuniorApi,
-  mentorJuniorApi,
+  challengeEmployeeApi,
+  mentorEmployeeApi,
   notificationsApi,
   calendarEventsApi,
   achievementsApi,
@@ -85,19 +85,22 @@ export const useDeleteChallenge = () => {
   });
 };
 
-// ===== CHALLENGE-JUNIOR =====
-export const useChallengeJuniors = (params?: { junior_id?: number; assigned_by?: number }) =>
+// ===== CHALLENGE-EMPLOYEE =====
+export const useChallengeJuniors = (params?: { employee_id?: number; assigned_by?: number }) =>
   useQuery({
-    queryKey: ['challenge-junior', params],
-    queryFn: () => challengeJuniorApi.getAll(params),
-    staleTime: 0, // always refetch so juniors see HR feedback/points immediately
+    queryKey: ['challenge-employee', params],
+    queryFn: () => challengeEmployeeApi.getAll(
+      params ? { employee_id: params.employee_id, assigned_by: params.assigned_by } : undefined
+    ),
+    staleTime: 0,
   });
 
 export const useAssignChallenge = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: challengeJuniorApi.create,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-junior'] }),
+    mutationFn: (data: import('@shared/api/services/challengeEmployee').ChallengeEmployeeCreateInput) =>
+      challengeEmployeeApi.create(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-employee'] }),
   });
 };
 
@@ -105,8 +108,8 @@ export const useUnassignChallenge = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ challengeId, juniorId }: { challengeId: number; juniorId: number }) =>
-      challengeJuniorApi.delete(challengeId, juniorId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-junior'] }),
+      challengeEmployeeApi.delete(challengeId, juniorId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-employee'] }),
   });
 };
 
@@ -114,32 +117,35 @@ export const useUpdateChallengeProgress = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ challengeId, juniorId, progress }: { challengeId: number; juniorId: number; progress: string }) =>
-      challengeJuniorApi.update(challengeId, juniorId, { progress: progress as 'GOING' | 'IN_PROGRESS' | 'DONE' | 'SKIPPED' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-junior'] }),
+      challengeEmployeeApi.update(challengeId, juniorId, { progress: progress as 'GOING' | 'IN_PROGRESS' | 'DONE' | 'SKIPPED' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-employee'] }),
   });
 };
 
-export const useUpdateChallengeJunior = () => {
+export const useUpdateChallengeEmployee = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ challengeId, juniorId, data }: { challengeId: number; juniorId: number; data: import('@shared/api/services/challengeJunior').ChallengeJuniorUpdateInput }) =>
-      challengeJuniorApi.update(challengeId, juniorId, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-junior'] }),
+    mutationFn: ({ challengeId, juniorId, data }: { challengeId: number; juniorId: number; data: import('@shared/api/services/challengeEmployee').ChallengeEmployeeUpdateInput }) =>
+      challengeEmployeeApi.update(challengeId, juniorId, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['challenge-employee'] }),
   });
 };
 
-// ===== MENTOR-JUNIOR =====
-export const useMentorJuniors = (params?: { mentor_id?: number; junior_id?: number }) =>
+// ===== MENTOR-EMPLOYEE =====
+export const useMentorJuniors = (params?: { mentor_id?: number; employee_id?: number }) =>
   useQuery({
-    queryKey: ['mentor-junior', params],
-    queryFn: () => mentorJuniorApi.getAll(params),
+    queryKey: ['mentor-employee', params],
+    queryFn: () => mentorEmployeeApi.getAll(
+      params ? { mentor_id: params.mentor_id, employee_id: params.employee_id } : undefined
+    ),
   });
 
 export const useAssignMentor = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: mentorJuniorApi.create,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['mentor-junior'] }),
+    mutationFn: (data: import('@shared/api/services/mentorEmployee').MentorEmployeeCreateInput) =>
+      mentorEmployeeApi.create(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['mentor-employee'] }),
   });
 };
 
@@ -147,8 +153,8 @@ export const useRemoveMentor = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ mentorId, juniorId }: { mentorId: number; juniorId: number }) =>
-      mentorJuniorApi.delete(mentorId, juniorId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['mentor-junior'] }),
+      mentorEmployeeApi.delete(mentorId, juniorId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['mentor-employee'] }),
   });
 };
 

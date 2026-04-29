@@ -11,7 +11,7 @@ import { registerPushSubscription } from '@shared/services/push';
 import styles from './RegisterForm.module.css';
 
 const ROLE_OPTIONS: SelectOption[] = [
-  { value: 'JUNIOR', label: 'Участник проекта ОКД' },
+  { value: 'EMPLOYEE', label: 'Участник проекта ОКД' },
   { value: 'HR', label: 'Администратор' },
   { value: 'MENTOR', label: 'Ментор' },
 ];
@@ -65,7 +65,7 @@ export function RegisterForm() {
       const { access_token, refresh_token } = await authApi.register({
         username: username.trim(),
         password,
-        role: role as 'HR' | 'MENTOR' | 'JUNIOR',
+        role: role as 'HR' | 'MENTOR' | 'EMPLOYEE',
       });
       localStorage.setItem('gradorix-token', access_token);
       const user = await authApi.getMe();

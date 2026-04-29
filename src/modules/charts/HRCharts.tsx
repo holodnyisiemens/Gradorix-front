@@ -77,11 +77,11 @@ function useHRChartsData() {
   const { data: quizResults = [] } = useQuizResults();
   const { data: allAssignments = [] } = useChallengeJuniors();
 
-  const hipoUsers = allUsers.filter(u => u.role === 'JUNIOR');
+  const hipoUsers = allUsers.filter(u => u.role === 'EMPLOYEE');
 
   // Stacked bar: tasks per HiPo
   const tasksData = hipoUsers.map(u => {
-    const ua = allAssignments.filter(a => a.junior_id === u.id);
+    const ua = allAssignments.filter(a => a.employee_id === u.id);
     return {
       name: u.username.slice(0, 8),
       fullName: u.username,

@@ -1,5 +1,5 @@
 import styles from './Badge.module.css';
-import type { ChallengeStatus, ChallengeJuniorProgress, UserRole } from '@shared/types';
+import type { ChallengeStatus, ChallengeEmployeeProgress, UserRole } from '@shared/types';
 
 type BadgeColor = 'default' | 'red' | 'orange' | 'green' | 'yellow' | 'blue' | 'gray';
 
@@ -31,8 +31,8 @@ export function ChallengeStatusBadge({ status }: { status: ChallengeStatus }) {
   return <Badge color={color} dot>{label}</Badge>;
 }
 
-export function ProgressBadge({ progress }: { progress: ChallengeJuniorProgress }) {
-  const map: Record<ChallengeJuniorProgress, { color: BadgeColor; label: string }> = {
+export function ProgressBadge({ progress }: { progress: ChallengeEmployeeProgress }) {
+  const map: Record<ChallengeEmployeeProgress, { color: BadgeColor; label: string }> = {
     GOING:       { color: 'gray',   label: 'Не начат' },
     IN_PROGRESS: { color: 'orange', label: 'В процессе' },
     DONE:        { color: 'green',  label: 'Выполнен' },
@@ -44,9 +44,9 @@ export function ProgressBadge({ progress }: { progress: ChallengeJuniorProgress 
 
 export function RoleBadge({ role }: { role: UserRole }) {
   const map: Record<UserRole, { color: BadgeColor; label: string }> = {
-    HR:     { color: 'yellow', label: 'HR' },
-    MENTOR: { color: 'blue',   label: 'Ментор' },
-    JUNIOR: { color: 'green',  label: 'Участник' },
+    HR:       { color: 'yellow', label: 'HR' },
+    MENTOR:   { color: 'blue',   label: 'Ментор' },
+    EMPLOYEE: { color: 'green',  label: 'Участник' },
   };
   const { color, label } = map[role];
   return <Badge color={color}>{label}</Badge>;

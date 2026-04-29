@@ -24,7 +24,7 @@ interface NavConfig {
 
 function getNavConfig(role: UserRole): NavConfig {
   switch (role) {
-    case 'JUNIOR':
+    case 'EMPLOYEE':
       return {
         primary: [
           { to: '/dashboard',    icon: <Home size={18} />,          label: 'Главная' },
@@ -69,13 +69,15 @@ function getNavConfig(role: UserRole): NavConfig {
           { to: '/admin',     icon: <Settings size={18} />,  label: 'Админ-панель' },
         ],
       };
+    default:
+      return { primary: [], secondary: [] };
   }
 }
 
 const roleLabel: Record<UserRole, string> = {
-  HR: 'HR',
-  MENTOR: 'Ментор',
-  JUNIOR: 'Участник',
+  HR:       'HR',
+  MENTOR:   'Ментор',
+  EMPLOYEE: 'Участник',
 };
 
 interface SideNavProps {}

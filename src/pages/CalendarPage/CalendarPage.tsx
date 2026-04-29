@@ -204,11 +204,11 @@ function TimeRow({ startTime, endTime, onStart, onEnd }: {
 // ── Main page ────────────────────────────────────────────────────────────────
 export function CalendarPage() {
   const user = useAuthStore((s) => s.user)!;
-  const isJunior = user.role === 'JUNIOR';
+  const isEmployee = user.role === 'EMPLOYEE';
 
   const { data: events = [] } = useCalendarEvents();
   const { data: allUsers = [] } = useUsers();
-  const { data: myAssignments = [] } = useChallengeJuniors(isJunior ? { junior_id: user.id } : undefined);
+  const { data: myAssignments = [] } = useChallengeJuniors(isEmployee ? { employee_id: user.id } : undefined);
   const { data: attendance = [] } = useMeetingAttendance();
 
   const createEvent = useCreateCalendarEvent();
@@ -231,14 +231,14 @@ export function CalendarPage() {
       if (user.role === 'HR') return true;
 
       if (ev.type === 'deadline') {
-        if (isJunior) return ev.challengeId != null && assignedChallengeIds.has(ev.challengeId);
+        if (isEmployee) return ev.challengeId != null && assignedChallengeIds.has(ev.challengeId);
         return true;
       }
 
       if (ev.attendeeIds.length === 0) return ev.createdBy === user.id;
       return ev.attendeeIds.includes(user.id);
     }),
-    [events, user, isJunior, assignedChallengeIds]
+    [events, user, isEmployee, assignedChallengeIds]
   );
 
   const [showCreate, setShowCreate] = useState(false);
@@ -256,7 +256,7 @@ export function CalendarPage() {
       window.open(`/challenges/${ev.challengeId}`, '_blank');
       return;
     }
-    if (isJunior && ev.type === 'meeting' && ev.date <= today) {
+    if (isEmployee && ev.type === 'meeting' && ev.date <= today) {
       setAttendanceEvent(ev);
       return;
     }
@@ -331,27 +331,6 @@ export function CalendarPage() {
       />
       <div className={styles.page}>
         <Calendar events={visibleEvents} onEventClick={handleEventClick} />
-
-        {user.role === 'HR' && visibleEvents.length > 0 && (
-          <div style={{ marginTop: 'var(--space-4)' }}>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>Все мероприятия</p>
-            {visibleEvents.map(ev => (
-              <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: 'var(--space-2) 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, color: 'var(--text-primary)' }}>{ev.title}</p>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                    {ev.date}{ev.startTime ? ` · ${ev.startTime}${ev.endTime ? `–${ev.endTime}` : ''}` : ''} · {ev.type}
-                    {ev.attendeeIds.length > 0 ? ` · ${ev.attendeeIds.length} уч.` : ''}
-                  </p>
-                </div>
-                <Button size="sm" variant="ghost" onClick={() => setDetailEvent({ ...ev })}>👁</Button>
-                {ev.createdBy === user.id && (
-                  <Button size="sm" variant="danger" onClick={() => deleteEvent.mutate(ev.id)}>✕</Button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ── Создать событие ── */}
@@ -460,6 +439,14 @@ export function CalendarPage() {
                 )}
               </div>
               <p style={{ fontSize: 14, color: 'var(--text-secondary)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>📅 {formatEventTime(detailEvent)}</p>
+              {detailEvent.createdBy != null && (() => {
+                const creator = allUsers.find(u => u.id === detailEvent.createdBy);
+                return creator ? (
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                    Инициатор: <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{creator.username}</span>
+                  </p>
+                ) : null;
+              })()}
               {detailEvent.description && (
                 <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{detailEvent.description}</p>
               )}

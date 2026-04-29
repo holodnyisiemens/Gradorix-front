@@ -35,7 +35,7 @@ export function DashboardPage() {
   const greeting = greetByTime();
   const firstName = user.username;
 
-  if (user.role === 'JUNIOR') return <JuniorDashboard userId={user.id} firstName={firstName} greeting={greeting} dateLabel={dateLabel} navigate={navigate} />;
+  if (user.role === 'EMPLOYEE') return <JuniorDashboard userId={user.id} firstName={firstName} greeting={greeting} dateLabel={dateLabel} navigate={navigate} />;
   if (user.role === 'MENTOR') return <MentorDashboard userId={user.id} firstName={firstName} greeting={greeting} dateLabel={dateLabel} navigate={navigate} />;
   return <HrDashboard firstName={firstName} greeting={greeting} dateLabel={dateLabel} navigate={navigate} />;
 }
@@ -43,13 +43,20 @@ export function DashboardPage() {
 // ===== JUNIOR =====
 function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: { userId: number; firstName: string; greeting: string; dateLabel: string; navigate: ReturnType<typeof useNavigate> }) {
   const { data: challenges = [] } = useChallenges();
-  const { data: assignments = [] } = useChallengeJuniors({ junior_id: userId });
+  const { data: assignments = [] } = useChallengeJuniors({ employee_id: userId });
   const { data: events = [] } = useCalendarEvents();
   const { data: achievements = [] } = useUserAchievementsWithStatus(userId);
   const { data: pts } = useUserPoints(userId);
   const { data: quizResults = [] } = useQuizResults({ user_id: userId });
 
-  const todayEvents = events.filter((e) => isToday(new Date(e.date)));
+  const assignedChallengeIds = new Set(assignments.map((a) => a.challenge_id));
+
+  const todayEvents = events.filter((e) => {
+    if (!isToday(new Date(e.date))) return false;
+    if (e.type === 'deadline') return e.challengeId != null && assignedChallengeIds.has(e.challengeId);
+    if (e.attendeeIds.length === 0) return e.createdBy === userId;
+    return e.attendeeIds.includes(userId);
+  });
 
   // Enrich assignments with challenge data
   const enriched = assignments.map((a) => {
@@ -200,12 +207,20 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
   const { data: pairs = [] } = useMentorJuniors({ mentor_id: userId });
   const { data: allUsers = [] } = useUsers();
   const { data: allAssignments = [] } = useChallengeJuniors();
+  const { data: events = [] } = useCalendarEvents();
 
-  const juniors = pairs.map((p) => allUsers.find((u) => u.id === p.junior_id)).filter(Boolean) as typeof allUsers;
+  const todayEvents = events.filter((e) => {
+    if (!isToday(new Date(e.date))) return false;
+    if (e.type === 'deadline') return true;
+    if (e.attendeeIds.length === 0) return e.createdBy === userId;
+    return e.attendeeIds.includes(userId);
+  });
+
+  const juniors = pairs.map((p) => allUsers.find((u) => u.id === p.employee_id)).filter(Boolean) as typeof allUsers;
 
   const juniorIds = juniors.map((j) => j.id);
-  const totalAssignments = allAssignments.filter((cj) => juniorIds.includes(cj.junior_id)).length;
-  const doneAssignments = allAssignments.filter((cj) => juniorIds.includes(cj.junior_id) && cj.progress === 'DONE').length;
+  const totalAssignments = allAssignments.filter((cj) => juniorIds.includes(cj.employee_id)).length;
+  const doneAssignments = allAssignments.filter((cj) => juniorIds.includes(cj.employee_id) && cj.progress === 'DONE').length;
 
   return (
     <>
@@ -237,7 +252,40 @@ function MentorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
             <span className={styles.statLabel}>В работе</span>
           </div>
         </div>
-
+        <div className={styles.todaySection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Сегодня</h2>
+            <a className={styles.seeAll} onClick={() => navigate('/calendar')}>
+              Календарь <ChevronRight size={14} />
+            </a>
+          </div>
+          {todayEvents.length === 0 ? (
+            <div className={styles.todayEmpty}>Сегодня событий нет 🎉</div>
+          ) : (
+            <div className={styles.list}>
+              {todayEvents.map((event) => (
+                <div
+                  key={event.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', background: 'var(--bg-card)',
+                    border: '1px solid var(--border-subtle)', borderRadius: 10,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => navigate('/calendar')}
+                >
+                  <span style={{ fontSize: 20 }}>
+                    {event.type === 'challenge' ? '⚡' : event.type === 'meeting' ? '👥' : '🚨'}
+                  </span>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{event.title}</p>
+                    {event.description && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{event.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <div className={styles.quickActions}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Навигация</h2>
@@ -285,18 +333,20 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
   const { data: pairs = [] } = useMentorJuniors();
   const { data: challenges = [] } = useChallenges();
   const { data: allAssignments = [] } = useChallengeJuniors();
+  const { data: events = [] } = useCalendarEvents();
 
+  const todayEvents = events.filter((e) => isToday(new Date(e.date)));
   const totalUsers = allUsers.length;
   const activeUsers = allUsers.filter((u) => u.is_active).length;
   const mentors = allUsers.filter((u) => u.role === 'MENTOR').length;
-  const juniors = allUsers.filter((u) => u.role === 'JUNIOR').length;
+  const juniors = allUsers.filter((u) => u.role === 'EMPLOYEE').length;
   const pairsCount = pairs.length;
   const activeChallengesCount = challenges.filter((c) => c.status === 'ACTIVE').length;
 
   // Compute junior activity stats from assignments
-  const juniorUsers = allUsers.filter((u) => u.role === 'JUNIOR');
+  const juniorUsers = allUsers.filter((u) => u.role === 'EMPLOYEE');
   const activityStats = juniorUsers.map((u) => {
-    const userAssignments = allAssignments.filter((a) => a.junior_id === u.id);
+    const userAssignments = allAssignments.filter((a) => a.employee_id === u.id);
     const done = userAssignments.filter((a) => a.progress === 'DONE').length;
     const inProgress = userAssignments.filter((a) => a.progress === 'IN_PROGRESS').length;
     const going = userAssignments.filter((a) => a.progress === 'GOING').length;
@@ -316,7 +366,6 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
           </h1>
           <p className={styles.greetingRole}>Администратор</p>
         </div>
-
         <div className={styles.statsGrid}>
           <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/users')}>
             <span className={`${styles.statValue} ${styles.statValueAccent}`}>{totalUsers}</span>
@@ -335,7 +384,40 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
             <span className={styles.statLabel}>Участников</span>
           </div>
         </div>
-
+        <div className={styles.todaySection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Сегодня</h2>
+            <a className={styles.seeAll} onClick={() => navigate('/calendar')}>
+              Календарь <ChevronRight size={14} />
+            </a>
+          </div>
+          {todayEvents.length === 0 ? (
+            <div className={styles.todayEmpty}>Сегодня событий нет 🎉</div>
+          ) : (
+            <div className={styles.list}>
+              {todayEvents.map((event) => (
+                <div
+                  key={event.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', background: 'var(--bg-card)',
+                    border: '1px solid var(--border-subtle)', borderRadius: 10,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => navigate('/calendar')}
+                >
+                  <span style={{ fontSize: 20 }}>
+                    {event.type === 'challenge' ? '⚡' : event.type === 'meeting' ? '👥' : '🚨'}
+                  </span>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{event.title}</p>
+                    {event.description && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{event.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <div className={styles.quickActions}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Управление</h2>

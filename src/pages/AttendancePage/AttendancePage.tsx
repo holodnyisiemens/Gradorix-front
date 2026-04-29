@@ -16,7 +16,7 @@ export function AttendancePage() {
   const updateAttendance = useUpdateAttendance();
 
   const meetings = events;
-  const hipoUsers = allUsers.filter(u => u.role === 'JUNIOR');
+  const hipoUsers = allUsers.filter(u => u.role === 'EMPLOYEE');
 
   function handleMark(eventId: number, userId: number, attended: boolean) {
     const existing = attendance.find((a: MeetingAttendance) => a.eventId === eventId && a.userId === userId);

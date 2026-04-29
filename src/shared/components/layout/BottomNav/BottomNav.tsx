@@ -12,7 +12,7 @@ interface NavItem {
 
 function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
   switch (role) {
-    case 'JUNIOR':
+    case 'EMPLOYEE':
       return [
         { to: '/dashboard',   icon: <Home size={20} />,          label: 'Главная' },
         { to: '/challenges',  icon: <Zap size={20} />,           label: 'Задачи' },
@@ -36,6 +36,8 @@ function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
         { to: '/mentorships', icon: <Link2 size={20} />,   label: 'Пары' },
         { to: '/profile',     icon: <User size={20} />,    label: 'Профиль' },
       ];
+    default:
+      return [];
   }
 }
 

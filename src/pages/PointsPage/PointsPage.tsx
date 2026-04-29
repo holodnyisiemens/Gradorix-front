@@ -226,7 +226,7 @@ function AchievementsTab() {
   const revoke = useRevokeAchievement();
   const [expanded, setExpanded] = useState<number | null>(null);
 
-  const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
 
   function hasAchievement(userId: number, achievementId: number) {
     return userAchievements.some(ua => ua.user_id === userId && ua.achievement_id === achievementId);
@@ -305,7 +305,7 @@ function EventsTab() {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [search, setSearch] = useState('');
 
-  const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
   const meetingEvents = [...events]
     .filter(ev => ev.type === 'meeting')
     .sort((a, b) => b.date.localeCompare(a.date));

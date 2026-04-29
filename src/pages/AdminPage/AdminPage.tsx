@@ -37,7 +37,7 @@ export function AdminPage() {
   const [newAchModal, setNewAchModal] = useState(false);
   const [newAch, setNewAch] = useState({ title: '', description: '', icon: '🏆', xp: 100, category: 'challenge' as const });
   const [newUserModal, setNewUserModal] = useState(false);
-  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: 'JUNIOR' as UserRole });
+  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: 'EMPLOYEE' as UserRole });
   const [newUserError, setNewUserError] = useState('');
   const [newEventModal, setNewEventModal] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', description: '', type: 'meeting' as CalendarEvent['type'] });
@@ -101,7 +101,7 @@ export function AdminPage() {
         role: newUser.role,
       });
       setNewUserModal(false);
-      setNewUser({ username: '', email: '', password: '', role: 'JUNIOR' });
+      setNewUser({ username: '', email: '', password: '', role: 'EMPLOYEE' });
     } catch {
       setNewUserError('Ошибка при создании. Проверьте данные.');
     }
@@ -355,7 +355,7 @@ export function AdminPage() {
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Роль</p>
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                {(['JUNIOR', 'MENTOR', 'HR'] as UserRole[]).map(r => (
+                {(['EMPLOYEE', 'MENTOR', 'HR'] as UserRole[]).map(r => (
                   <button
                     key={r}
                     onClick={() => setNewUser(p => ({ ...p, role: r }))}
@@ -383,7 +383,7 @@ export function AdminPage() {
       {/* Award Achievement Modal */}
       {awardModal !== null && (() => {
         const ach = achievements.find(a => a.id === awardModal);
-        const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+        const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
         return (
           <Modal open={true} onClose={() => setAwardModal(null)} title="Наградить участника" type="dialog">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -446,7 +446,7 @@ export function AdminPage() {
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Участник</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 160, overflowY: 'auto' }}>
-                {allUsers.filter(u => u.role === 'JUNIOR').map(u => (
+                {allUsers.filter(u => u.role === 'EMPLOYEE').map(u => (
                   <button key={u.id} onClick={() => setNewActivity(p => ({ ...p, userId: u.id }))}
                     style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid', textAlign: 'left', cursor: 'pointer', fontSize: 12,
                       borderColor: newActivity.userId === u.id ? 'var(--color-primary)' : 'var(--border-subtle)',

@@ -10,11 +10,11 @@ import type { User, UserRole } from '@shared/types';
 import styles from './UsersPage.module.css';
 
 export function UserProfileModal({ user, onClose }: { user: User; onClose: () => void }) {
-  const isJunior = user.role === 'JUNIOR';
+  const isEmployee = user.role === 'EMPLOYEE';
   const { data: pts } = useUserPoints(user.id);
-  const { data: assignments = [] } = useChallengeJuniors(isJunior ? { junior_id: user.id } : undefined);
-  const { data: quizResults = [] } = useQuizResults(isJunior ? { user_id: user.id } : undefined);
-  const { data: activities = [] } = useActivities(isJunior ? { user_id: user.id } : undefined);
+  const { data: assignments = [] } = useChallengeJuniors(isEmployee ? { employee_id: user.id } : undefined);
+  const { data: quizResults = [] } = useQuizResults(isEmployee ? { user_id: user.id } : undefined);
+  const { data: activities = [] } = useActivities(isEmployee ? { user_id: user.id } : undefined);
 
   const initials = user.username.slice(0, 2).toUpperCase();
 
@@ -54,7 +54,7 @@ export function UserProfileModal({ user, onClose }: { user: User; onClose: () =>
         </div>
 
         {/* Stats — only for JUNIORs */}
-        {isJunior && (
+        {isEmployee && (
           <div>
             <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Статистика</p>
             {pts && row('Уровень', `${pts.level} — ${pts.levelName}`)}
@@ -76,7 +76,7 @@ const ROLE_FILTERS: { key: RoleFilter; label: string }[] = [
   { key: 'all',    label: 'Все' },
   { key: 'HR',     label: 'HR' },
   { key: 'MENTOR', label: 'Менторы' },
-  { key: 'JUNIOR', label: 'Участник' },
+  { key: 'EMPLOYEE', label: 'Участник' },
 ];
 
 export function UsersPage() {

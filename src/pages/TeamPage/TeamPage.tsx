@@ -31,7 +31,7 @@ export function TeamPage() {
   const [form, setForm] = useState({ name: '', project: '', description: '', status: 'active' as TeamStatus, mentor_id: '' as string | number, member_ids: [] as number[] });
 
   const mentors = allUsers.filter(u => u.role === 'MENTOR');
-  const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
 
   const team = isHR ? null : teams.find((t) => t.memberIds.includes(user.id) || t.mentorId === user.id);
 

@@ -1,8 +1,8 @@
 export { authApi } from './services/auth';
 export { usersApi } from './services/users';
 export { challengesApi } from './services/challenges';
-export { challengeJuniorApi } from './services/challengeJunior';
-export { mentorJuniorApi } from './services/mentorJunior';
+export { challengeEmployeeApi } from './services/challengeEmployee';
+export { mentorEmployeeApi } from './services/mentorEmployee';
 export { notificationsApi } from './services/notifications';
 export { calendarEventsApi } from './services/calendarEvents';
 export { achievementsApi } from './services/achievements';

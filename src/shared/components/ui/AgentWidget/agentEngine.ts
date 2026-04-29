@@ -60,7 +60,7 @@ export function generateReply(text: string, role: string, ctx: ReplyContext): st
       return withFollowup(`📊 **Топ участников по выполнению задач:**\n\n${top || 'Данных пока нет'}\n\nДанные актуальны на сегодня.`, role);
     }
     if (q.includes('список') || q.includes('все участник') || q.includes('перечисли')) {
-      const juniors = ctx.allUsers.filter(u => u.role === 'JUNIOR');
+      const juniors = ctx.allUsers.filter(u => u.role === 'EMPLOYEE');
       const list = juniors.map((u, i) => `${i + 1}. ${u.username}`).join('\n');
       return withFollowup(`👥 **Участники программы (${juniors.length}):**\n\n${list || 'Пока никого нет'}`, role);
     }

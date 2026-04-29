@@ -21,11 +21,11 @@ export function MentorshipsPage() {
   const removeMentor = useRemoveMentor();
 
   const mentors = allUsers.filter(u => u.role === 'MENTOR');
-  const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
 
   async function handleCreatePair() {
     if (!selectedMentorId || !selectedJuniorId) return;
-    await assignMentor.mutateAsync({ mentor_id: selectedMentorId, junior_id: selectedJuniorId, assigned_by: currentUser.id });
+    await assignMentor.mutateAsync({ mentor_id: selectedMentorId, employee_id: selectedJuniorId, assigned_by: currentUser.id });
     setPairModal(false);
     setSelectedMentorId(null);
     setSelectedJuniorId(null);
@@ -34,7 +34,7 @@ export function MentorshipsPage() {
   // Group by mentor
   const grouped = pairs.reduce<Record<number, number[]>>((acc, pair) => {
     if (!acc[pair.mentor_id]) acc[pair.mentor_id] = [];
-    acc[pair.mentor_id].push(pair.junior_id);
+    acc[pair.mentor_id].push(pair.employee_id);
     return acc;
   }, {});
 
@@ -76,7 +76,7 @@ export function MentorshipsPage() {
                         <p className={styles.nameSm}>{junior.username}</p>
                         <p className={styles.usernameSm}>@{junior.username}</p>
                       </div>
-                      <RoleBadge role="JUNIOR" />
+                      <RoleBadge role="EMPLOYEE" />
                       {isHR && (
                         <button
                           onClick={() => removeMentor.mutate({ mentorId: Number(mentorId), juniorId: jid })}

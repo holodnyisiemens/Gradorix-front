@@ -9,9 +9,9 @@ interface UserCardProps {
 }
 
 const avatarClass: Record<string, string> = {
-  HR:     styles.avatarHr,
-  MENTOR: styles.avatarMentor,
-  JUNIOR: styles.avatarJunior,
+  HR:       styles.avatarHr,
+  MENTOR:   styles.avatarMentor,
+  EMPLOYEE: styles.avatarJunior,
 };
 
 function getInitials(user: User): string {

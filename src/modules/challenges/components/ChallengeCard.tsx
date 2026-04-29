@@ -1,12 +1,12 @@
 import { Calendar, ExternalLink, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import type { Challenge, ChallengeJuniorProgress } from '@shared/types';
+import type { Challenge, ChallengeEmployeeProgress } from '@shared/types';
 import { ChallengeStatusBadge, ProgressBadge } from '@shared/components/ui/Badge/Badge';
 import styles from './ChallengeCard.module.css';
 
 interface ChallengeCardProps {
-  challenge: Challenge & { progress?: ChallengeJuniorProgress };
+  challenge: Challenge & { progress?: ChallengeEmployeeProgress };
   awardedPoints?: number | null;
   onClick?: () => void;
   showProgress?: boolean;

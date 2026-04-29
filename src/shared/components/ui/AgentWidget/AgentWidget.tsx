@@ -40,8 +40,8 @@ export function AgentWidget() {
   const { data: allAssignments = [] } = useChallengeJuniors();
   const { data: userPoints } = useUserPoints(user.id);
 
-  const juniorActivityStats = allUsers.filter(u => u.role === 'JUNIOR').map(u => {
-    const ua = allAssignments.filter(a => a.junior_id === u.id);
+  const juniorActivityStats = allUsers.filter(u => u.role === 'EMPLOYEE').map(u => {
+    const ua = allAssignments.filter(a => a.employee_id === u.id);
     const done = ua.filter(a => a.progress === 'DONE').length;
     const skipped = ua.filter(a => a.progress === 'SKIPPED').length;
     const total = ua.length;

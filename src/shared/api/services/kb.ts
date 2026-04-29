@@ -93,10 +93,15 @@ export const kbApi = {
     form.append('created_at', data.created_at
       ? data.created_at.split('T')[0]
       : new Date().toISOString().split('T')[0]);
-    if (data.files) {
+    if (data.files?.length) {
       data.files.forEach(f => form.append('files', f));
     }
-    const res = await apiClient.post<KBArticleBackend>('/kb-articles/', form);
+    // Remove the default 'application/json' Content-Type so axios 1.x passes
+    // FormData as-is to XHR, which then sets multipart/form-data with boundary.
+    const res = await apiClient.post<KBArticleBackend>('/kb-articles/', form, {
+      headers: { 'Content-Type': undefined },
+      timeout: 60000,
+    });
     return mapArticle(res.data);
   },
 
@@ -112,10 +117,13 @@ export const kbApi = {
     if (data.title != null) form.append('title', data.title);
     if (data.content != null) form.append('content', data.content);
     if (data.author != null) form.append('author', data.author);
-    if (data.files) {
+    if (data.files?.length) {
       data.files.forEach(f => form.append('files', f));
     }
-    const res = await apiClient.patch<KBArticleBackend>(`/kb-articles/${id}`, form);
+    const res = await apiClient.patch<KBArticleBackend>(`/kb-articles/${id}`, form, {
+      headers: { 'Content-Type': undefined },
+      timeout: 60000,
+    });
     return mapArticle(res.data);
   },
 

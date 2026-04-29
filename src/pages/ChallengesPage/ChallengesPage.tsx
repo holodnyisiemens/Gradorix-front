@@ -11,10 +11,10 @@ import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
 import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Modal } from '@shared/components/ui/Modal/Modal';
-import type { ChallengeStatus, ChallengeJuniorProgress } from '@shared/types';
+import type { ChallengeStatus, ChallengeEmployeeProgress } from '@shared/types';
 import styles from './ChallengesPage.module.css';
 
-type Filter = 'all' | ChallengeStatus | ChallengeJuniorProgress;
+type Filter = 'all' | ChallengeStatus | ChallengeEmployeeProgress;
 
 const JUNIOR_FILTERS: { key: Filter; label: string }[] = [
   { key: 'all',         label: 'Все' },
@@ -42,20 +42,20 @@ export function ChallengesPage() {
   const [newChallenge, setNewChallenge] = useState(EMPTY_FORM);
   const [createError, setCreateError] = useState('');
 
-  const isJunior = user.role === 'JUNIOR';
-  const filters = isJunior ? JUNIOR_FILTERS : HR_MENTOR_FILTERS;
+  const isEmployee = user.role === 'EMPLOYEE';
+  const filters = isEmployee ? JUNIOR_FILTERS : HR_MENTOR_FILTERS;
 
   const { data: challenges = [] } = useChallenges();
   const { data: allUsers = [] } = useUsers();
-  const { data: assignments = [] } = useChallengeJuniors(isJunior ? { junior_id: user.id } : undefined);
+  const { data: assignments = [] } = useChallengeJuniors(isEmployee ? { employee_id: user.id } : undefined);
   const { data: allAssignments = [] } = useChallengeJuniors();
   const createChallenge = useCreateChallenge();
   const assignChallengeMut = useAssignChallenge();
   const createCalendarEvent = useCreateCalendarEvent();
 
-  const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
 
-  const allChallenges = isJunior
+  const allChallenges = isEmployee
     ? assignments
         .map((a) => {
           const challenge = challenges.find((c) => c.id === a.challenge_id);
@@ -63,13 +63,13 @@ export function ChallengesPage() {
           if (challenge.status === 'DRAFT') return null;
           return { ...challenge, progress: a.progress, awardedPoints: a.awarded_points };
         })
-        .filter(Boolean) as (typeof challenges[number] & { progress: ChallengeJuniorProgress; awardedPoints?: number })[]
+        .filter(Boolean) as (typeof challenges[number] & { progress: ChallengeEmployeeProgress; awardedPoints?: number })[]
     : challenges;
 
   const filtered = (filter === 'all'
     ? allChallenges
     : allChallenges.filter((c) => {
-        if (isJunior && 'progress' in c) return c.progress === filter;
+        if (isEmployee && 'progress' in c) return c.progress === filter;
         return c.status === filter;
       })
   )
@@ -104,10 +104,10 @@ export function ChallengesPage() {
         });
       }
       if (newChallenge.personal) {
-        await assignChallengeMut.mutateAsync({ challenge_id: created.id, junior_id: user.id, assigned_by: user.id, progress: 'GOING' });
+        await assignChallengeMut.mutateAsync({ challenge_id: created.id, employee_id: user.id, assigned_by: user.id, progress: 'GOING' });
       } else if (newChallenge.assignAll && juniors.length > 0) {
         await Promise.all(juniors.map(j =>
-          assignChallengeMut.mutateAsync({ challenge_id: created.id, junior_id: j.id, assigned_by: user.id, progress: 'GOING' })
+          assignChallengeMut.mutateAsync({ challenge_id: created.id, employee_id: j.id, assigned_by: user.id, progress: 'GOING' })
         ));
       }
       setNewModal(false);
@@ -118,7 +118,7 @@ export function ChallengesPage() {
     }
   }
 
-  const title = isJunior ? 'Мои задачи' : 'Задачи';
+  const title = isEmployee ? 'Мои задачи' : 'Задачи';
 
   return (
     <>
@@ -156,8 +156,8 @@ export function ChallengesPage() {
                 <ChallengeCard
                   key={c.id}
                   challenge={c}
-                  awardedPoints={isJunior && 'awardedPoints' in c ? (c.awardedPoints as number | null) : undefined}
-                  showProgress={isJunior}
+                  awardedPoints={isEmployee && 'awardedPoints' in c ? (c.awardedPoints as number | null) : undefined}
+                  showProgress={isEmployee}
                   pendingReview={pendingCount || undefined}
                   onClick={() => navigate(`/challenges/${c.id}`)}
                 />

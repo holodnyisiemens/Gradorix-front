@@ -1,8 +1,8 @@
-export type UserRole = 'HR' | 'MENTOR' | 'JUNIOR';
+export type UserRole = 'HR' | 'MENTOR' | 'EMPLOYEE';
 
 export type ChallengeStatus = 'DRAFT' | 'UPCOMING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
 
-export type ChallengeJuniorProgress = 'GOING' | 'IN_PROGRESS' | 'DONE' | 'SKIPPED';
+export type ChallengeEmployeeProgress = 'GOING' | 'IN_PROGRESS' | 'DONE' | 'SKIPPED';
 
 export interface User {
   id: number;
@@ -21,23 +21,22 @@ export interface Challenge {
   maxPoints?: number;
 }
 
-export interface MentorJunior {
+export interface MentorEmployee {
   mentor_id: number;
-  junior_id: number;
+  employee_id: number;
   assigned_by: number;
 }
 
-export interface ChallengeJunior {
+export interface ChallengeEmployee {
   challenge_id: number;
-  junior_id: number;
+  employee_id: number;
   assigned_by: number;
-  progress: ChallengeJuniorProgress;
+  progress: ChallengeEmployeeProgress;
   comment?: string;
   links?: string[];
   awarded_points?: number;
   feedback?: string;
 }
-
 export interface Notification {
   id: number;
   user_id: number;
@@ -73,7 +72,7 @@ export interface Achievement {
   xp: number;
 }
 
-export interface JuniorActivityStats {
+export interface EmployeeActivityStats {
   userId: number;
   totalChallenges: number;
   done: number;
