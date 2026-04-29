@@ -8,7 +8,6 @@ import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import {
   useActivities, useUsers, useUpdateActivity, useCreateActivity, useDeleteActivity,
-  useChallenges, useChallengeJuniors, useUpdateChallengeJunior, useCreateNotification,
   useQuizzes, useQuizResults,
   useAchievements, useAllUserAchievements, useAwardAchievement, useRevokeAchievement,
   useCalendarEvents, useMeetingAttendance, useMarkAttendance, useUpdateAttendance, useDeleteAttendance,
@@ -29,130 +28,6 @@ const STATUS_LABEL: Record<ActivityStatus, string> = {
   revision: 'На доработку',
   rejected: 'Отклонено',
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HR: Задачи tab
-// ─────────────────────────────────────────────────────────────────────────────
-
-function TasksTab() {
-  const { data: challenges = [] } = useChallenges();
-  const { data: assignments = [] } = useChallengeJuniors();
-  const { data: allUsers = [] } = useUsers();
-  const updateJunior = useUpdateChallengeJunior();
-  const createNotification = useCreateNotification();
-
-  // Local state per assignment (challengeId+juniorId key)
-  const [editing, setEditing] = useState<Record<string, { points: number; feedback: string }>>({});
-  const [saved, setSaved] = useState<Record<string, boolean>>({});
-
-  const reviewable = assignments.filter(a => a.progress === 'DONE');
-
-  function key(a: typeof assignments[number]) { return `${a.challenge_id}-${a.junior_id}`; }
-
-  function getState(a: typeof assignments[number]) {
-    const k = key(a);
-    if (editing[k]) return editing[k];
-    const challenge = challenges.find(c => c.id === a.challenge_id);
-    return { points: a.awarded_points ?? 0, feedback: a.feedback ?? '', maxPoints: challenge?.maxPoints };
-  }
-
-  function update(a: typeof assignments[number], patch: Partial<{ points: number; feedback: string }>) {
-    const k = key(a);
-    const cur = getState(a);
-    setEditing(prev => ({ ...prev, [k]: { ...cur, ...patch } }));
-  }
-
-  async function save(a: typeof assignments[number]) {
-    const k = key(a);
-    const st = getState(a);
-    const challenge = challenges.find(c => c.id === a.challenge_id);
-    const maxPts = challenge?.maxPoints;
-    const finalPoints = maxPts != null ? Math.min(st.points, maxPts) : st.points;
-    await updateJunior.mutateAsync({
-      challengeId: a.challenge_id,
-      juniorId: a.junior_id,
-      data: {
-        awarded_points: finalPoints,
-        feedback: st.feedback || undefined,
-      },
-    });
-    // Notify the junior
-    await createNotification.mutateAsync({
-      user_id: a.junior_id,
-      message: `⭐ HR проверил вашу задачу «${challenge?.title ?? `#${a.challenge_id}`}» — начислено ${finalPoints} баллов${st.feedback ? '. Есть обратная связь' : ''}`,
-      link: `/challenges/${a.challenge_id}`,
-    });
-    setSaved(prev => ({ ...prev, [k]: true }));
-    setTimeout(() => setSaved(prev => ({ ...prev, [k]: false })), 2000);
-  }
-
-  if (reviewable.length === 0) {
-    return <div className={styles.empty}>Нет задач на проверке</div>;
-  }
-
-  return (
-    <div className={styles.list}>
-      {reviewable.map(a => {
-        const challenge = challenges.find(c => c.id === a.challenge_id);
-        const junior = allUsers.find(u => u.id === a.junior_id);
-        const juniorName = junior ? `${junior.firstname ?? ''} ${junior.lastname ?? ''}`.trim() || junior.username : `#${a.junior_id}`;
-        const k = key(a);
-        const st = getState(a);
-        const maxPts = challenge?.maxPoints;
-        const isSaved = saved[k];
-
-        return (
-          <div key={k} className={styles.card}>
-            <div className={styles.cardTop}>
-              <p className={styles.cardTitle}>{challenge?.title ?? `Задача #${a.challenge_id}`}</p>
-              <span className={[styles.statusBadge, a.progress === 'DONE' ? styles.approved : styles.pending].join(' ')}>
-                {a.progress === 'DONE' ? 'Выполнено' : 'В процессе'}
-              </span>
-            </div>
-            <p className={styles.userName}>👤 {juniorName}</p>
-
-            {a.comment && <p className={styles.cardDesc}>{a.comment}</p>}
-            {(a.links ?? []).length > 0 && (
-              <div className={styles.linksList}>
-                {(a.links ?? []).map(url => (
-                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className={styles.linksItem}>
-                    <Link2 size={11} />{url}
-                  </a>
-                ))}
-              </div>
-            )}
-
-            <div className={styles.scoreRow}>
-              <span className={styles.scoreLabel}>Баллы:</span>
-              <input
-                type="number"
-                className={styles.scoreInput}
-                min={0}
-                max={maxPts ?? undefined}
-                value={st.points}
-                onChange={e => update(a, { points: Math.max(0, maxPts != null ? Math.min(Number(e.target.value), maxPts) : Number(e.target.value)) })}
-              />
-              {maxPts != null && <span className={styles.maxLabel}>/ {maxPts}</span>}
-            </div>
-
-            <textarea
-              className={styles.feedbackArea}
-              placeholder="Обратная связь для участника..."
-              value={st.feedback}
-              onChange={e => update(a, { feedback: e.target.value })}
-            />
-
-            <div className={styles.actions}>
-              <Button size="sm" onClick={() => save(a)} disabled={updateJunior.isPending}>
-                {isSaved ? '✓ Сохранено' : 'Сохранить'}
-              </Button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HR: Тесты tab
@@ -269,7 +144,7 @@ function PersonalTab() {
         <div className={styles.list}>
           {filtered.map(a => {
             const u = allUsers.find(x => x.id === a.userId);
-            const name = u ? `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim() || u.username : `#${a.userId}`;
+            const name = u ? u.username : `#${a.userId}`;
             const ed = getEdit(a.id, a.awardedPoints ?? 0, a.reviewNote ?? '');
 
             return (
@@ -378,7 +253,7 @@ function AchievementsTab() {
               {juniors.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Нет Участник проектаов</p>}
               {juniors.map(j => {
                 const earned = hasAchievement(j.id, ach.id);
-                const name = `${j.firstname ?? ''} ${j.lastname ?? ''}`.trim() || j.username;
+                const name = j.username;
                 return (
                   <div key={j.id} className={styles.juniorRow}>
                     <p className={styles.juniorName}>{name}</p>
@@ -457,8 +332,7 @@ function EventsTab() {
 
   const filteredJuniors = juniors.filter(j => {
     if (!search.trim()) return true;
-    const name = `${j.firstname ?? ''} ${j.lastname ?? ''}`.trim() || j.username;
-    return name.toLowerCase().includes(search.toLowerCase());
+    return j.username.toLowerCase().includes(search.toLowerCase());
   });
 
   return (
@@ -508,8 +382,8 @@ function EventsTab() {
                   <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: 'var(--space-3) 0' }}>Никого не найдено</p>
                 )}
                 {filteredJuniors.map(j => {
-                  const name = `${j.firstname ?? ''} ${j.lastname ?? ''}`.trim() || j.username;
-                  const initials = ((j.firstname?.[0] ?? '') + (j.lastname?.[0] ?? '')).toUpperCase() || j.username.slice(0, 2).toUpperCase();
+                  const name = j.username;
+                  const initials = j.username.slice(0, 2).toUpperCase();
                   const rec = getRecord(ev.id, j.id);
                   const state: 'none' | 'absent' | 'present' =
                     !rec ? 'none' : rec.attended ? 'present' : 'absent';
@@ -547,10 +421,9 @@ function EventsTab() {
 // HR: full page with tabs
 // ─────────────────────────────────────────────────────────────────────────────
 
-type HrTab = 'tasks' | 'tests' | 'personal' | 'achievements' | 'events';
+type HrTab = 'tests' | 'personal' | 'achievements' | 'events';
 
 const HR_TABS: { key: HrTab; label: string }[] = [
-  { key: 'tasks',        label: 'Задачи' },
   { key: 'tests',        label: 'Тесты' },
   { key: 'personal',     label: 'Личные достижения' },
   { key: 'achievements', label: 'Достижения' },
@@ -558,10 +431,8 @@ const HR_TABS: { key: HrTab; label: string }[] = [
 ];
 
 function HrPointsPage() {
-  const [tab, setTab] = useState<HrTab>('tasks');
-  const { data: assignments = [] } = useChallengeJuniors();
+  const [tab, setTab] = useState<HrTab>('personal');
   const { data: activities = [] } = useActivities();
-  const pendingTasks    = assignments.filter(a => a.progress === 'DONE' && a.awarded_points == null).length;
   const pendingPersonal = activities.filter(a => a.type === 'achievement' && a.status === 'pending').length;
 
   return (
@@ -569,12 +440,12 @@ function HrPointsPage() {
       <PageHeader
         title="Управление баллами"
         showBack
-        subtitle={`${pendingTasks + pendingPersonal} ожидают проверки`}
+        subtitle={pendingPersonal > 0 ? `${pendingPersonal} ожидают проверки` : undefined}
       />
       <div className={styles.page}>
         <div className={styles.tabs}>
           {HR_TABS.map(t => {
-            const badge = t.key === 'tasks' ? pendingTasks : t.key === 'personal' ? pendingPersonal : 0;
+            const badge = t.key === 'personal' ? pendingPersonal : 0;
             return (
               <button
                 key={t.key}
@@ -588,7 +459,6 @@ function HrPointsPage() {
           })}
         </div>
 
-        {tab === 'tasks'        && <TasksTab />}
         {tab === 'tests'        && <TestsTab />}
         {tab === 'personal'     && <PersonalTab />}
         {tab === 'achievements' && <AchievementsTab />}

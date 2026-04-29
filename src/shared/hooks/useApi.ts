@@ -442,8 +442,17 @@ export const useDeleteKBSection = () => {
 export const useCreateKBArticle = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { section_id: number; title: string; content: string; author: string }) =>
+    mutationFn: (data: { section_id: number; title: string; content: string; author: string; files?: File[] }) =>
       kbApi.createArticle(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['kb-articles'] }),
+  });
+};
+
+export const useUpdateKBArticle = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { title?: string; content?: string; author?: string; files?: File[] } }) =>
+      kbApi.updateArticle(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['kb-articles'] }),
   });
 };

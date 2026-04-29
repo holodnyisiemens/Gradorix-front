@@ -37,7 +37,7 @@ export function AdminPage() {
   const [newAchModal, setNewAchModal] = useState(false);
   const [newAch, setNewAch] = useState({ title: '', description: '', icon: '🏆', xp: 100, category: 'challenge' as const });
   const [newUserModal, setNewUserModal] = useState(false);
-  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: 'JUNIOR' as UserRole, firstname: '', lastname: '' });
+  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: 'JUNIOR' as UserRole });
   const [newUserError, setNewUserError] = useState('');
   const [newEventModal, setNewEventModal] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', description: '', type: 'meeting' as CalendarEvent['type'] });
@@ -99,11 +99,9 @@ export function AdminPage() {
         email: newUser.email,
         password: newUser.password,
         role: newUser.role,
-        firstname: newUser.firstname || undefined,
-        lastname: newUser.lastname || undefined,
       });
       setNewUserModal(false);
-      setNewUser({ username: '', email: '', password: '', role: 'JUNIOR', firstname: '', lastname: '' });
+      setNewUser({ username: '', email: '', password: '', role: 'JUNIOR' });
     } catch {
       setNewUserError('Ошибка при создании. Проверьте данные.');
     }
@@ -165,7 +163,7 @@ export function AdminPage() {
                     <p className={styles.itemTitle}>{act.title}</p>
                     <span className={[styles.status, styles[act.status]].join(' ')}>{STATUS_LABEL[act.status]}</span>
                   </div>
-                  <p className={styles.itemSub}>👤 {actUser?.firstname} {actUser?.lastname} · {act.submittedAt} · +{act.requestedPoints} бал.</p>
+                  <p className={styles.itemSub}>👤 {actUser?.username} · {act.submittedAt} · +{act.requestedPoints} бал.</p>
                   <p className={styles.itemDesc}>{act.description}</p>
                   {act.reviewNote && <p className={styles.reviewNote}>💬 {act.reviewNote}</p>}
                   <div className={styles.itemActions}>
@@ -252,7 +250,7 @@ export function AdminPage() {
               return (
                 <div key={u.id} className={styles.item}>
                   <div className={styles.itemTop}>
-                    <p className={styles.itemTitle}>{u.firstname} {u.lastname}</p>
+                    <p className={styles.itemTitle}>{u.username}</p>
                     {pts && <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: 'var(--color-primary-bright)' }}>{pts.totalPoints} бал.</span>}
                   </div>
                   <p className={styles.itemSub}>@{u.username} · {pts?.levelName ?? '—'} · #{pts?.rank ?? '—'}</p>
@@ -354,8 +352,6 @@ export function AdminPage() {
             <Input label="Логин *" value={newUser.username} onChange={e => setNewUser(p => ({ ...p, username: e.target.value }))} />
             <Input label="Email *" type="email" value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
             <Input label="Пароль *" type="password" value={newUser.password} onChange={e => setNewUser(p => ({ ...p, password: e.target.value }))} />
-            <Input label="Имя" value={newUser.firstname} onChange={e => setNewUser(p => ({ ...p, firstname: e.target.value }))} />
-            <Input label="Фамилия" value={newUser.lastname} onChange={e => setNewUser(p => ({ ...p, lastname: e.target.value }))} />
             <div>
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Роль</p>
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -417,7 +413,7 @@ export function AdminPage() {
                         opacity: alreadyHas ? 0.5 : 1,
                       }}
                     >
-                      {u.firstname} {u.lastname} <span style={{ color: 'var(--text-muted)' }}>@{u.username}</span>
+                      {u.username}
                       {alreadyHas && <span style={{ marginLeft: 8, fontSize: 11 }}>✓ уже есть</span>}
                     </button>
                   );
@@ -457,7 +453,7 @@ export function AdminPage() {
                       background: newActivity.userId === u.id ? 'rgba(204,0,0,0.15)' : 'transparent',
                       color: 'var(--text-primary)',
                     }}
-                  >{newActivity.userId === u.id ? '✓ ' : ''}{u.firstname} {u.lastname} <span style={{ color: 'var(--text-muted)' }}>@{u.username}</span></button>
+                  >{newActivity.userId === u.id ? '✓ ' : ''}{u.username}</button>
                 ))}
               </div>
             </div>

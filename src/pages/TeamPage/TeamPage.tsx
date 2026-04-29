@@ -100,7 +100,7 @@ export function TeamPage() {
                   </div>
                   <Badge color={STATUS_COLOR[t.status]}>{STATUS_LABEL[t.status]}</Badge>
                 </div>
-                {mentor && <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0' }}>Ментор: {mentor.firstname} {mentor.lastname}</p>}
+                {mentor && <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0' }}>Ментор: {mentor.username}</p>}
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Участников: {members.length}</p>
                 <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
                   <Button size="sm" variant="ghost" onClick={() => openEdit(t)}>Редактировать</Button>
@@ -150,7 +150,7 @@ export function TeamPage() {
                         background: form.mentor_id === m.id ? 'rgba(204,0,0,0.15)' : 'transparent',
                         color: 'var(--text-primary)',
                       }}
-                    >{m.firstname} {m.lastname} <span style={{ color: 'var(--text-muted)' }}>@{m.username}</span></button>
+                    >{m.username}</button>
                   ))}
                 </div>
               </div>
@@ -166,7 +166,7 @@ export function TeamPage() {
                           background: sel ? 'rgba(204,0,0,0.15)' : 'transparent',
                           color: 'var(--text-primary)',
                         }}
-                      >{sel ? '✓ ' : ''}{j.firstname} {j.lastname} <span style={{ color: 'var(--text-muted)' }}>@{j.username}</span></button>
+                      >{sel ? '✓ ' : ''}{j.username}</button>
                     );
                   })}
                 </div>
@@ -218,10 +218,10 @@ export function TeamPage() {
             <Card>
               <div className={styles.memberRow}>
                 <div className={styles.avatar} style={{ borderColor: 'rgba(58,154,238,0.4)', color: 'var(--color-info-bright)' }}>
-                  {(mentor.firstname?.[0] ?? '') + (mentor.lastname?.[0] ?? '')}
+                  {mentor.username.slice(0, 2).toUpperCase()}
                 </div>
                 <div className={styles.memberInfo}>
-                  <p className={styles.memberName}>{mentor.firstname} {mentor.lastname}</p>
+                  <p className={styles.memberName}>{mentor.username}</p>
                   <p className={styles.memberRole}>@{mentor.username}</p>
                 </div>
                 <Badge color="blue">Ментор</Badge>
@@ -240,10 +240,10 @@ export function TeamPage() {
                 <Card key={m.id}>
                   <div className={styles.memberRow}>
                     <div className={styles.avatar} style={{ borderColor: isMe ? 'rgba(204,0,0,0.4)' : 'rgba(61,189,106,0.4)', color: isMe ? 'var(--color-primary-bright)' : 'var(--color-success-bright)' }}>
-                      {(m.firstname?.[0] ?? '') + (m.lastname?.[0] ?? '')}
+                      {m.username.slice(0, 2).toUpperCase()}
                     </div>
                     <div className={styles.memberInfo}>
-                      <p className={styles.memberName}>{m.firstname} {m.lastname}{isMe ? ' (вы)' : ''}</p>
+                      <p className={styles.memberName}>{m.username}{isMe ? ' (вы)' : ''}</p>
                       <p className={styles.memberRole}>@{m.username}</p>
                     </div>
                     <Badge color="green">Участник</Badge>

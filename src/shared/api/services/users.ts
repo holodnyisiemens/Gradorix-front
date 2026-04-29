@@ -6,16 +6,12 @@ export interface UserCreateInput {
   email: string;
   password: string;
   role: UserRole;
-  firstname?: string;
-  lastname?: string;
 }
 
 export interface UserUpdateInput {
   username?: string;
   email?: string;
   role?: UserRole;
-  firstname?: string;
-  lastname?: string;
   is_active?: boolean;
 }
 

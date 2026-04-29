@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Paperclip, Download, X } from 'lucide-react';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
@@ -19,6 +20,12 @@ function renderMarkdown(text: string): React.ReactNode[] {
   }).filter(Boolean) as React.ReactNode[];
 }
 
+function fileName(url: string): string {
+  const raw = url.split('/').pop() ?? url;
+  // strip the uuid suffix added by backend: name_abc12345.ext → name.ext
+  return raw.replace(/_[0-9a-f]{8}(\.[^.]+)$/, '$1');
+}
+
 export function KnowledgeSectionPage() {
   const { sectionId } = useParams<{ sectionId: string }>();
   const navigate = useNavigate();
@@ -33,10 +40,25 @@ export function KnowledgeSectionPage() {
   const [selected, setSelected] = useState<KBArticle | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<KBArticle | null>(null);
   const [newArticleModal, setNewArticleModal] = useState(false);
-  const [newArticle, setNewArticle] = useState({ title: '', content: '', author: user.firstname ? `${user.firstname} ${user.lastname}` : user.username });
+  const [newArticle, setNewArticle] = useState({ title: '', content: '', author: user.username });
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const section = sections.find((s) => s.id === Number(sectionId));
   if (!section) return null;
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(e.target.files ?? []);
+    setNewFiles(prev => {
+      const existing = new Set(prev.map(f => f.name));
+      return [...prev, ...picked.filter(f => !existing.has(f.name))];
+    });
+    e.target.value = '';
+  }
+
+  function removeFile(name: string) {
+    setNewFiles(prev => prev.filter(f => f.name !== name));
+  }
 
   async function handleCreateArticle() {
     if (!newArticle.title || !newArticle.content) return;
@@ -45,9 +67,11 @@ export function KnowledgeSectionPage() {
       title: newArticle.title,
       content: newArticle.content,
       author: newArticle.author || user.username,
+      files: newFiles.length ? newFiles : undefined,
     });
     setNewArticleModal(false);
     setNewArticle({ title: '', content: '', author: newArticle.author });
+    setNewFiles([]);
   }
 
   if (selected) {
@@ -59,6 +83,37 @@ export function KnowledgeSectionPage() {
             <div className={styles.articleContent}>
               {renderMarkdown(selected.content)}
             </div>
+
+            {selected.attachments && selected.attachments.length > 0 && (
+              <div style={{ marginTop: 'var(--space-4)' }}>
+                <p style={{ fontSize: 'var(--text-xs)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
+                  Вложения ({selected.attachments.length})
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  {selected.attachments.map((url, i) => (
+                    <a
+                      key={i}
+                      href={url}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+                        padding: 'var(--space-2) var(--space-3)',
+                        background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)', textDecoration: 'none',
+                        color: 'var(--color-info-bright)', fontSize: 13,
+                        overflowWrap: 'break-word', wordBreak: 'break-all',
+                      }}
+                    >
+                      <Download size={14} style={{ flexShrink: 0 }} />
+                      {fileName(url)}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {isHR && (
               <div className={styles.hrActions}>
                 <Button variant="danger" size="sm" onClick={() => setDeleteTarget(selected)}>Удалить статью</Button>
@@ -85,7 +140,15 @@ export function KnowledgeSectionPage() {
             <div key={article.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <button className={styles.article} style={{ flex: 1 }} onClick={() => setSelected(article)}>
                 <p className={styles.articleTitle}>{article.title}</p>
-                <p className={styles.articleMeta}>{article.author} · {article.createdAt}</p>
+                <p className={styles.articleMeta}>
+                  {article.author} · {article.createdAt}
+                  {article.attachments && article.attachments.length > 0 && (
+                    <span style={{ marginLeft: 6, color: 'var(--text-muted)' }}>
+                      <Paperclip size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 2 }} />
+                      {article.attachments.length}
+                    </span>
+                  )}
+                </p>
               </button>
               {isHR && (
                 <button onClick={() => setDeleteTarget(article)}
@@ -127,7 +190,7 @@ export function KnowledgeSectionPage() {
       )}
 
       {newArticleModal && (
-        <Modal open={true} onClose={() => setNewArticleModal(false)} title="Создать статью" type="dialog">
+        <Modal open={true} onClose={() => { setNewArticleModal(false); setNewFiles([]); }} title="Создать статью" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Заголовок *" value={newArticle.title} onChange={e => setNewArticle(p => ({ ...p, title: e.target.value }))} />
             <Input label="Автор" value={newArticle.author} onChange={e => setNewArticle(p => ({ ...p, author: e.target.value }))} />
@@ -140,6 +203,51 @@ export function KnowledgeSectionPage() {
                 style={{ width: '100%', minHeight: 180, padding: 10, borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-input)', color: 'var(--text-primary)', fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
               />
             </div>
+
+            {/* File picker */}
+            <div>
+              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
+                Вложения
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp,.zip,.rar"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '8px 12px', borderRadius: 'var(--radius-md)',
+                  border: '1px dashed var(--border-subtle)', background: 'transparent',
+                  color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer',
+                  width: '100%', justifyContent: 'center',
+                }}
+              >
+                <Paperclip size={14} />
+                Прикрепить файлы (макс. 5 × 10 МБ)
+              </button>
+              {newFiles.length > 0 && (
+                <div style={{ marginTop: 'var(--space-2)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {newFiles.map(f => (
+                    <div key={f.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <Paperclip size={11} style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                      <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>{(f.size / 1024).toFixed(0)} KB</span>
+                      <button type="button" onClick={() => removeFile(f.name)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', padding: 0 }}>
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Button full onClick={handleCreateArticle} disabled={createArticle.isPending}>
               {createArticle.isPending ? 'Создание...' : 'Создать статью'}
             </Button>

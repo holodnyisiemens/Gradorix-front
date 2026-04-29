@@ -33,9 +33,6 @@ export function RegisterForm() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const [username, setUsername] = useState('');
-  const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [role, setRole] = useState('');
@@ -46,9 +43,6 @@ export function RegisterForm() {
 
   const validateForm = (): string => {
     if (!username.trim()) return 'Логин обязателен';
-    if (!firstname.trim()) return 'Имя обязательно';
-    if (!lastname.trim()) return 'Фамилия обязательна';
-    if (!email.trim()) return 'Email обязателен';
     if (!password) return 'Пароль обязателен';
     if (password.length < 6) return 'Пароль должен быть минимум 6 символов';
     if (password !== passwordConfirm) return 'Пароли не совпадают';
@@ -56,7 +50,7 @@ export function RegisterForm() {
     return '';
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -68,23 +62,19 @@ export function RegisterForm() {
     setError('');
     setLoading(true);
     try {
-      await authApi.register({
+      const { access_token, refresh_token } = await authApi.register({
         username: username.trim(),
-        email: email.trim(),
         password,
-        firstname: firstname.trim(),
-        lastname: lastname.trim(),
         role: role as 'HR' | 'MENTOR' | 'JUNIOR',
       });
-      // Backend returns {message}, not a token — login manually after register
-      const { access_token } = await authApi.login({ email: email.trim(), password });
       localStorage.setItem('gradorix-token', access_token);
       const user = await authApi.getMe();
-      login(user, access_token);
+      login(user, access_token, refresh_token);
       registerPushSubscription(user.id);
     } catch (err: unknown) {
       const axiosData = (err as { response?: { data?: { detail?: string } } })?.response?.data;
-      setError(axiosData?.detail || 'Не удалось зарегистрироваться. Возможно, такой электронный адрес уже используется.');
+      const rawMsg = axiosData?.detail ?? 'Не удалось зарегистрироваться. Возможно, такой логин уже занят.';
+      setError(translateError(rawMsg));
     } finally {
       setLoading(false);
     }
@@ -114,40 +104,12 @@ export function RegisterForm() {
             )}
 
             <Input
-              label="Логин"
+              label="Никнейм"
               type="text"
               placeholder="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
-              autoCapitalize="none"
-            />
-
-            <Input
-              label="Имя"
-              type="text"
-              placeholder="Иван"
-              value={firstname}
-              onChange={(e) => setFirstname(e.target.value)}
-              autoComplete="given-name"
-            />
-
-            <Input
-              label="Фамилия"
-              type="text"
-              placeholder="Петров"
-              value={lastname}
-              onChange={(e) => setLastname(e.target.value)}
-              autoComplete="family-name"
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              placeholder="user@gradorix.ru"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
               autoCapitalize="none"
             />
 
@@ -180,7 +142,7 @@ export function RegisterForm() {
               onChange={(e) => setRole(e.target.value)}
             />
 
-            <Button type="submit" full loading={loading} disabled={!username || !firstname || !lastname || !email || !password || !passwordConfirm || !role}>
+            <Button type="submit" full loading={loading} disabled={!username || !password || !passwordConfirm || !role}>
               Зарегистрироваться
             </Button>
 

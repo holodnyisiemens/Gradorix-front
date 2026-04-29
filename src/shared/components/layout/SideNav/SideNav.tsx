@@ -112,8 +112,7 @@ export function SideNav(_: SideNavProps) {
   const { primary, secondary } = getNavConfig(user.role);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const initials = ((user.firstname?.[0] ?? '') + (user.lastname?.[0] ?? '')).toUpperCase()
-    || user.username.slice(0, 2).toUpperCase();
+  const initials = user.username.slice(0, 2).toUpperCase();
 
   // Badge for "Ещё" button — sum of all secondary badges
   const moreBadge = secondary.reduce((s, i) => s + (i.badge ?? 0), 0);
@@ -174,7 +173,7 @@ export function SideNav(_: SideNavProps) {
         <span className={styles.userAvatar}>{initials}</span>
         <div className={styles.userInfo}>
           <p className={styles.userName}>
-            {user.firstname ? `${user.firstname} ${user.lastname ?? ''}`.trim() : user.username}
+            {user.username}
           </p>
           <p className={styles.userRole}>{roleLabel[user.role]}</p>
         </div>

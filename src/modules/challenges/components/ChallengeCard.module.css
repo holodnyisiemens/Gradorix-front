@@ -102,6 +102,20 @@
   font-weight: 600;
 }
 
+.pendingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--color-warning-bright);
+  font-family: var(--font-display);
+  background: rgba(255, 170, 64, 0.1);
+  border: 1px solid rgba(255, 170, 64, 0.2);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
 .locked {
   opacity: 0.6;
   cursor: default;

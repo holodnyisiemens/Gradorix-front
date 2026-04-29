@@ -15,9 +15,7 @@ const avatarClass: Record<string, string> = {
 };
 
 function getInitials(user: User): string {
-  const f = user.firstname?.[0] ?? '';
-  const l = user.lastname?.[0] ?? '';
-  return (f + l).toUpperCase() || user.username.slice(0, 2).toUpperCase();
+  return user.username.slice(0, 2).toUpperCase();
 }
 
 export function UserCard({ user, onClick, extra }: UserCardProps) {
@@ -34,9 +32,7 @@ export function UserCard({ user, onClick, extra }: UserCardProps) {
       </div>
       <div className={styles.info}>
         <p className={styles.name}>
-          {user.firstname && user.lastname
-            ? `${user.firstname} ${user.lastname}`
-            : user.username}
+          {user.username}
         </p>
         <p className={styles.username}>@{user.username}</p>
       </div>

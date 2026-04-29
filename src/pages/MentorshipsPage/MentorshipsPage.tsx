@@ -54,10 +54,10 @@ export function MentorshipsPage() {
             <Card key={mentorId} accent>
               <div className={styles.mentorRow}>
                 <div className={styles.avatar} style={{ borderColor: 'rgba(58,154,238,0.4)', color: 'var(--color-info-bright)' }}>
-                  {(mentor.firstname?.[0] ?? '') + (mentor.lastname?.[0] ?? '')}
+                  {mentor.username.slice(0, 2).toUpperCase()}
                 </div>
                 <div className={styles.info}>
-                  <p className={styles.name}>{mentor.firstname} {mentor.lastname}</p>
+                  <p className={styles.name}>{mentor.username}</p>
                   <p className={styles.username}>@{mentor.username}</p>
                 </div>
                 <RoleBadge role="MENTOR" />
@@ -70,10 +70,10 @@ export function MentorshipsPage() {
                     <div key={jid} className={styles.juniorRow}>
                       <span className={styles.connector}>└</span>
                       <div className={styles.avatarSm} style={{ borderColor: 'rgba(61,189,106,0.4)', color: 'var(--color-success-bright)' }}>
-                        {(junior.firstname?.[0] ?? '') + (junior.lastname?.[0] ?? '')}
+                        {junior.username.slice(0, 2).toUpperCase()}
                       </div>
                       <div className={styles.info}>
-                        <p className={styles.nameSm}>{junior.firstname} {junior.lastname}</p>
+                        <p className={styles.nameSm}>{junior.username}</p>
                         <p className={styles.usernameSm}>@{junior.username}</p>
                       </div>
                       <RoleBadge role="JUNIOR" />
@@ -113,7 +113,7 @@ export function MentorshipsPage() {
                       color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13,
                     }}
                   >
-                    {m.firstname} {m.lastname} <span style={{ color: 'var(--text-muted)' }}>@{m.username}</span>
+                    {m.username}
                   </button>
                 ))}
               </div>
@@ -132,7 +132,7 @@ export function MentorshipsPage() {
                       color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13,
                     }}
                   >
-                    {j.firstname} {j.lastname} <span style={{ color: 'var(--text-muted)' }}>@{j.username}</span>
+                    {j.username}
                   </button>
                 ))}
               </div>

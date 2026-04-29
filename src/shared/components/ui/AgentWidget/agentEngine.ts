@@ -55,13 +55,13 @@ export function generateReply(text: string, role: string, ctx: ReplyContext): st
       const stats = ctx.juniorActivityStats.slice().sort((a, b) => b.completionRate - a.completionRate);
       const top = stats.slice(0, 3).map((s, i) => {
         const u = ctx.allUsers.find((x) => x.id === s.userId);
-        return `${i + 1}. ${u?.firstname ?? ''} ${u?.lastname ?? ''} — ${s.completionRate}% выполнения задач`;
+        return `${i + 1}. ${u?.username ?? ''} — ${s.completionRate}% выполнения задач`;
       }).join('\n');
       return withFollowup(`📊 **Топ участников по выполнению задач:**\n\n${top || 'Данных пока нет'}\n\nДанные актуальны на сегодня.`, role);
     }
     if (q.includes('список') || q.includes('все участник') || q.includes('перечисли')) {
       const juniors = ctx.allUsers.filter(u => u.role === 'JUNIOR');
-      const list = juniors.map((u, i) => `${i + 1}. ${u.firstname ?? ''} ${u.lastname ?? ''}`.trim() || u.username).join('\n');
+      const list = juniors.map((u, i) => `${i + 1}. ${u.username}`).join('\n');
       return withFollowup(`👥 **Участники программы (${juniors.length}):**\n\n${list || 'Пока никого нет'}`, role);
     }
     if (q.includes('активност') || q.includes('статистик')) {
@@ -82,7 +82,7 @@ export function generateReply(text: string, role: string, ctx: ReplyContext): st
       const pending = ctx.activities.filter((a) => a.status === 'pending');
       const lines = pending.slice(0, 5).map(a => {
         const u = ctx.allUsers.find(x => x.id === a.userId);
-        return `• ${u?.firstname ?? ''} ${u?.lastname ?? ''}: "${a.title}" (+${a.requestedPoints} баллов)`;
+        return `• ${u?.username ?? ''}: "${a.title}" (+${a.requestedPoints} баллов)`;
       }).join('\n');
       return withFollowup(`⏳ **Ожидают подтверждения: ${pending.length}**\n\n${lines || 'Нет ожидающих'}\n\nПерейдите в раздел "Баллы" для обработки.`, role);
     }
@@ -99,7 +99,7 @@ export function generateReply(text: string, role: string, ctx: ReplyContext): st
       if (stats.length === 0) return withFollowup(`👥 Подопечные ещё не назначены. Обратитесь к HR для создания пар.`, role);
       const lines = stats.map(s => {
         const u = ctx.allUsers.find(x => x.id === s.userId);
-        return `• ${u?.firstname ?? ''} ${u?.lastname ?? ''}: ${s.done} задач выполнено (${s.completionRate}%)`;
+        return `• ${u?.username ?? ''}: ${s.done} задач выполнено (${s.completionRate}%)`;
       }).join('\n');
       return withFollowup(`👥 **Прогресс подопечных:**\n\n${lines}`, role);
     }

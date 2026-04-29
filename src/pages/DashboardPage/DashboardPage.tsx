@@ -33,7 +33,7 @@ export function DashboardPage() {
   const today = new Date();
   const dateLabel = format(today, 'EEEE, d MMMM', { locale: ru });
   const greeting = greetByTime();
-  const firstName = user.firstname ?? user.username;
+  const firstName = user.username;
 
   if (user.role === 'JUNIOR') return <JuniorDashboard userId={user.id} firstName={firstName} greeting={greeting} dateLabel={dateLabel} navigate={navigate} />;
   if (user.role === 'MENTOR') return <MentorDashboard userId={user.id} firstName={firstName} greeting={greeting} dateLabel={dateLabel} navigate={navigate} />;
@@ -379,12 +379,12 @@ function HrDashboard({ firstName, greeting, dateLabel, navigate }: { firstName: 
               const junior = allUsers.find((u) => u.id === stat.userId);
               if (!junior) return null;
               const isTop = idx === 0;
-              const name = `${junior.firstname ?? ''} ${junior.lastname ?? ''}`.trim() || junior.username;
+              const name = junior.username;
               return (
                 <div key={stat.userId} className={styles.activityCard} onClick={() => setProfileUser(junior)} style={{ cursor: 'pointer' }}>
                   <div className={styles.activityHeader}>
                     <div className={styles.activityAvatar} style={{ background: isTop ? 'rgba(245,197,24,0.15)' : 'var(--bg-elevated)', borderColor: isTop ? 'rgba(245,197,24,0.4)' : 'var(--border-subtle)' }}>
-                      {(junior.firstname?.[0] ?? junior.username[0]).toUpperCase()}
+                      {junior.username[0].toUpperCase()}
                     </div>
                     <div className={styles.activityInfo}>
                       <span className={styles.activityName}>

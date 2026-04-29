@@ -28,18 +28,15 @@ function AppInner() {
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('gradorix-token');
-      console.log('Initializing auth, token exists:', !!token);
+      const refreshToken = localStorage.getItem('gradorix-refresh-token');
       if (token && !useAuthStore.getState().isAuthenticated) {
         try {
-          console.log('Attempting to get user with existing token');
           const user = await authApi.getMe();
-          login(user, token);
-          console.log('Auth initialized successfully');
+          login(user, token, refreshToken ?? '');
           registerPushSubscription(user.id);
-        } catch (error) {
-          // Token is invalid, remove it
+        } catch {
           localStorage.removeItem('gradorix-token');
-          console.warn('Invalid token removed from localStorage:', error);
+          localStorage.removeItem('gradorix-refresh-token');
         }
       }
     };

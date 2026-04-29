@@ -1,57 +1,168 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { ExternalLink, Calendar, Star, Link2, Plus, X, Lock } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ExternalLink, Calendar, Star, Link2, Plus, X, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { useChallenge, useChallengeJuniors, useUpdateChallengeProgress, useUpdateChallengeJunior } from '@shared/hooks/useApi';
+import {
+  useChallenge, useChallengeJuniors, useUpdateChallengeProgress, useUpdateChallengeJunior,
+  useUpdateChallenge, useDeleteChallenge, useAssignChallenge, useUnassignChallenge,
+  useUsers, useCreateNotification,
+} from '@shared/hooks/useApi';
 import { ChallengeStatusBadge, ProgressBadge } from '@shared/components/ui/Badge/Badge';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Card } from '@shared/components/ui/Card/Card';
 import { Button } from '@shared/components/ui/Button/Button';
+import { Input } from '@shared/components/ui/Input/Input';
+import { DateInput } from '@shared/components/ui/Input/DateInput';
+import { Modal } from '@shared/components/ui/Modal/Modal';
+import type { ChallengeStatus } from '@shared/types';
 import styles from './ChallengePage.module.css';
+
+interface DonutSegment { value: number; color: string; label: string }
+
+function DonutChart({ total, segments }: { total: number; segments: DonutSegment[] }) {
+  const r = 54;
+  const cx = 70;
+  const cy = 70;
+  const strokeWidth = 14;
+  const circumference = 2 * Math.PI * r;
+
+  let accumulated = 0;
+  const arcs = segments
+    .filter(s => s.value > 0)
+    .map(s => {
+      const length = (s.value / total) * circumference;
+      const offset = accumulated;
+      accumulated += length;
+      return { ...s, length, offset };
+    });
+
+  return (
+    <svg viewBox="0 0 140 140" width={140} height={140} style={{ flexShrink: 0 }}>
+      {arcs.length === 0 ? (
+        <circle cx={cx} cy={cy} r={r} fill="none" strokeWidth={strokeWidth}
+          style={{ stroke: 'var(--border-subtle)' }} />
+      ) : (
+        arcs.map((arc, i) => (
+          <circle key={i} cx={cx} cy={cy} r={r} fill="none" strokeWidth={strokeWidth}
+            stroke={arc.color}
+            strokeDasharray={`${arc.length} ${circumference}`}
+            strokeDashoffset={-arc.offset}
+            transform={`rotate(-90 ${cx} ${cy})`}
+            strokeLinecap="butt"
+          />
+        ))
+      )}
+      <text x={cx} y={cy - 8} textAnchor="middle" fontSize={26}
+        fontFamily="var(--font-display)" fill="var(--text-primary)">{total}</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fontSize={10}
+        fontFamily="inherit" fill="var(--text-muted)" letterSpacing="0.05em">НАЗНАЧЕНО</text>
+    </svg>
+  );
+}
+
+type EditForm = {
+  title: string;
+  description: string;
+  url: string;
+  date: string;
+  maxPointsStr: string;
+  status: ChallengeStatus;
+};
 
 export function ChallengePage() {
   const { id } = useParams<{ id: string }>();
   const user = useAuthStore((s) => s.user)!;
+  const navigate = useNavigate();
   const isJunior = user.role === 'JUNIOR';
+  const isHR = user.role === 'HR';
 
   const { data: challenge, isLoading } = useChallenge(Number(id));
   const { data: assignments = [] } = useChallengeJuniors(
     isJunior ? { junior_id: user.id } : undefined
   );
+  const { data: allUsers = [] } = useUsers();
   const updateProgress = useUpdateChallengeProgress();
   const updateJunior = useUpdateChallengeJunior();
+  const updateChallenge = useUpdateChallenge();
+  const deleteChallenge = useDeleteChallenge();
+  const assignChallengeMut = useAssignChallenge();
+  const unassignChallengeMut = useUnassignChallenge();
+  const createNotification = useCreateNotification();
 
+  // HR: edit modal
+  const [editModal, setEditModal] = useState(false);
+  const [editForm, setEditForm] = useState<EditForm | null>(null);
+  // HR: assign modal
+  const [assignModal, setAssignModal] = useState(false);
+  const [selectedJuniorIds, setSelectedJuniorIds] = useState<number[]>([]);
+  // HR: stats + review accordions
+  const [statsExpanded, setStatsExpanded] = useState(false);
+  const [reviewExpanded, setReviewExpanded] = useState(false);
+  const [reviewedExpanded, setReviewedExpanded] = useState(false);
+  const [reviewing, setReviewing] = useState<Record<number, { points: number; feedback: string }>>({});
+  const [saved, setSaved] = useState<Record<number, boolean>>({});
+  const [editModeJuniors, setEditModeJuniors] = useState<Set<number>>(new Set());
 
+  // Junior or HR-personal: comment & links
   const assignment = isJunior
     ? assignments.find((cj) => cj.challenge_id === Number(id) && cj.junior_id === user.id)
     : null;
-
   const [comment, setComment] = useState('');
   const [links, setLinks] = useState<string[]>([]);
   const [linkInput, setLinkInput] = useState('');
   const [saving, setSaving] = useState<'draft' | 'submit' | null>(null);
 
-  // Sync state from assignment when loaded
-  useEffect(() => {
-    if (assignment) {
-      setComment(assignment.comment ?? '');
-      setLinks(assignment.links ?? []);
-    }
-  }, [assignment?.challenge_id, assignment?.junior_id]);
+  const juniors = allUsers.filter(u => u.role === 'JUNIOR');
+  const challengeAssignments = assignments.filter(a => a.challenge_id === Number(id));
 
-  // Auto-set SKIPPED when challenge is COMPLETED and progress is GOING/IN_PROGRESS
+  // personal = HR has assigned themselves and no one else is assigned
+  const selfAssignment = isHR
+    ? challengeAssignments.find(a => a.junior_id === user.id) ?? null
+    : null;
+  const isPersonal = isHR &&
+    challengeAssignments.length > 0 &&
+    challengeAssignments.every(a => a.junior_id === user.id);
+
+  const activeAssignment = assignment ?? selfAssignment;
+
+  const awaitingReview = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points == null && a.junior_id !== user.id);
+  const alreadyReviewed = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points != null && a.junior_id !== user.id);
+
+  const stats = (() => {
+    if (!isHR || challengeAssignments.length === 0) return null;
+    const total = challengeAssignments.length;
+    const done = challengeAssignments.filter(a => a.progress === 'DONE').length;
+    const inProgress = challengeAssignments.filter(a => a.progress === 'IN_PROGRESS').length;
+    const going = challengeAssignments.filter(a => a.progress === 'GOING').length;
+    const skipped = challengeAssignments.filter(a => a.progress === 'SKIPPED').length;
+    const pointsList = alreadyReviewed.map(a => a.awarded_points ?? 0);
+    const avgPoints = pointsList.length > 0
+      ? Math.round(pointsList.reduce((s, p) => s + p, 0) / pointsList.length * 10) / 10
+      : null;
+    const maxPoints = pointsList.length > 0 ? Math.max(...pointsList) : null;
+    return { total, done, inProgress, going, skipped, avgPoints, maxPoints };
+  })();
+
+  useEffect(() => {
+    if (activeAssignment) {
+      setComment(activeAssignment.comment ?? '');
+      setLinks(activeAssignment.links ?? []);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeAssignment?.challenge_id, activeAssignment?.junior_id]);
+
   useEffect(() => {
     if (
       challenge?.status === 'COMPLETED' &&
-      assignment &&
-      (assignment.progress === 'GOING' || assignment.progress === 'IN_PROGRESS')
+      activeAssignment &&
+      (activeAssignment.progress === 'GOING' || activeAssignment.progress === 'IN_PROGRESS')
     ) {
       updateProgress.mutate({ challengeId: challenge.id, juniorId: user.id, progress: 'SKIPPED' });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [challenge?.status, assignment?.progress]);
+  }, [challenge?.status, activeAssignment?.progress]);
 
   if (isLoading) return null;
 
@@ -66,14 +177,14 @@ export function ChallengePage() {
     );
   }
 
-  const isUpcoming  = challenge.status === 'UPCOMING';
   const isActive    = challenge.status === 'ACTIVE';
   const isCompleted = challenge.status === 'COMPLETED';
   const isCancelled = challenge.status === 'CANCELLED';
-  const isReadOnly  = !isActive;
 
-  const currentProgress = assignment?.progress;
+  const currentProgress = activeAssignment?.progress;
   const isSubmitted = currentProgress === 'DONE';
+
+  // ── Junior helpers ──────────────────────────────────────────────────────────
 
   function addLink() {
     const trimmed = linkInput.trim();
@@ -93,65 +204,220 @@ export function ChallengePage() {
   }
 
   async function saveDraft() {
-    if (!assignment) return;
+    if (!activeAssignment) return;
     const finalLinks = getFinalLinks();
     if (linkInput.trim()) { setLinks(finalLinks); setLinkInput(''); }
     setSaving('draft');
     await updateJunior.mutateAsync({
-      challengeId: challenge!.id,
+      challengeId: challenge.id,
       juniorId: user.id,
-      data: {
-        comment: comment || undefined,
-        links: finalLinks.length ? finalLinks : undefined,
-        progress: 'IN_PROGRESS',
-      },
+      data: { comment: comment || undefined, links: finalLinks.length ? finalLinks : undefined, progress: 'IN_PROGRESS' },
     });
     setSaving(null);
   }
 
   async function submitForReview() {
-    if (!assignment) return;
+    if (!activeAssignment) return;
     const finalLinks = getFinalLinks();
     if (linkInput.trim()) { setLinks(finalLinks); setLinkInput(''); }
     setSaving('submit');
     await updateJunior.mutateAsync({
-      challengeId: challenge!.id,
+      challengeId: challenge.id,
       juniorId: user.id,
-      data: {
-        comment: comment || undefined,
-        links: finalLinks.length ? finalLinks : undefined,
-        progress: 'DONE',
-      },
+      data: { comment: comment || undefined, links: finalLinks.length ? finalLinks : undefined, progress: 'DONE' },
     });
     setSaving(null);
+  }
+
+  // ── HR helpers ──────────────────────────────────────────────────────────────
+
+  function openEdit() {
+    setEditForm({
+      title: challenge.title,
+      description: challenge.description ?? '',
+      url: challenge.url ?? '',
+      date: challenge.date ?? '',
+      maxPointsStr: challenge.maxPoints != null ? String(challenge.maxPoints) : '',
+      status: challenge.status,
+    });
+    setEditModal(true);
+  }
+
+  async function handleEdit() {
+    if (!editForm) return;
+    const maxPts = editForm.maxPointsStr ? Number(editForm.maxPointsStr) : undefined;
+    await updateChallenge.mutateAsync({
+      id: challenge.id,
+      data: {
+        title: editForm.title,
+        description: editForm.description,
+        status: editForm.status,
+        date: editForm.date,
+        url: editForm.url,
+        max_points: maxPts,
+      },
+    });
+    setEditModal(false);
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Удалить задачу «${challenge.title}»?`)) return;
+    await deleteChallenge.mutateAsync(challenge.id);
+    navigate('/challenges');
+  }
+
+  function openAssign() {
+    setSelectedJuniorIds(challengeAssignments.map(a => a.junior_id));
+    setAssignModal(true);
+  }
+
+  async function handleAssign() {
+    const existing = challengeAssignments.map(a => a.junior_id);
+    const toAssign = selectedJuniorIds.filter(jid => !existing.includes(jid));
+    const toUnassign = existing.filter(jid => !selectedJuniorIds.includes(jid));
+    await Promise.all(toUnassign.map(juniorId =>
+      unassignChallengeMut.mutateAsync({ challengeId: challenge.id, juniorId })
+    ));
+    await Promise.all(toAssign.map(juniorId =>
+      assignChallengeMut.mutateAsync({ challenge_id: challenge.id, junior_id: juniorId, assigned_by: user.id, progress: 'GOING' })
+    ));
+    setAssignModal(false);
+  }
+
+  function toggleJunior(jid: number) {
+    setSelectedJuniorIds(prev => prev.includes(jid) ? prev.filter(x => x !== jid) : [...prev, jid]);
+  }
+
+  function getReviewState(juniorId: number, defaultPoints: number, defaultFeedback: string) {
+    return reviewing[juniorId] ?? { points: defaultPoints, feedback: defaultFeedback };
+  }
+
+  function renderReviewForm(a: typeof assignments[number]) {
+    const junior = allUsers.find(u => u.id === a.junior_id);
+    const name = junior ? junior.username : `#${a.junior_id}`;
+    const st = getReviewState(a.junior_id, a.awarded_points ?? 0, a.feedback ?? '');
+    const maxPts = challenge?.maxPoints;
+    const isSaved = saved[a.junior_id];
+
+    return (
+      <div style={{
+        padding: 'var(--space-3) var(--space-4)',
+        background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)',
+      }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-primary)' }}>
+          👤 {name}
+        </p>
+        {a.comment && (
+          <p style={{
+            fontSize: 13, color: 'var(--text-secondary)',
+            background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-2) var(--space-3)',
+          }}>
+            {a.comment}
+          </p>
+        )}
+        {(a.links ?? []).length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {(a.links ?? []).map(url => (
+              <a key={url} href={url} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-info-bright)', textDecoration: 'none' }}
+              >
+                <Link2 size={11} />{url}
+              </a>
+            ))}
+          </div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginTop: 4 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Баллы:</span>
+          <input
+            type="number" min={0} max={maxPts ?? undefined} value={st.points}
+            className={styles.scoreInput}
+            onChange={e => setReviewing(prev => ({
+              ...prev,
+              [a.junior_id]: { ...st, points: Math.max(0, maxPts != null ? Math.min(Number(e.target.value), maxPts) : Number(e.target.value)) },
+            }))}
+          />
+          {maxPts != null && <span className={styles.maxLabel}>/ {maxPts}</span>}
+        </div>
+        <textarea
+          placeholder="Обратная связь для участника..."
+          value={st.feedback}
+          onChange={e => setReviewing(prev => ({ ...prev, [a.junior_id]: { ...st, feedback: e.target.value } }))}
+          style={{
+            width: '100%', minHeight: 72, background: 'var(--bg-elevated)',
+            border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)',
+            color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit',
+            padding: 'var(--space-2) var(--space-3)', resize: 'vertical', outline: 'none',
+            boxSizing: 'border-box',
+          }}
+        />
+        <Button size="sm" onClick={() => saveReview(a)} disabled={updateJunior.isPending}>
+          {isSaved ? '✓ Сохранено' : 'Сохранить'}
+        </Button>
+      </div>
+    );
+  }
+
+  async function saveReview(a: typeof assignments[number]) {
+    const st = getReviewState(a.junior_id, a.awarded_points ?? 0, a.feedback ?? '');
+    const maxPts = challenge.maxPoints;
+    const finalPoints = maxPts != null ? Math.min(st.points, maxPts) : st.points;
+    await updateJunior.mutateAsync({
+      challengeId: challenge.id,
+      juniorId: a.junior_id,
+      data: { awarded_points: finalPoints, feedback: st.feedback || undefined },
+    });
+    createNotification.mutate({
+      user_id: a.junior_id,
+      message: `⭐ HR проверил вашу задачу «${challenge.title}» — начислено ${finalPoints} баллов${st.feedback ? '. Есть обратная связь' : ''}`,
+      link: `/challenges/${challenge.id}`,
+    });
+    setSaved(prev => ({ ...prev, [a.junior_id]: true }));
+    setEditModeJuniors(prev => { const next = new Set(prev); next.delete(a.junior_id); return next; });
+    setTimeout(() => setSaved(prev => ({ ...prev, [a.junior_id]: false })), 2000);
   }
 
   return (
     <>
       <PageHeader title={challenge.title} showBack />
       <div className={styles.page}>
+
+        {/* HR action bar */}
+        {isHR && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            {!isPersonal && (
+              <Button size="sm" variant="ghost" onClick={openAssign} style={{ flex: 1 }}>
+                Назначить ({challengeAssignments.filter(a => a.junior_id !== user.id).length})
+              </Button>
+            )}
+            {isPersonal && (
+              <span style={{ flex: 1, fontSize: 12, color: 'var(--text-muted)', padding: '0 var(--space-2)' }}>
+                Личная задача
+              </span>
+            )}
+            <Button size="sm" variant="secondary" onClick={openEdit} title="Редактировать">
+              <Pencil size={15} />
+            </Button>
+            <Button size="sm" variant="danger" onClick={handleDelete} title="Удалить">
+              <Trash2 size={15} />
+            </Button>
+          </div>
+        )}
+
         <div className={styles.header}>
           <ChallengeStatusBadge status={challenge.status} />
-          {assignment && <ProgressBadge progress={currentProgress ?? assignment.progress} />}
-          {challenge.maxPoints != null && challenge.maxPoints > 0 && (
-            <span className={[styles.maxPointsBadge, isJunior && assignment?.awarded_points != null ? styles.maxPointsBadgeAwarded : ''].join(' ')}>
+          {activeAssignment && <ProgressBadge progress={currentProgress ?? activeAssignment.progress} />}
+          {challenge.maxPoints != null && challenge.maxPoints > 0 && !isPersonal && (
+            <span className={[styles.maxPointsBadge, isJunior && activeAssignment?.awarded_points != null ? styles.maxPointsBadgeAwarded : ''].join(' ')}>
               <Star size={13} />
-              {isJunior && assignment?.awarded_points != null
-                ? `${assignment.awarded_points} из ${challenge.maxPoints} баллов`
+              {isJunior && activeAssignment?.awarded_points != null
+                ? `${activeAssignment.awarded_points} из ${challenge.maxPoints} баллов`
                 : `до ${challenge.maxPoints} баллов`}
             </span>
           )}
         </div>
 
-        {/* UPCOMING: locked notice */}
-        {isJunior && isUpcoming && (
-          <div className={styles.lockedNotice}>
-            <Lock size={16} />
-            <span>Задача ещё не началась. Вы сможете приступить, когда HR активирует её.</span>
-          </div>
-        )}
-
-        {/* CANCELLED notice */}
         {isCancelled && (
           <div className={styles.cancelledNotice}>
             Задача отменена. Баллы за неё не начисляются.
@@ -178,8 +444,153 @@ export function ChallengePage() {
           </a>
         )}
 
-        {/* Editable comment & links — for junior on ACTIVE challenge, not yet submitted */}
-        {isJunior && assignment && isActive && !isSubmitted && (
+                {/* HR stats accordion */}
+        {isHR && !isPersonal && stats && (
+          <div>
+            <button
+              onClick={() => setStatsExpanded(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%',
+                padding: 'var(--space-3) var(--space-4)',
+                background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+                borderRadius: statsExpanded ? 'var(--radius-lg) var(--radius-lg) 0 0' : 'var(--radius-lg)',
+                cursor: 'pointer', color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-display)', fontSize: 14,
+              }}
+            >
+              <span style={{ flex: 1, textAlign: 'left' }}>Статистика</span>
+              {statsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+
+            {statsExpanded && (
+              <div className={styles.statsCard}>
+                <DonutChart
+                  total={stats.total}
+                  segments={[
+                    { value: stats.done,       color: '#3dbd6a', label: 'Выполнено' },
+                    { value: stats.inProgress, color: '#3a9aee', label: 'В процессе' },
+                    { value: stats.going,      color: '#555566', label: 'Не начато' },
+                    { value: stats.skipped,    color: '#cc3333', label: 'Пропущено' },
+                  ]}
+                />
+                <div className={styles.statsLegend}>
+                  {[
+                    { value: stats.done,       color: '#3dbd6a', label: 'Выполнено' },
+                    { value: stats.inProgress, color: '#3a9aee', label: 'В процессе' },
+                    { value: stats.going,      color: '#555566', label: 'Не начато' },
+                    ...(stats.skipped > 0 ? [{ value: stats.skipped, color: '#cc3333', label: 'Пропущено' }] : []),
+                  ].map(s => (
+                    <div key={s.label} className={styles.legendRow}>
+                      <span className={styles.legendDot} style={{ background: s.color }} />
+                      <span className={styles.legendLabel}>{s.label}</span>
+                      <span className={styles.legendValue} style={{ color: s.color }}>{s.value}</span>
+                    </div>
+                  ))}
+                  {stats.avgPoints !== null && (
+                    <div className={styles.legendDivider}>
+                      <span className={styles.legendLabel}>Средний балл</span>
+                      <span className={styles.legendValue} style={{ color: '#ffaa40' }}>{stats.avgPoints}</span>
+                    </div>
+                  )}
+                  {stats.maxPoints !== null && (
+                    <div className={styles.legendDivider}>
+                      <span className={styles.legendLabel}>Лучший результат</span>
+                      <span className={styles.legendValue} style={{ color: '#ffaa40' }}>{stats.maxPoints}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* HR: awaiting review */}
+        {isHR && !isPersonal && awaitingReview.length > 0 && (
+          <div>
+            <button
+              onClick={() => setReviewExpanded(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%',
+                padding: 'var(--space-3) var(--space-4)',
+                background: 'rgba(255,170,64,0.08)', border: '1px solid rgba(255,170,64,0.25)',
+                borderRadius: 'var(--radius-lg)', cursor: 'pointer',
+                color: 'var(--color-warning-bright)', fontFamily: 'var(--font-display)', fontSize: 14,
+              }}
+            >
+              <Star size={14} />
+              <span style={{ flex: 1, textAlign: 'left' }}>На проверке ({awaitingReview.length})</span>
+              {reviewExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            {reviewExpanded && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
+                {awaitingReview.map(a => (
+                  <div key={a.junior_id}>{renderReviewForm(a)}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* HR: already reviewed */}
+        {isHR && !isPersonal && alreadyReviewed.length > 0 && (
+          <div>
+            <button
+              onClick={() => setReviewedExpanded(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%',
+                padding: 'var(--space-3) var(--space-4)',
+                background: 'rgba(61,189,106,0.07)', border: '1px solid rgba(61,189,106,0.25)',
+                borderRadius: 'var(--radius-lg)', cursor: 'pointer',
+                color: 'var(--color-success-bright)', fontFamily: 'var(--font-display)', fontSize: 14,
+              }}
+            >
+              <Star size={14} />
+              <span style={{ flex: 1, textAlign: 'left' }}>Проверено ({alreadyReviewed.length})</span>
+              {reviewedExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            {reviewedExpanded && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
+                {alreadyReviewed.map(a => {
+                  const inEditMode = editModeJuniors.has(a.junior_id);
+                  if (inEditMode) return <div key={a.junior_id}>{renderReviewForm(a)}</div>;
+
+                  const junior = allUsers.find(u => u.id === a.junior_id);
+                  const name = junior ? junior.username : `#${a.junior_id}`;
+                  return (
+                    <div key={a.junior_id} style={{
+                      padding: 'var(--space-3) var(--space-4)',
+                      background: 'rgba(61,189,106,0.05)', border: '1px solid rgba(61,189,106,0.2)',
+                      borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-primary)' }}>
+                          👤 {name}
+                        </p>
+                        <Button size="sm" variant="ghost" onClick={() => setEditModeJuniors(prev => new Set([...prev, a.junior_id]))}>
+                          Редактировать
+                        </Button>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Баллы:</span>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--color-success-bright)' }}>
+                          {a.awarded_points}{challenge.maxPoints != null ? ` / ${challenge.maxPoints}` : ''}
+                        </span>
+                      </div>
+                      {a.feedback && (
+                        <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          💬 {a.feedback}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Junior / HR-personal: editable submission */}
+        {(isJunior || isPersonal) && activeAssignment && isActive && !isSubmitted && (
           <div className={styles.submissionSection}>
             <h3 className={styles.sectionTitle}>Комментарий</h3>
             <textarea
@@ -219,36 +630,29 @@ export function ChallengePage() {
             )}
 
             <div className={styles.submitActions}>
-              <Button
-                variant="secondary"
-                onClick={saveDraft}
-                disabled={saving !== null}
-              >
+              <Button variant="secondary" onClick={saveDraft} disabled={saving !== null}>
                 {saving === 'draft' ? 'Сохранение...' : 'Сохранить черновик'}
               </Button>
-              <Button
-                onClick={submitForReview}
-                disabled={saving !== null}
-              >
+              <Button onClick={submitForReview} disabled={saving !== null}>
                 {saving === 'submit' ? 'Отправка...' : 'Отправить на проверку'}
               </Button>
             </div>
           </div>
         )}
 
-        {/* Read-only submitted view — junior already sent for review */}
-        {isJunior && assignment && isActive && isSubmitted && (
+        {/* Junior / HR-personal: read-only submitted view */}
+        {(isJunior || isPersonal) && activeAssignment && isActive && isSubmitted && (
           <>
-            {assignment.comment && (
+            {activeAssignment.comment && (
               <div className={styles.submissionReadonly}>
                 <p className={styles.submissionLabel}>Ваш комментарий</p>
-                <p className={styles.submissionText}>{assignment.comment}</p>
+                <p className={styles.submissionText}>{activeAssignment.comment}</p>
               </div>
             )}
-            {(assignment.links ?? []).length > 0 && (
+            {(activeAssignment.links ?? []).length > 0 && (
               <div className={styles.submissionReadonly}>
                 <p className={styles.submissionLabel}>Ссылки</p>
-                {(assignment.links ?? []).map(url => (
+                {(activeAssignment.links ?? []).map(url => (
                   <a key={url} href={url} target="_blank" rel="noopener noreferrer" className={styles.submissionLink}>
                     <Link2 size={13} />
                     {url}
@@ -259,19 +663,19 @@ export function ChallengePage() {
           </>
         )}
 
-        {/* Read-only comment & links display when COMPLETED/CANCELLED */}
-        {isJunior && assignment && (isCompleted || isCancelled) && (
+        {/* Junior / HR-personal: completed/cancelled read-only */}
+        {(isJunior || isPersonal) && activeAssignment && (isCompleted || isCancelled) && (
           <>
-            {assignment.comment && (
+            {activeAssignment.comment && (
               <div className={styles.submissionReadonly}>
                 <p className={styles.submissionLabel}>Ваш комментарий</p>
-                <p className={styles.submissionText}>{assignment.comment}</p>
+                <p className={styles.submissionText}>{activeAssignment.comment}</p>
               </div>
             )}
-            {(assignment.links ?? []).length > 0 && (
+            {(activeAssignment.links ?? []).length > 0 && (
               <div className={styles.submissionReadonly}>
                 <p className={styles.submissionLabel}>Ссылки</p>
-                {(assignment.links ?? []).map(url => (
+                {(activeAssignment.links ?? []).map(url => (
                   <a key={url} href={url} target="_blank" rel="noopener noreferrer" className={styles.submissionLink}>
                     <Link2 size={13} />
                     {url}
@@ -282,14 +686,12 @@ export function ChallengePage() {
           </>
         )}
 
-        {/* "Submitted, waiting for HR review" notice */}
         {isJunior && assignment && isActive && isSubmitted && assignment.feedback == null && assignment.awarded_points == null && (
           <div className={styles.pendingReviewNotice}>
             ✅ Задача отправлена на проверку. Ожидайте обратной связи от HR.
           </div>
         )}
 
-        {/* HR feedback & awarded points (visible to junior) */}
         {isJunior && assignment && (assignment.feedback || assignment.awarded_points != null) && (
           <div className={styles.hrFeedback}>
             {assignment.awarded_points != null && (
@@ -306,14 +708,74 @@ export function ChallengePage() {
             )}
           </div>
         )}
-
-        {/* HR/Mentor: read-only status */}
-        {!isJunior && isReadOnly && (
-          <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', padding: 'var(--space-4) 0' }}>
-            Статус: <strong style={{ color: 'var(--text-primary)' }}>{challenge.status}</strong>
-          </div>
-        )}
       </div>
+
+      {/* Edit modal */}
+      {editModal && editForm && (
+        <Modal open={true} onClose={() => setEditModal(false)} title="Редактировать задачу" type="dialog">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <Input label="Название *" value={editForm.title} onChange={e => setEditForm(p => p && ({ ...p, title: e.target.value }))} />
+            <Input label="Описание" value={editForm.description} onChange={e => setEditForm(p => p && ({ ...p, description: e.target.value }))} />
+            <Input label="Ссылка (URL)" value={editForm.url} onChange={e => setEditForm(p => p && ({ ...p, url: e.target.value }))} />
+            <DateInput label="Дата дедлайна" value={editForm.date} onChange={date => setEditForm(p => p && ({ ...p, date }))} />
+            <Input label="Максимум баллов" type="number" value={editForm.maxPointsStr} onChange={e => setEditForm(p => p && ({ ...p, maxPointsStr: e.target.value }))} />
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Статус</p>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                {(['DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED'] as ChallengeStatus[]).map(s => (
+                  <button key={s} onClick={() => setEditForm(p => p && ({ ...p, status: s }))}
+                    style={{
+                      flex: 1, padding: '6px', borderRadius: 6, border: '1px solid', cursor: 'pointer',
+                      fontSize: 11, fontFamily: 'var(--font-display)',
+                      borderColor: editForm.status === s ? 'var(--color-primary)' : 'var(--border-subtle)',
+                      background: editForm.status === s ? 'rgba(204,0,0,0.15)' : 'transparent',
+                      color: editForm.status === s ? 'var(--color-primary-bright)' : 'var(--text-muted)',
+                    }}
+                  >
+                    {({ DRAFT: 'Черновик', ACTIVE: 'Активна', COMPLETED: 'Завершена', CANCELLED: 'Отменена' } as Record<string, string>)[s]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Button full onClick={handleEdit} disabled={updateChallenge.isPending}>
+              {updateChallenge.isPending ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Assign modal */}
+      {assignModal && (
+        <Modal open={true} onClose={() => { setAssignModal(false); setSelectedJuniorIds([]); }} title={`Назначить: ${challenge.title}`} type="dialog">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Выберите участников:</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', maxHeight: 280, overflowY: 'auto' }}>
+              {juniors.map(j => {
+                const isSelected = selectedJuniorIds.includes(j.id);
+                return (
+                  <button key={j.id} onClick={() => toggleJunior(j.id)}
+                    style={{
+                      padding: '10px 12px', borderRadius: 6, border: '1px solid', textAlign: 'left',
+                      cursor: 'pointer',
+                      borderColor: isSelected ? 'var(--color-primary)' : 'var(--border-subtle)',
+                      background: isSelected ? 'rgba(204,0,0,0.15)' : 'transparent',
+                      color: 'var(--text-primary)', fontSize: 13,
+                    }}
+                  >
+                    {isSelected ? '✓ ' : ''}{j.username}
+                  </button>
+                );
+              })}
+              {juniors.length === 0 && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Нет доступных участников</p>
+              )}
+            </div>
+            <Button full onClick={handleAssign} disabled={assignChallengeMut.isPending || unassignChallengeMut.isPending}>
+              {assignChallengeMut.isPending ? 'Назначение...' : `Сохранить (${selectedJuniorIds.length})`}
+            </Button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

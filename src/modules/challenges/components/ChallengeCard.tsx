@@ -11,6 +11,7 @@ interface ChallengeCardProps {
   onClick?: () => void;
   showProgress?: boolean;
   locked?: boolean;
+  pendingReview?: number;
 }
 
 const statusClass: Record<string, string> = {
@@ -21,7 +22,7 @@ const statusClass: Record<string, string> = {
   DRAFT:     styles.draft,
 };
 
-export function ChallengeCard({ challenge, awardedPoints, onClick, showProgress = false, locked = false }: ChallengeCardProps) {
+export function ChallengeCard({ challenge, awardedPoints, onClick, showProgress = false, locked = false, pendingReview }: ChallengeCardProps) {
   return (
     <div
       className={[styles.card, statusClass[challenge.status] ?? '', locked ? styles.locked : ''].join(' ')}
@@ -46,7 +47,7 @@ export function ChallengeCard({ challenge, awardedPoints, onClick, showProgress 
       )}
 
       <div className={styles.footer}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           {challenge.date && (
             <span className={styles.date}>
               <Calendar size={12} />
@@ -59,6 +60,11 @@ export function ChallengeCard({ challenge, awardedPoints, onClick, showProgress 
               {awardedPoints != null
                 ? `${awardedPoints} из ${challenge.maxPoints} баллов`
                 : `до ${challenge.maxPoints} баллов`}
+            </span>
+          )}
+          {pendingReview != null && pendingReview > 0 && (
+            <span className={styles.pendingBadge}>
+              {pendingReview} ожидает проверки
             </span>
           )}
         </div>

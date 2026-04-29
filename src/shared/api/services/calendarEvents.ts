@@ -1,7 +1,6 @@
 import { apiClient } from '../client';
 import type { CalendarEvent } from '@shared/types';
 
-// Backend DTO shape
 interface CalendarEventBackend {
   id: number;
   title: string;
@@ -9,6 +8,10 @@ interface CalendarEventBackend {
   event_type: 'challenge' | 'meeting' | 'deadline';
   challenge_id?: number | null;
   description?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  attendee_ids: number[];
+  created_by?: number | null;
 }
 
 function mapEvent(b: CalendarEventBackend): CalendarEvent {
@@ -19,6 +22,10 @@ function mapEvent(b: CalendarEventBackend): CalendarEvent {
     type: b.event_type,
     challengeId: b.challenge_id ?? undefined,
     description: b.description ?? undefined,
+    startTime: b.start_time ?? undefined,
+    endTime: b.end_time ?? undefined,
+    attendeeIds: b.attendee_ids ?? [],
+    createdBy: b.created_by ?? undefined,
   };
 }
 
@@ -28,6 +35,9 @@ export interface CalendarEventCreateInput {
   event_type: 'challenge' | 'meeting' | 'deadline';
   challenge_id?: number;
   description?: string;
+  start_time?: string;
+  end_time?: string;
+  attendee_ids?: number[];
 }
 
 export const calendarEventsApi = {

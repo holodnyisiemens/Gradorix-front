@@ -16,8 +16,7 @@ export function UserProfileModal({ user, onClose }: { user: User; onClose: () =>
   const { data: quizResults = [] } = useQuizResults(isJunior ? { user_id: user.id } : undefined);
   const { data: activities = [] } = useActivities(isJunior ? { user_id: user.id } : undefined);
 
-  const initials = ((user.firstname?.[0] ?? '') + (user.lastname?.[0] ?? '')).toUpperCase()
-    || user.username.slice(0, 2).toUpperCase();
+  const initials = user.username.slice(0, 2).toUpperCase();
 
   const doneChallenges = assignments.filter(a => a.progress === 'DONE').length;
   const approvedActivities = activities.filter(a => a.status === 'approved').length;
@@ -41,7 +40,7 @@ export function UserProfileModal({ user, onClose }: { user: User; onClose: () =>
           }}>{initials}</div>
           <div>
             <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
-              {user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : user.username}
+              {user.username}
             </p>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>@{user.username}</p>
           </div>
@@ -89,7 +88,7 @@ export function UsersPage() {
   const filtered = allUsers.filter((u) => {
     const matchRole = roleFilter === 'all' || u.role === roleFilter;
     const q = query.toLowerCase();
-    const matchQuery = !q || [u.username, u.firstname, u.lastname, u.email]
+    const matchQuery = !q || [u.username, u.email]
       .some((v) => v?.toLowerCase().includes(q));
     return matchRole && matchQuery;
   });

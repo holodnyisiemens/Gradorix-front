@@ -100,7 +100,7 @@ export function AttendancePage() {
             {hipoUsers.map(u => (
               <tr key={u.id}>
                 <td className={styles.td}>
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>{u.firstname} {u.lastname}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{u.username}</span>
                 </td>
                 {meetings.map(m => {
                   const att = isAttended(m.id, u.id);

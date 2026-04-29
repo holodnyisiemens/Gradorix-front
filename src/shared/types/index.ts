@@ -7,10 +7,7 @@ export type ChallengeJuniorProgress = 'GOING' | 'IN_PROGRESS' | 'DONE' | 'SKIPPE
 export interface User {
   id: number;
   username: string;
-  email: string;
   role: UserRole;
-  firstname?: string;
-  lastname?: string;
   is_active: boolean;
 }
 
@@ -57,6 +54,10 @@ export interface CalendarEvent {
   type: 'challenge' | 'meeting' | 'deadline';
   challengeId?: number;
   description?: string;
+  startTime?: string;   // "HH:MM"
+  endTime?: string;     // "HH:MM"
+  attendeeIds: number[];
+  createdBy?: number;
 }
 
 export type AchievementCategory = 'milestone' | 'challenge' | 'streak' | 'social' | 'special';
@@ -141,6 +142,7 @@ export interface KBArticle {
   content: string;
   createdAt: string;
   author: string;
+  attachments?: string[];
 }
 
 // ===== TEAM =====

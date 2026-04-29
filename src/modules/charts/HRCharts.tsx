@@ -83,8 +83,8 @@ function useHRChartsData() {
   const tasksData = hipoUsers.map(u => {
     const ua = allAssignments.filter(a => a.junior_id === u.id);
     return {
-      name: (u.firstname ?? u.username).slice(0, 8),
-      fullName: `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim() || u.username,
+      name: u.username.slice(0, 8),
+      fullName: u.username,
       done:       ua.filter(a => a.progress === 'DONE').length,
       inProgress: ua.filter(a => a.progress === 'IN_PROGRESS').length,
       going:      ua.filter(a => a.progress === 'GOING').length,
@@ -109,7 +109,7 @@ function useHRChartsData() {
   const pointsData = leaderboard.slice(0, 6).map((p, i) => {
     const u = allUsers.find(x => x.id === p.userId);
     return {
-      name: (u?.firstname ?? 'Участник').slice(0, 9),
+      name: (u?.username ?? 'Участник').slice(0, 9),
       points: p.totalPoints,
       level: p.levelName,
       medal: MEDALS[i] ?? '',

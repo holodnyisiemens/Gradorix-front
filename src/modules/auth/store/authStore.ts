@@ -5,8 +5,10 @@ import type { User } from '@shared/types';
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
+  login: (user: User, token: string, refreshToken: string) => void;
+  updateToken: (token: string, refreshToken: string) => void;
   logout: () => void;
 }
 
@@ -15,14 +17,22 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
-      login: (user, token) => {
+      login: (user, token, refreshToken) => {
         localStorage.setItem('gradorix-token', token);
-        set({ user, token, isAuthenticated: true });
+        localStorage.setItem('gradorix-refresh-token', refreshToken);
+        set({ user, token, refreshToken, isAuthenticated: true });
+      },
+      updateToken: (token, refreshToken) => {
+        localStorage.setItem('gradorix-token', token);
+        localStorage.setItem('gradorix-refresh-token', refreshToken);
+        set({ token, refreshToken });
       },
       logout: () => {
         localStorage.removeItem('gradorix-token');
-        set({ user: null, token: null, isAuthenticated: false });
+        localStorage.removeItem('gradorix-refresh-token');
+        set({ user: null, token: null, refreshToken: null, isAuthenticated: false });
       },
     }),
     {

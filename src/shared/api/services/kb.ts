@@ -1,6 +1,8 @@
 import { apiClient } from '../client';
 import type { KBSection, KBArticle } from '@shared/types';
 
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+
 interface KBSectionBackend {
   id: number;
   title: string;
@@ -14,6 +16,7 @@ interface KBArticleBackend {
   content: string;
   created_at: string;
   author: string;
+  attachments?: string[] | null;
 }
 
 function mapSection(b: KBSectionBackend): KBSection {
@@ -33,6 +36,9 @@ function mapArticle(b: KBArticleBackend): KBArticle {
     content: b.content,
     createdAt: b.created_at,
     author: b.author,
+    attachments: b.attachments
+      ? b.attachments.map(p => `${API_BASE}${p}`)
+      : undefined,
   };
 }
 
@@ -77,15 +83,20 @@ export const kbApi = {
     content: string;
     created_at?: string;
     author: string;
+    files?: File[];
   }): Promise<KBArticle> => {
-    const payload = {
-      ...data,
-      // backend requires created_at (date-only YYYY-MM-DD), default to today
-      created_at: data.created_at
-        ? data.created_at.split('T')[0]
-        : new Date().toISOString().split('T')[0],
-    };
-    const res = await apiClient.post<KBArticleBackend>('/kb-articles/', payload);
+    const form = new FormData();
+    form.append('section_id', String(data.section_id));
+    form.append('title', data.title);
+    form.append('content', data.content);
+    form.append('author', data.author);
+    form.append('created_at', data.created_at
+      ? data.created_at.split('T')[0]
+      : new Date().toISOString().split('T')[0]);
+    if (data.files) {
+      data.files.forEach(f => form.append('files', f));
+    }
+    const res = await apiClient.post<KBArticleBackend>('/kb-articles/', form);
     return mapArticle(res.data);
   },
 
@@ -94,8 +105,17 @@ export const kbApi = {
     title?: string;
     content?: string;
     author?: string;
+    files?: File[];
   }): Promise<KBArticle> => {
-    const res = await apiClient.patch<KBArticleBackend>(`/kb-articles/${id}`, data);
+    const form = new FormData();
+    if (data.section_id != null) form.append('section_id', String(data.section_id));
+    if (data.title != null) form.append('title', data.title);
+    if (data.content != null) form.append('content', data.content);
+    if (data.author != null) form.append('author', data.author);
+    if (data.files) {
+      data.files.forEach(f => form.append('files', f));
+    }
+    const res = await apiClient.patch<KBArticleBackend>(`/kb-articles/${id}`, form);
     return mapArticle(res.data);
   },
 

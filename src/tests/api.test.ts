@@ -49,8 +49,6 @@ describe('AUTH', () => {
       email: `test_${Date.now()}@gradorix.com`,
       password: 'Test1234!',
       role: 'JUNIOR',
-      firstname: 'Test',
-      lastname: 'User',
     };
     const res = await axios.post(`${BASE_URL}/auth/register`, payload);
     expect(res.status).toBeOneOf([200, 201]);
@@ -122,9 +120,9 @@ describe('USERS', () => {
   });
 
   it('PATCH /users/{id} — обновить пользователя', async () => {
-    const res = await http.patch(`/users/${ids.userId}`, { firstname: 'Updated' });
+    const res = await http.patch(`/users/${ids.userId}`, { username: 'updated_test_user' });
     expect(res.status).toBe(200);
-    expect(res.data.firstname).toBe('Updated');
+    expect(res.data.username).toBe('updated_test_user');
     log('PATCH /users/id', res.data);
   });
 

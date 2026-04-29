@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Bell, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical } from 'lucide-react';
+import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
@@ -60,10 +60,9 @@ export function ProfilePage() {
   const updateUser = useUpdateUser();
 
   const [editModal, setEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ firstname: user.firstname ?? '', lastname: user.lastname ?? '', username: user.username });
+  const [editForm, setEditForm] = useState({ username: user.username });
 
-  const initials = ((user.firstname?.[0] ?? '') + (user.lastname?.[0] ?? '')).toUpperCase()
-    || user.username.slice(0, 2).toUpperCase();
+  const initials = user.username.slice(0, 2).toUpperCase();
 
   const { data: pts } = useUserPoints(user.id);
   const isHiPo = user.role === 'JUNIOR';
@@ -82,8 +81,9 @@ export function ProfilePage() {
     : 0;
 
   async function handleSaveProfile() {
-    await updateUser.mutateAsync({ id: user.id, data: { firstname: editForm.firstname || undefined, lastname: editForm.lastname || undefined, username: editForm.username } });
-    loginStore({ ...user, firstname: editForm.firstname || undefined, lastname: editForm.lastname || undefined, username: editForm.username }, useAuthStore.getState().token!);
+    await updateUser.mutateAsync({ id: user.id, data: { username: editForm.username } });
+    const state = useAuthStore.getState();
+    loginStore({ ...user, username: editForm.username }, state.token!, state.refreshToken!);
     setEditModal(false);
   }
 
@@ -94,7 +94,7 @@ export function ProfilePage() {
         <div className={styles.avatarSection}>
           <div className={styles.avatar}>{initials}</div>
           <h2 className={styles.name}>
-            {user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : user.username}
+            {user.username}
           </h2>
           <RoleBadge role={user.role} />
           <Button variant="ghost" size="sm" style={{ marginTop: 8 }} onClick={() => setEditModal(true)}>
@@ -209,8 +209,6 @@ export function ProfilePage() {
       {editModal && (
         <Modal open={true} onClose={() => setEditModal(false)} title="Редактировать профиль" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <Input label="Имя" value={editForm.firstname} onChange={e => setEditForm(p => ({ ...p, firstname: e.target.value }))} />
-            <Input label="Фамилия" value={editForm.lastname} onChange={e => setEditForm(p => ({ ...p, lastname: e.target.value }))} />
             <Input label="Логин" value={editForm.username} onChange={e => setEditForm(p => ({ ...p, username: e.target.value }))} />
             <Button full onClick={handleSaveProfile} disabled={updateUser.isPending}>
               {updateUser.isPending ? 'Сохранение...' : 'Сохранить'}

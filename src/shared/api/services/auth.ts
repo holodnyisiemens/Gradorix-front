@@ -2,19 +2,17 @@ import { apiClient } from '../client';
 import type { User } from '@shared/types';
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface LoginResponse {
   access_token: string;
+  refresh_token: string;
   token_type: string;
 }
 
-export interface RegisterResponse {
-  access_token: string;
-  token_type: string;
-}
+export type RegisterResponse = LoginResponse;
 
 export const authApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
@@ -24,13 +22,15 @@ export const authApi = {
 
   register: async (data: {
     username: string;
-    email: string;
     password: string;
     role: string;
-    firstname?: string;
-    lastname?: string;
   }): Promise<RegisterResponse> => {
     const res = await apiClient.post<RegisterResponse>('/auth/register', data);
+    return res.data;
+  },
+
+  refresh: async (refresh_token: string): Promise<LoginResponse> => {
+    const res = await apiClient.post<LoginResponse>('/auth/refresh', { refresh_token });
     return res.data;
   },
 

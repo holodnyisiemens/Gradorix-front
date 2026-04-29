@@ -215,7 +215,7 @@ export function QuizReviewPage() {
               .sort((a, b) => b.score - a.score)
               .map(result => {
                 const u = allUsers.find(x => x.id === result.userId);
-                const name = u ? `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim() || u.username : `Пользователь ${result.userId}`;
+                const name = u ? u.username : `Пользователь ${result.userId}`;
                 return (
                   <ResultRow
                     key={result.id}

@@ -41,7 +41,7 @@ export function LeaderboardPage() {
             <div className={styles.myRank}>{rankEmoji(myPoints.rank)}</div>
             <div className={styles.myInfo}>
               <p className={styles.myName}>
-                {user.firstname ? `${user.firstname} ${user.lastname}` : user.username}
+                {user.username}
               </p>
               <p className={styles.myLevel}>{myPoints.levelName}</p>
               <div className={styles.progressBar}>
@@ -70,8 +70,7 @@ export function LeaderboardPage() {
             const u = allUsers.find((x) => x.id === entry.userId);
             if (!u) return null;
             const isMe = u.id === user.id;
-            const initials = ((u.firstname?.[0] ?? '') + (u.lastname?.[0] ?? '')).toUpperCase()
-              || u.username.slice(0, 2).toUpperCase();
+            const initials = u.username.slice(0, 2).toUpperCase();
             return (
               <div
                 key={entry.userId}
@@ -87,7 +86,7 @@ export function LeaderboardPage() {
                 </div>
                 <div className={styles.info}>
                   <p className={styles.name}>
-                    {u.firstname ? `${u.firstname} ${u.lastname}` : u.username}
+                    {u.username}
                     {isMe && ' (ты)'}
                   </p>
                   <p className={styles.level}>{entry.levelName}</p>

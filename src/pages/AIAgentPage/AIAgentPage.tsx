@@ -26,7 +26,7 @@ function generateReply(text: string, role: string, ctx: ReplyContext): string {
       const stats = ctx.juniorActivityStats.slice().sort((a, b) => b.completionRate - a.completionRate);
       const top = stats.slice(0, 3).map((s, i) => {
         const u = ctx.allUsers.find((x) => x.id === s.userId);
-        return `${i + 1}. ${u?.firstname} ${u?.lastname} — ${s.completionRate}% выполнения задач`;
+        return `${i + 1}. ${u?.username ?? ''} — ${s.completionRate}% выполнения задач`;
       }).join('\n');
       return `📊 **Топ участников по выполнению задач:**\n\n${top}\n\nДанные актуальны на сегодня. Хотите подробнее по кому-то конкретному?`;
     }
@@ -48,7 +48,7 @@ function generateReply(text: string, role: string, ctx: ReplyContext): string {
       const pending = ctx.activities.filter((a) => a.status === 'pending');
       return `⏳ **Ожидают подтверждения: ${pending.length} активностей**\n\n${pending.map(a => {
         const u = ctx.allUsers.find(x => x.id === a.userId);
-        return `• ${u?.firstname} ${u?.lastname}: "${a.title}" (+${a.requestedPoints} баллов)`;
+        return `• ${u?.username ?? ''}: "${a.title}" (+${a.requestedPoints} баллов)`;
       }).join('\n')}\n\nПерейдите в раздел "Баллы" для обработки.`;
     }
     if (q.includes('помощ') || q.includes('что умеешь') || q.includes('help')) {

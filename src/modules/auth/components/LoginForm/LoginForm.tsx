@@ -12,31 +12,31 @@ import styles from './LoginForm.module.css';
 export function LoginForm() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const doLogin = async (e: string, p: string) => {
+  const doLogin = async (u: string, p: string) => {
     setError('');
     setLoading(true);
     try {
-      const { access_token } = await authApi.login({ email: e, password: p });
+      const { access_token, refresh_token } = await authApi.login({ username: u, password: p });
       localStorage.setItem('gradorix-token', access_token);
       const user = await authApi.getMe();
-      login(user, access_token);
+      login(user, access_token, refresh_token);
       registerPushSubscription(user.id);
     } catch {
-      setError('Неверный email или пароль');
+      setError('Неверный логин или пароль');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
-    await doLogin(email.trim(), password);
+    await doLogin(username.trim(), password);
   };
 
   return (
@@ -63,12 +63,12 @@ export function LoginForm() {
             )}
 
             <Input
-              label="Email"
-              type="email"
-              placeholder="user@gradorix.ru"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              label="Никнейм"
+              type="text"
+              placeholder="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
               autoCapitalize="none"
             />
 
@@ -83,7 +83,7 @@ export function LoginForm() {
               onIconRightClick={() => setShowPassword((v) => !v)}
             />
 
-            <Button type="submit" full loading={loading} disabled={!email || !password}>
+            <Button type="submit" full loading={loading} disabled={!username || !password}>
               Войти
             </Button>
 
