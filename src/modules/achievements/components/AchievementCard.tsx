@@ -17,7 +17,7 @@ export function AchievementCard({ achievement }: AchievementCardProps) {
         <div className={styles.description}>{description}</div>
       </div>
       {earned ? (
-        <span className={styles.xp}>+{xp} XP</span>
+        <span className={styles.xp}>+{xp} БАЛЛОВ</span>
       ) : (
         <Lock size={16} className={styles.lockIcon} />
       )}

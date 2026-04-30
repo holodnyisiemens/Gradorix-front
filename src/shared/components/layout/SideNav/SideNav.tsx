@@ -28,16 +28,15 @@ function getNavConfig(role: UserRole): NavConfig {
       return {
         primary: [
           { to: '/dashboard',    icon: <Home size={18} />,          label: 'Главная' },
-          { to: '/challenges',   icon: <Zap size={18} />,           label: 'Задачи' },
-          { to: '/tests',        icon: <FlaskConical size={18} />,  label: 'Тесты' },
           { to: '/leaderboard',  icon: <Trophy size={18} />,        label: 'Рейтинг' },
-          { to: '/calendar',     icon: <Calendar size={18} />,      label: 'Календарь' },
+          { to: '/challenges',   icon: <Zap size={18} />,           label: 'Задачи' },
+          { to: '/points',     icon: <Star size={18} />,          label: 'Мои достижения' },
+
         ],
         secondary: [
-          { to: '/points',     icon: <Star size={18} />,          label: 'Мои достижения' },
           { to: '/knowledge',  icon: <BookOpen size={18} />,      label: 'База знаний' },
           { to: '/team',       icon: <Users size={18} />,         label: 'Моя команда' },
-          { to: '/attendance', icon: <CalendarCheck size={18} />, label: 'Посещаемость' },
+          { to: '/tests',        icon: <FlaskConical size={18} />,  label: 'Тесты' },
         ],
       };
     case 'MENTOR':
@@ -58,14 +57,11 @@ function getNavConfig(role: UserRole): NavConfig {
         primary: [
           { to: '/dashboard',   icon: <Home size={18} />,          label: 'Главная' },
           { to: '/users',       icon: <Users size={18} />,         label: 'Пользователи' },
-          { to: '/challenges',  icon: <Zap size={18} />,           label: 'Задачи' },
           { to: '/mentorships', icon: <Link2 size={18} />,         label: 'Пары' },
           { to: '/calendar',    icon: <Calendar size={18} />,      label: 'Календарь' },
-          { to: '/attendance',  icon: <CalendarCheck size={18} />, label: 'Посещаемость' },
         ],
         secondary: [
           { to: '/knowledge', icon: <BookOpen size={18} />,  label: 'База знаний' },
-          { to: '/points',    icon: <Star size={18} />,      label: 'Управление баллами' },
           { to: '/admin',     icon: <Settings size={18} />,  label: 'Админ-панель' },
         ],
       };

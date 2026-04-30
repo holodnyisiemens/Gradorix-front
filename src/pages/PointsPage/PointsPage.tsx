@@ -9,10 +9,8 @@ import { Modal } from '@shared/components/ui/Modal/Modal';
 import {
   useActivities, useUsers, useUpdateActivity, useCreateActivity, useDeleteActivity,
   useQuizzes, useQuizResults,
-  useAchievements, useAllUserAchievements, useAwardAchievement, useRevokeAchievement,
-  useCalendarEvents, useMeetingAttendance, useMarkAttendance, useUpdateAttendance, useDeleteAttendance,
 } from '@shared/hooks/useApi';
-import { ChevronDown, ChevronUp, Link2, Plus, X, ClipboardCheck, Calendar, CheckCircle } from 'lucide-react';
+import { Link2, Plus, X, ClipboardCheck, Calendar, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { ActivityStatus } from '@shared/types';
@@ -215,219 +213,14 @@ function PersonalTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HR: Достижения tab (award catalog achievements)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function AchievementsTab() {
-  const { data: achievements = [] } = useAchievements();
-  const { data: allUsers = [] } = useUsers();
-  const { data: userAchievements = [] } = useAllUserAchievements();
-  const award = useAwardAchievement();
-  const revoke = useRevokeAchievement();
-  const [expanded, setExpanded] = useState<number | null>(null);
-
-  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
-
-  function hasAchievement(userId: number, achievementId: number) {
-    return userAchievements.some(ua => ua.user_id === userId && ua.achievement_id === achievementId);
-  }
-
-  if (achievements.length === 0) return <div className={styles.empty}>Нет достижений в каталоге</div>;
-
-  return (
-    <div className={styles.achieveGrid}>
-      {achievements.map(ach => (
-        <div key={ach.id} className={styles.achieveCard}>
-          <div className={styles.achieveCardHeader} onClick={() => setExpanded(v => v === ach.id ? null : ach.id)}>
-            <span className={styles.achieveIcon}>{ach.icon}</span>
-            <div style={{ flex: 1 }}>
-              <p className={styles.achieveTitle}>{ach.title}</p>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{ach.description}</p>
-            </div>
-            <span className={styles.achieveXp}>+{ach.xp} XP</span>
-            {expanded === ach.id ? <ChevronUp size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} />}
-          </div>
-
-          {expanded === ach.id && (
-            <div className={styles.achieveBody}>
-              {juniors.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Нет Участник проектаов</p>}
-              {juniors.map(j => {
-                const earned = hasAchievement(j.id, ach.id);
-                const name = j.username;
-                return (
-                  <div key={j.id} className={styles.juniorRow}>
-                    <p className={styles.juniorName}>{name}</p>
-                    {earned ? (
-                      <>
-                        <span className={styles.awardedBadge}>✓ Выдано</span>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          style={{ marginLeft: 6 }}
-                          onClick={() => revoke.mutate({ userId: j.id, achievementId: ach.id })}
-                          disabled={revoke.isPending}
-                        >
-                          Отозвать
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => award.mutate({ user_id: j.id, achievement_id: ach.id })}
-                        disabled={award.isPending}
-                      >
-                        Выдать
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HR: Мероприятия tab (attendance matrix — same as AttendancePage)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function EventsTab() {
-  const { data: events = [] } = useCalendarEvents();
-  const { data: attendance = [] } = useMeetingAttendance();
-  const { data: allUsers = [] } = useUsers();
-  const markAttendance = useMarkAttendance();
-  const updateAttendance = useUpdateAttendance();
-  const deleteAttendance = useDeleteAttendance();
-
-  const [expanded, setExpanded] = useState<number | null>(null);
-  const [search, setSearch] = useState('');
-
-  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
-  const meetingEvents = [...events]
-    .filter(ev => ev.type === 'meeting')
-    .sort((a, b) => b.date.localeCompare(a.date));
-
-  if (meetingEvents.length === 0) return <div className={styles.empty}>Нет мероприятий</div>;
-
-  // Returns: null = no record, true = attended, false = not attended
-  function getRecord(eventId: number, userId: number) {
-    return attendance.find(r => r.eventId === eventId && r.userId === userId) ?? null;
-  }
-
-  // Карусель HR: — → Не был → Был → — (удаление записи)
-  // При удалении сотрудник снова может сам выбрать статус в календаре
-  function handleCycle(eventId: number, userId: number) {
-    const rec = getRecord(eventId, userId);
-    if (!rec) {
-      markAttendance.mutate({ event_id: eventId, user_id: userId, attended: false });
-    } else if (!rec.attended) {
-      updateAttendance.mutate({ id: rec.id, data: { attended: true } });
-    } else {
-      deleteAttendance.mutate(rec.id);
-    }
-  }
-
-  const filteredJuniors = juniors.filter(j => {
-    if (!search.trim()) return true;
-    return j.username.toLowerCase().includes(search.toLowerCase());
-  });
-
-  return (
-    <div className={styles.achieveGrid}>
-      {meetingEvents.map(ev => {
-        const attendedCount = juniors.filter(j => (getRecord(ev.id, j.id)?.attended ?? false)).length;
-        const isOpen = expanded === ev.id;
-
-        return (
-          <div key={ev.id} className={styles.achieveCard}>
-            <div className={styles.achieveCardHeader} onClick={() => setExpanded(v => v === ev.id ? null : ev.id)}>
-              <span className={styles.achieveIcon}>🤝</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p className={styles.achieveTitle}>{ev.title}</p>
-                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{ev.date}</p>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
-                <span style={{
-                  fontSize: 12, fontFamily: 'var(--font-display)',
-                  color: attendedCount > 0 ? 'var(--color-success-bright)' : 'var(--text-muted)',
-                }}>
-                  {attendedCount}/{juniors.length}
-                </span>
-                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>присутств.</span>
-              </div>
-              {isOpen
-                ? <ChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                : <ChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />}
-            </div>
-
-            {isOpen && (
-              <div className={styles.achieveBody}>
-                {ev.description && (
-                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>{ev.description}</p>
-                )}
-                <input
-                  className={styles.evSearch}
-                  placeholder="Поиск по имени..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>
-                  <span>Сотрудник</span>
-                  <span>Статус</span>
-                </div>
-                {filteredJuniors.length === 0 && (
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: 'var(--space-3) 0' }}>Никого не найдено</p>
-                )}
-                {filteredJuniors.map(j => {
-                  const name = j.username;
-                  const initials = j.username.slice(0, 2).toUpperCase();
-                  const rec = getRecord(ev.id, j.id);
-                  const state: 'none' | 'absent' | 'present' =
-                    !rec ? 'none' : rec.attended ? 'present' : 'absent';
-
-                  return (
-                    <div key={j.id} className={styles.juniorRow}>
-                      <div className={styles.evAvatar}>{initials}</div>
-                      <p className={styles.juniorName}>{name}</p>
-                      <button
-                        className={[
-                          styles.evToggle,
-                          state === 'present' ? styles.evToggleOn : '',
-                          state === 'absent' ? styles.evToggleOff : '',
-                        ].join(' ')}
-                        onClick={() => handleCycle(ev.id, j.id)}
-                        title="Нажмите для смены статуса"
-                      >
-                        {state === 'none' && '—'}
-                        {state === 'absent' && '✗ Не был'}
-                        {state === 'present' && '✓ Был'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // HR: full page with tabs
 // ─────────────────────────────────────────────────────────────────────────────
 
-type HrTab = 'tests' | 'personal' | 'achievements' | 'events';
+type HrTab = 'tests' | 'personal';
 
 const HR_TABS: { key: HrTab; label: string }[] = [
-  { key: 'tests',        label: 'Тесты' },
-  { key: 'personal',     label: 'Личные достижения' },
-  { key: 'achievements', label: 'Достижения' },
-  { key: 'events',       label: 'Мероприятия' },
+  { key: 'tests',    label: 'Тесты' },
+  { key: 'personal', label: 'Личные достижения' },
 ];
 
 function HrPointsPage() {
@@ -459,10 +252,8 @@ function HrPointsPage() {
           })}
         </div>
 
-        {tab === 'tests'        && <TestsTab />}
-        {tab === 'personal'     && <PersonalTab />}
-        {tab === 'achievements' && <AchievementsTab />}
-        {tab === 'events'       && <EventsTab />}
+        {tab === 'tests'    && <TestsTab />}
+        {tab === 'personal' && <PersonalTab />}
       </div>
     </>
   );

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronDown, ChevronUp, Pencil, Trash2, Calendar, CheckCircle, Link2, ClipboardCheck } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
@@ -9,12 +10,17 @@ import { Modal } from '@shared/components/ui/Modal/Modal';
 import {
   useActivities, useAchievements, useUsers, useLeaderboard,
   useUpdateActivity, useCreateActivity, useDeleteAchievement, useCreateUser,
-  useCalendarEvents, useCreateCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent,
-  useAwardAchievement, useAllUserAchievements,
+  useCalendarEvents, useCreateCalendarEvent,
+  useAwardAchievement, useAllUserAchievements, useRevokeAchievement,
+  useChallenges, useChallengeJuniors, useCreateChallenge, useAssignChallenge,
+  useMeetingAttendance, useMarkAttendance, useUpdateAttendance, useDeleteAttendance,
+  useQuizzes,
+  useQuizResults,
 } from '@shared/hooks/useApi';
 import { achievementsApi } from '@shared/api/services/achievements';
+import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Activity, ActivityStatus, CalendarEvent, UserRole } from '@shared/types';
+import type { Activity, ActivityStatus, UserRole, ChallengeStatus } from '@shared/types';
 
 const STATUS_LABEL: Record<ActivityStatus, string> = {
   pending: 'На проверке',
@@ -22,47 +28,127 @@ const STATUS_LABEL: Record<ActivityStatus, string> = {
   revision: 'На доработку',
   rejected: 'Отклонено',
 };
-import styles from './AdminPage.module.css';
 
-type Tab = 'achievements' | 'activities' | 'users' | 'events';
+const CHALLENGE_FILTERS: { key: 'all' | ChallengeStatus; label: string }[] = [
+  { key: 'all',       label: 'Все' },
+  { key: 'ACTIVE',    label: 'Активные' },
+  { key: 'COMPLETED', label: 'Завершены' },
+  { key: 'DRAFT',     label: 'Черновики' },
+];
+
+const EMPTY_CHALLENGE = {
+  title: '', description: '', status: 'DRAFT' as ChallengeStatus,
+  date: '', url: '', maxPoints: '', assignAll: false, personal: false,
+};
+
+import styles from './AdminPage.module.css';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
+
+type Tab = 'achievements' | 'activities' | 'users' | 'events' | 'tests' | 'personal'|'challenges';
 
 export function AdminPage() {
   const user = useAuthStore((s) => s.user)!;
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const [tab, setTab] = useState<Tab>('activities');
+  const [tab, setTab] = useState<Tab>('challenges');
   const [editActivity, setEditActivity] = useState<Activity | null>(null);
-  const [editAchievementId, setEditAchievementId] = useState<number | null>(null);
+  // Challenges tab
+  const [challengeFilter, setChallengeFilter] = useState<'all' | ChallengeStatus>('all');
+  const [challengeSearch, setChallengeSearch] = useState('');
+  const [newChallengeModal, setNewChallengeModal] = useState(false);
+  const [newChallenge, setNewChallenge] = useState(EMPTY_CHALLENGE);
+  const [createChallengeError, setCreateChallengeError] = useState('');
   const [newAchModal, setNewAchModal] = useState(false);
   const [newAch, setNewAch] = useState({ title: '', description: '', icon: '🏆', xp: 100, category: 'challenge' as const });
+  const [achExpanded, setAchExpanded] = useState<number | null>(null);
+  const [editAchModal, setEditAchModal] = useState<number | null>(null);
+  const [achEditData, setAchEditData] = useState<{ title: string; description: string; icon: string; xp: string }>({ title: '', description: '', icon: '', xp: '' });
   const [newUserModal, setNewUserModal] = useState(false);
   const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: 'EMPLOYEE' as UserRole });
   const [newUserError, setNewUserError] = useState('');
-  const [newEventModal, setNewEventModal] = useState(false);
-  const [newEvent, setNewEvent] = useState({ title: '', date: '', description: '', type: 'meeting' as CalendarEvent['type'] });
   const [newActivityModal, setNewActivityModal] = useState(false);
   const [newActivity, setNewActivity] = useState({ title: '', description: '', requested_points: '100', userId: 0 });
-  const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
-  const [awardModal, setAwardModal] = useState<number | null>(null); // achievement id
-  const [awardUserId, setAwardUserId] = useState<number | null>(null);
+  const [attendanceExpanded, setAttendanceExpanded] = useState<number | null>(null);
+  const [attendanceSearch, setAttendanceSearch] = useState('');
 
   const { data: activities = [] } = useActivities();
   const { data: achievements = [] } = useAchievements();
   const { data: allUsers = [] } = useUsers();
   const { data: leaderboard = [] } = useLeaderboard();
   const { data: events = [] } = useCalendarEvents();
+  const { data: challenges = [] } = useChallenges();
+  const { data: allAssignments = [] } = useChallengeJuniors();
   const updateActivity = useUpdateActivity();
   const createActivity = useCreateActivity();
   const deleteAchievement = useDeleteAchievement();
   const createUser = useCreateUser();
   const createEvent = useCreateCalendarEvent();
-  const updateEvent = useUpdateCalendarEvent();
-  const deleteEvent = useDeleteCalendarEvent();
   const awardAchievement = useAwardAchievement();
+  const revokeAchievement = useRevokeAchievement();
   const { data: allUserAchievements = [] } = useAllUserAchievements();
+  const { data: quizzes = [] } = useQuizzes();
+  const { data: allResults = [] } = useQuizResults();
+  const createChallengeMut = useCreateChallenge();
+  const assignChallengeMut = useAssignChallenge();
+  const { data: attendance = [] } = useMeetingAttendance();
+  const markAttendance = useMarkAttendance();
+  const updateAttendance = useUpdateAttendance();
+  const deleteAttendance = useDeleteAttendance();
 
-  const editAchievement = achievements.find((a) => a.id === editAchievementId) ?? null;
+  const [editing, setEditing] = useState<Record<number, { points: number; note: string }>>({});
+  const [filter, setFilter] = useState<'all' | ActivityStatus>('pending');
+
+  const personal = activities.filter(a => a.type === 'achievement');
+  const filtered = filter === 'all' ? personal : personal.filter(a => a.status === filter);
+  const pendingCount = personal.filter(a => a.status === 'pending').length;
+
+  function getEdit(id: number, defaultPts: number, defaultNote: string) {
+    return editing[id] ?? { points: defaultPts, note: defaultNote };
+  }
+
+  async function approve(id: number) {
+    const ed = editing[id];
+    await updateActivity.mutateAsync({
+      id,
+      data: {
+        status: 'approved',
+        awarded_points: ed?.points ?? 0,
+        review_note: ed?.note || undefined,
+      },
+    });
+  }
+
+  async function reject(id: number) {
+    const ed = editing[id];
+    await updateActivity.mutateAsync({
+      id,
+      data: {
+        status: 'rejected',
+        review_note: ed?.note || 'Не соответствует критериям',
+      },
+    });
+  }
+
+  async function revision(id: number) {
+    const ed = editing[id];
+    await updateActivity.mutateAsync({
+      id,
+      data: {
+        status: 'revision',
+        review_note: ed?.note || 'Требуется доработка',
+      },
+    });
+  }
+
+  const FILTER_BTNS: { key: 'all' | ActivityStatus; label: string }[] = [
+    { key: 'all',      label: 'Все' },
+    { key: 'pending',  label: `На проверке${pendingCount ? ` (${pendingCount})` : ''}` },
+    { key: 'approved', label: 'Одобрено' },
+    { key: 'rejected', label: 'Отклонено' },
+    { key: 'revision', label: 'На доработку' },
+  ];
 
   if (user.role !== 'HR') {
     navigate('/dashboard');
@@ -107,12 +193,6 @@ export function AdminPage() {
     }
   }
 
-  async function saveEditedAchievement(id: number, data: { title: string; description: string; icon: string; xp: number }) {
-    await achievementsApi.update(id, data);
-    qc.invalidateQueries({ queryKey: ['achievements'] });
-    setEditAchievementId(null);
-  }
-
   async function createNewActivity() {
     if (!newActivity.title || !newActivity.userId) return;
     await createActivity.mutateAsync({
@@ -126,17 +206,53 @@ export function AdminPage() {
     setNewActivity({ title: '', description: '', requested_points: '100', userId: 0 });
   }
 
-  async function createNewEvent() {
-    if (!newEvent.title || !newEvent.date) return;
-    await createEvent.mutateAsync({ title: newEvent.title, date: newEvent.date, event_type: newEvent.type, description: newEvent.description || undefined });
-    setNewEventModal(false);
-    setNewEvent({ title: '', date: '', description: '', type: 'meeting' });
+  async function handleCreateChallenge() {
+    if (!newChallenge.title) return;
+    setCreateChallengeError('');
+    const maxPts = newChallenge.maxPoints ? Number(newChallenge.maxPoints) : undefined;
+    try {
+      const created = await createChallengeMut.mutateAsync({
+        title: newChallenge.title,
+        description: newChallenge.description || undefined,
+        status: newChallenge.status,
+        date: newChallenge.date || undefined,
+        url: newChallenge.url || undefined,
+        max_points: maxPts,
+      });
+      if (newChallenge.date) {
+        createEvent.mutate({ title: `Дедлайн: ${created.title}`, date: newChallenge.date, event_type: 'deadline', challenge_id: created.id, description: newChallenge.description || undefined });
+      }
+      const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
+      if (newChallenge.personal) {
+        await assignChallengeMut.mutateAsync({ challenge_id: created.id, employee_id: user.id, assigned_by: user.id, progress: 'GOING' });
+      } else if (newChallenge.assignAll && juniors.length > 0) {
+        await Promise.all(juniors.map(j => assignChallengeMut.mutateAsync({ challenge_id: created.id, employee_id: j.id, assigned_by: user.id, progress: 'GOING' })));
+      }
+      setNewChallengeModal(false);
+      setNewChallenge(EMPTY_CHALLENGE);
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setCreateChallengeError(msg ?? 'Ошибка при создании задачи');
+    }
   }
 
+  const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
+
+  const filteredChallenges = (challengeFilter === 'all' ? challenges : challenges.filter(c => c.status === challengeFilter))
+    .filter(c => !challengeSearch.trim() || c.title.toLowerCase().includes(challengeSearch.toLowerCase()))
+    .sort((a, b) => {
+      const pa = allAssignments.filter(x => x.challenge_id === a.id && x.progress === 'DONE' && x.awarded_points == null).length;
+      const pb = allAssignments.filter(x => x.challenge_id === b.id && x.progress === 'DONE' && x.awarded_points == null).length;
+      return pb - pa;
+    });
+
   const TABS: { key: Tab; label: string }[] = [
+    { key: 'challenges',   label: 'Задачи' },
     { key: 'achievements', label: 'Достижения' },
-    { key: 'events', label: 'Мероприятия' },
-    { key: 'users', label: 'Участники' },
+    { key: 'events',       label: 'Мероприятия' },
+    { key: 'tests',        label: 'Тесты' },
+    { key: 'users',        label: 'Участники' },
+    { key: 'personal', label: 'Личные достижения' },
   ];
 
   return (
@@ -150,6 +266,47 @@ export function AdminPage() {
             </button>
           ))}
         </div>
+
+        {/* CHALLENGES TAB */}
+        {tab === 'challenges' && (
+          <div>
+            <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setNewChallengeModal(true)}>
+              + Создать задачу
+            </Button>
+            <input
+              className={styles.search}
+              placeholder="Поиск по задачам..."
+              value={challengeSearch}
+              onChange={e => setChallengeSearch(e.target.value)}
+            />
+            <div className={styles.filterRow}>
+              {CHALLENGE_FILTERS.map(f => (
+                <button
+                  key={f.key}
+                  className={[styles.filterBtn, challengeFilter === f.key ? styles.filterBtnActive : ''].join(' ')}
+                  onClick={() => setChallengeFilter(f.key)}
+                >{f.label}</button>
+              ))}
+            </div>
+            {filteredChallenges.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 'var(--space-4) 0' }}>Ничего не найдено</p>
+            ) : (
+              <div className={styles.list}>
+                {filteredChallenges.map(c => {
+                  const pendingCount = allAssignments.filter(a => a.challenge_id === c.id && a.progress === 'DONE' && a.awarded_points == null).length;
+                  return (
+                    <ChallengeCard
+                      key={c.id}
+                      challenge={c}
+                      pendingReview={pendingCount || undefined}
+                      onClick={() => navigate(`/challenges/${c.id}`)}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ACTIVITIES TAB */}
         {tab === 'activities' && (
@@ -182,61 +339,283 @@ export function AdminPage() {
           </div>
         )}
 
+        {tab === 'tests' && quizzes.length === 0 && (
+<div className={styles.empty}>Нет тестов</div>)}
+{tab === 'tests' && quizzes.length !== 0 && (
+    <div className={styles.list}>
+      {quizzes.map(q => {
+        const count = allResults.filter(r => r.quizId === q.id).length;
+        const pending = allResults.filter(r => r.quizId === q.id && r.score === 0).length;
+        return (
+          <div key={q.id} className={styles.quizCard}>
+            <div className={styles.quizInfo}>
+              <p className={styles.quizTitle}>{q.title}</p>
+              <p className={styles.quizMeta}>
+                {count} {count === 1 ? 'результат' : count < 5 ? 'результата' : 'результатов'}
+                {pending > 0 && <span style={{ color: 'var(--color-warning-bright)', marginLeft: 8 }}>• {pending} требует проверки</span>}
+              </p>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => navigate(`/tests/${q.id}/review`)}>
+              <ClipboardCheck size={14} style={{ marginRight: 4 }} />
+              Проверить
+            </Button>
+          </div>
+        );
+      })}
+    </div>
+        )}
+
         {/* ACHIEVEMENTS TAB */}
         {tab === 'achievements' && (
           <div>
             <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setNewAchModal(true)}>
               + Создать достижение
             </Button>
-            <div className={styles.achGrid}>
-              {achievements.map(ach => (
-                <div key={ach.id} className={styles.achCard}>
-                  <div className={styles.achTop}>
-                    <span style={{ fontSize: 28 }}>{ach.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <p className={styles.achTitle}>{ach.title}</p>
-                      <p className={styles.achDesc}>{ach.description}</p>
+            <div className={styles.attendanceGrid}>
+              {achievements.map(ach => {
+                const isOpen = achExpanded === ach.id;
+                const employees = allUsers.filter(u => u.role === 'EMPLOYEE');
+                return (
+                  <div key={ach.id} className={styles.attendanceCard}>
+                    <div className={styles.attendanceHeader} onClick={() => setAchExpanded(v => v === ach.id ? null : ach.id)}>
+                      <span style={{ fontSize: 24, flexShrink: 0 }}>{ach.icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p className={styles.achTitle} style={{ marginBottom: 2 }}>{ach.title}</p>
+                        <p className={styles.achDesc}>{ach.description}</p>
+                        <p style={{ fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--color-warning-bright)', marginTop: 3 }}>+{ach.xp} БАЛЛОВ</p>
+                      </div>
+                      <button
+                        title="Редактировать"
+                        onClick={e => { e.stopPropagation(); setAchEditData({ title: ach.title, description: ach.description ?? '', icon: ach.icon, xp: String(ach.xp) }); setEditAchModal(ach.id); }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 6, border: '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', flexShrink: 0 }}
+                      ><Pencil size={15} /></button>
+                      <button
+                        title="Удалить"
+                        onClick={e => { e.stopPropagation(); deleteAchievement.mutate(ach.id); }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 6, border: '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', color: 'var(--color-primary-bright)', flexShrink: 0 }}
+                      ><Trash2 size={15} /></button>
+                      {isOpen ? <ChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />}
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontSize: 13, color: 'var(--color-warning-bright)', fontFamily: 'var(--font-display)' }}>+{ach.xp}</p>
-                      <p style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ach.category}</p>
-                    </div>
+                    {isOpen && (
+                      <div className={styles.attendanceBody}>
+                        <p style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 'var(--space-2)' }}>Участники</p>
+                        <div>
+                          {employees.map(emp => {
+                            const has = allUserAchievements.some(ua => ua.user_id === emp.id && ua.achievement_id === ach.id);
+                            return (
+                              <div key={emp.id} className={styles.attendanceRow}>
+                                <div className={styles.attendanceAvatar}>{emp.username.slice(0, 2).toUpperCase()}</div>
+                                <p style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>{emp.username}</p>
+                                {has ? (
+                                  <>
+                                    <span style={{ fontSize: 11, color: 'var(--color-success-bright)', marginRight: 'var(--space-2)' }}>✓ Выдано</span>
+                                    <Button size="sm" variant="danger" onClick={() => revokeAchievement.mutate({ userId: emp.id, achievementId: ach.id })} disabled={revokeAchievement.isPending}>Отозвать</Button>
+                                  </>
+                                ) : (
+                                  <Button size="sm" onClick={() => awardAchievement.mutate({ user_id: emp.id, achievement_id: ach.id })} disabled={awardAchievement.isPending}>Выдать</Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className={styles.itemActions} style={{ marginTop: 'var(--space-2)' }}>
-                    <Button size="sm" onClick={() => { setAwardModal(ach.id); setAwardUserId(null); }}>🏅 Наградить</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditAchievementId(ach.id)}>Редактировать</Button>
-                    <Button size="sm" variant="danger" onClick={() => deleteAchievement.mutate(ach.id)}>Удалить</Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* EVENTS TAB */}
-        {tab === 'events' && (
-          <div>
-            <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setNewEventModal(true)}>
-              + Добавить мероприятие
-            </Button>
-            <div className={styles.list}>
-              {events.map(ev => (
-                <div key={ev.id} className={styles.item}>
-                  <div className={styles.itemTop}>
-                    <p className={styles.itemTitle}>{ev.title}</p>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>{ev.type}</span>
+        {/* EVENTS TAB — attendance only */}
+        {tab === 'events' && (() => {
+          const hrIds = new Set(allUsers.filter(u => u.role === 'HR').map(u => u.id));
+
+          // Only meetings created by HR that have at least one EMPLOYEE attendee
+          const meetingEvents = [...events]
+            .filter(ev => {
+              if (ev.type !== 'meeting') return false;
+              if (ev.createdBy == null || !hrIds.has(ev.createdBy)) return false;
+              const employeeAttendees = ev.attendeeIds.filter(id => {
+                const u = allUsers.find(u => u.id === id);
+                return u?.role === 'EMPLOYEE';
+              });
+              return employeeAttendees.length > 0;
+            })
+            .sort((a, b) => b.date.localeCompare(a.date));
+
+          function getRecord(eventId: number, userId: number) {
+            return attendance.find(r => r.eventId === eventId && r.userId === userId) ?? null;
+          }
+
+          function handleCycle(eventId: number, userId: number) {
+            const rec = getRecord(eventId, userId);
+            if (!rec) {
+              markAttendance.mutate({ event_id: eventId, user_id: userId, attended: false });
+            } else if (!rec.attended) {
+              updateAttendance.mutate({ id: rec.id, data: { attended: true } });
+            } else {
+              deleteAttendance.mutate(rec.id);
+            }
+          }
+
+          if (meetingEvents.length === 0) {
+            return <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 'var(--space-6) 0' }}>Нет мероприятий с назначенными участниками</p>;
+          }
+
+          return (
+            <div className={styles.attendanceGrid}>
+              {meetingEvents.map(ev => {
+                // Only EMPLOYEE users from this event's attendeeIds
+                const eventEmployees = ev.attendeeIds
+                  .map(id => allUsers.find(u => u.id === id))
+                  .filter(u => u?.role === 'EMPLOYEE') as typeof allUsers;
+
+                const filteredEmployees = attendanceSearch.trim()
+                  ? eventEmployees.filter(e => e.username.toLowerCase().includes(attendanceSearch.toLowerCase()))
+                  : eventEmployees;
+
+                const attendedCount = eventEmployees.filter(e => getRecord(ev.id, e.id)?.attended).length;
+                const isOpen = attendanceExpanded === ev.id;
+
+                return (
+                  <div key={ev.id} className={styles.attendanceCard}>
+                    <div className={styles.attendanceHeader} onClick={() => setAttendanceExpanded(v => v === ev.id ? null : ev.id)}>
+                      <span style={{ fontSize: 20, flexShrink: 0 }}>🤝</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p className={styles.itemTitle} style={{ marginBottom: 2 }}>{ev.title}</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ev.date}</p>
+                      </div>
+                      <span style={{ fontSize: 12, fontFamily: 'var(--font-display)', color: attendedCount > 0 ? 'var(--color-success-bright)' : 'var(--text-muted)', flexShrink: 0 }}>
+                        {attendedCount}/{eventEmployees.length}
+                      </span>
+                      {isOpen ? <ChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />}
+                    </div>
+                    {isOpen && (
+                      <div className={styles.attendanceBody}>
+                        <input
+                          className={styles.search}
+                          placeholder="Поиск по имени..."
+                          value={attendanceSearch}
+                          onChange={e => setAttendanceSearch(e.target.value)}
+                        />
+                        {filteredEmployees.length === 0 && (
+                          <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: 'var(--space-2) 0' }}>Никого не найдено</p>
+                        )}
+                        {filteredEmployees.map(emp => {
+                          const rec = getRecord(ev.id, emp.id);
+                          const state: 'none' | 'absent' | 'present' = !rec ? 'none' : rec.attended ? 'present' : 'absent';
+                          return (
+                            <div key={emp.id} className={styles.attendanceRow}>
+                              <div className={styles.attendanceAvatar}>{emp.username.slice(0, 2).toUpperCase()}</div>
+                              <p style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>{emp.username}</p>
+                              <button
+                                className={[styles.attendanceToggle, state === 'present' ? styles.attendanceToggleOn : state === 'absent' ? styles.attendanceToggleOff : ''].join(' ')}
+                                onClick={() => handleCycle(ev.id, emp.id)}
+                              >
+                                {state === 'none' && '—'}
+                                {state === 'absent' && '✗ Не был'}
+                                {state === 'present' && '✓ Был'}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <p className={styles.itemSub}>{ev.date}{ev.description ? ` · ${ev.description}` : ''}</p>
-                  <div className={styles.itemActions}>
-                    <Button size="sm" variant="ghost" onClick={() => setEditEvent({ ...ev })}>Редактировать</Button>
-                    <Button size="sm" variant="danger" onClick={() => deleteEvent.mutate(ev.id)}>Удалить</Button>
-                  </div>
-                </div>
-              ))}
-              {events.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 'var(--space-4) 0' }}>Мероприятий пока нет</p>}
+                );
+              })}
             </div>
-          </div>
-        )}
+          );
+        })()}
+
+
+        {tab === 'personal' && (
+    <>
+      <div className={styles.filters}>
+        {FILTER_BTNS.map(f => (
+          <button key={f.key}
+            className={[styles.filterBtn, filter === f.key ? styles.active : ''].join(' ')}
+            onClick={() => setFilter(f.key)}
+          >{f.label}</button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className={styles.empty}>Нет достижений</div>
+      ) : (
+        <div className={styles.list}>
+          {filtered.map(a => {
+            const u = allUsers.find(x => x.id === a.userId);
+            const name = u ? u.username : `#${a.userId}`;
+            const ed = getEdit(a.id, a.awardedPoints ?? 0, a.reviewNote ?? '');
+
+            return (
+              <div key={a.id} className={styles.card}>
+                <div className={styles.cardTop}>
+                  <p className={styles.cardTitle}>{a.title}</p>
+                  <span className={[styles.statusBadge, styles[a.status]].join(' ')}>
+                    {STATUS_LABEL[a.status]}
+                  </span>
+                </div>
+                <p className={styles.userName}>👤 {name}</p>
+                {a.achievedDate && (
+                  <p className={styles.metaItem} style={{ fontSize: 11 }}>
+                    <Calendar size={11} />
+                    {format(new Date(a.achievedDate), 'd MMMM yyyy', { locale: ru })}
+                  </p>
+                )}
+                {a.description && <p className={styles.cardDesc}>{a.description}</p>}
+                {(a.links ?? []).length > 0 && (
+                  <div className={styles.linksList}>
+                    {(a.links ?? []).map(url => (
+                      <a key={url} href={url} target="_blank" rel="noopener noreferrer" className={styles.linksItem}>
+                        <Link2 size={11} />{url}
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                {a.status === 'pending' && (
+                  <>
+                    <div className={styles.scoreRow}>
+                      <span className={styles.scoreLabel}>Баллы:</span>
+                      <input
+                        type="number"
+                        className={styles.scoreInput}
+                        min={0}
+                        value={ed.points}
+                        onChange={e => setEditing(prev => ({ ...prev, [a.id]: { ...ed, points: Math.max(0, Number(e.target.value)) } }))}
+                      />
+                    </div>
+                    <textarea
+                      className={styles.feedbackArea}
+                      placeholder="Комментарий..."
+                      value={ed.note}
+                      onChange={e => setEditing(prev => ({ ...prev, [a.id]: { ...ed, note: e.target.value } }))}
+                    />
+                    <div className={styles.actions}>
+                      <Button size="sm" onClick={() => approve(a.id)} disabled={updateActivity.isPending}>Одобрить</Button>
+                      <Button size="sm" variant="secondary" onClick={() => revision(a.id)} disabled={updateActivity.isPending}>На доработку</Button>
+                      <Button size="sm" variant="danger" onClick={() => reject(a.id)} disabled={updateActivity.isPending}>Отклонить</Button>
+                    </div>
+                  </>
+                )}
+
+                {a.status !== 'pending' && a.reviewNote && (
+                  <p className={styles.note}>💬 {a.reviewNote}</p>
+                )}
+                {a.status === 'approved' && a.awardedPoints != null && (
+                  <p className={styles.points}>✓ +{a.awardedPoints} баллов</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  )
+}
 
         {/* USERS TAB */}
         {tab === 'users' && (
@@ -266,6 +645,23 @@ export function AdminPage() {
         )}
       </div>
 
+      {/* Edit Achievement Modal */}
+      {editAchModal !== null && (
+        <Modal open={true} onClose={() => setEditAchModal(null)} title="Редактировать достижение" type="dialog">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <Input label="Название" value={achEditData.title} onChange={e => setAchEditData(p => ({ ...p, title: e.target.value }))} />
+            <Input label="Описание" value={achEditData.description} onChange={e => setAchEditData(p => ({ ...p, description: e.target.value }))} />
+            <Input label="Иконка (эмодзи)" value={achEditData.icon} onChange={e => setAchEditData(p => ({ ...p, icon: e.target.value }))} />
+            <Input label="Баллов" type="number" value={achEditData.xp} onChange={e => setAchEditData(p => ({ ...p, xp: e.target.value }))} />
+            <Button full onClick={async () => {
+              await achievementsApi.update(editAchModal, { title: achEditData.title, description: achEditData.description, icon: achEditData.icon, xp: Number(achEditData.xp) });
+              qc.invalidateQueries({ queryKey: ['achievements'] });
+              setEditAchModal(null);
+            }}>Сохранить</Button>
+          </div>
+        </Modal>
+      )}
+
       {/* Edit Activity Modal */}
       {editActivity && (
         <Modal open={true} onClose={() => setEditActivity(null)} title="Редактировать активность" type="dialog">
@@ -292,54 +688,69 @@ export function AdminPage() {
             <Input label="Название" value={newAch.title} onChange={e => setNewAch(p => ({ ...p, title: e.target.value }))} />
             <Input label="Описание" value={newAch.description} onChange={e => setNewAch(p => ({ ...p, description: e.target.value }))} />
             <Input label="Иконка (эмодзи)" value={newAch.icon} onChange={e => setNewAch(p => ({ ...p, icon: e.target.value }))} />
-            <Input label="XP баллов" type="number" value={String(newAch.xp)} onChange={e => setNewAch(p => ({ ...p, xp: Number(e.target.value) }))} />
+            <Input label="Баллов" type="number" value={String(newAch.xp)} onChange={e => setNewAch(p => ({ ...p, xp: Number(e.target.value) }))} />
             <Button full onClick={addAchievement}>Создать</Button>
           </div>
         </Modal>
       )}
 
-      {/* Edit Achievement Modal */}
-      {editAchievement && (
-        <Modal open={true} onClose={() => setEditAchievementId(null)} title="Редактировать достижение" type="dialog">
+      {/* New Challenge Modal */}
+      {newChallengeModal && (
+        <Modal open={true} onClose={() => { setNewChallengeModal(false); setCreateChallengeError(''); }} title="Создать задачу" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <Input label="Название" defaultValue={editAchievement.title} onChange={() => {}} id="ach-title" />
-            <Input label="Описание" defaultValue={editAchievement.description} onChange={() => {}} id="ach-desc" />
-            <Input label="Иконка" defaultValue={editAchievement.icon} onChange={() => {}} id="ach-icon" />
-            <Input label="XP" type="number" defaultValue={String(editAchievement.xp)} onChange={() => {}} id="ach-xp" />
-            <Button full onClick={() => {
-              const title = (document.getElementById('ach-title') as HTMLInputElement)?.value ?? editAchievement.title;
-              const description = (document.getElementById('ach-desc') as HTMLInputElement)?.value ?? editAchievement.description;
-              const icon = (document.getElementById('ach-icon') as HTMLInputElement)?.value ?? editAchievement.icon;
-              const xp = Number((document.getElementById('ach-xp') as HTMLInputElement)?.value) || editAchievement.xp;
-              saveEditedAchievement(editAchievement.id, { title, description, icon, xp });
-            }}>Сохранить</Button>
-          </div>
-        </Modal>
-      )}
-
-      {/* New Event Modal */}
-      {newEventModal && (
-        <Modal open={true} onClose={() => setNewEventModal(false)} title="Добавить мероприятие" type="dialog">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <Input label="Название *" value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} />
-            <DateInput label="Дата *" value={newEvent.date} onChange={date => setNewEvent(p => ({ ...p, date }))} />
-            <Input label="Описание" value={newEvent.description} onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))} />
-            <Button full onClick={createNewEvent} disabled={createEvent.isPending}>
-              {createEvent.isPending ? 'Создание...' : 'Создать мероприятие'}
-            </Button>
-          </div>
-        </Modal>
-      )}
-
-      {/* Edit Event Modal */}
-      {editEvent && (
-        <Modal open={true} onClose={() => setEditEvent(null)} title="Редактировать мероприятие" type="dialog">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <Input label="Название *" value={editEvent.title} onChange={e => setEditEvent(p => p && ({ ...p, title: e.target.value }))} />
-            <DateInput label="Дата *" value={editEvent.date} onChange={date => setEditEvent(p => p && ({ ...p, date }))} />
-            <Input label="Описание" value={editEvent.description ?? ''} onChange={e => setEditEvent(p => p && ({ ...p, description: e.target.value }))} />
-            <Button full onClick={() => updateEvent.mutate({ id: editEvent.id, data: { title: editEvent.title, date: editEvent.date, event_type: editEvent.type, description: editEvent.description } }, { onSuccess: () => setEditEvent(null) })} disabled={updateEvent.isPending}>
-              {updateEvent.isPending ? 'Сохранение...' : 'Сохранить'}
+            <Input label="Название *" value={newChallenge.title} onChange={e => setNewChallenge(p => ({ ...p, title: e.target.value }))} />
+            <Input label="Описание" value={newChallenge.description} onChange={e => setNewChallenge(p => ({ ...p, description: e.target.value }))} />
+            <Input label="Ссылка (URL)" value={newChallenge.url} onChange={e => setNewChallenge(p => ({ ...p, url: e.target.value }))} />
+            <DateInput label="Дата дедлайна" value={newChallenge.date} onChange={date => setNewChallenge(p => ({ ...p, date }))} />
+            {!newChallenge.personal && (
+              <Input label="Максимум баллов" type="number" value={newChallenge.maxPoints} onChange={e => setNewChallenge(p => ({ ...p, maxPoints: e.target.value }))} />
+            )}
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Статус</p>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                {(['DRAFT', 'ACTIVE'] as ChallengeStatus[]).map(s => (
+                  <button key={s} onClick={() => setNewChallenge(p => ({ ...p, status: s }))}
+                    style={{
+                      flex: 1, padding: '8px', borderRadius: 6, border: '1px solid', cursor: 'pointer',
+                      fontSize: 12, fontFamily: 'var(--font-display)',
+                      borderColor: newChallenge.status === s ? 'var(--color-primary)' : 'var(--border-subtle)',
+                      background: newChallenge.status === s ? 'rgba(204,0,0,0.15)' : 'transparent',
+                      color: newChallenge.status === s ? 'var(--color-primary-bright)' : 'var(--text-muted)',
+                    }}
+                  >{{ DRAFT: 'Черновик', ACTIVE: 'Активна' }[s as 'DRAFT' | 'ACTIVE']}</button>
+                ))}
+              </div>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', userSelect: 'none' }}>
+              <div onClick={() => setNewChallenge(p => ({ ...p, personal: !p.personal, assignAll: false }))}
+                style={{ width: 36, height: 20, borderRadius: 10, position: 'relative', flexShrink: 0, cursor: 'pointer',
+                  background: newChallenge.personal ? 'var(--color-primary)' : 'var(--border-subtle)', transition: 'background 0.2s' }}>
+                <span style={{ position: 'absolute', top: 2, left: newChallenge.personal ? 18 : 2,
+                  width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                  transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+              </div>
+              <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>Личная задача (только для меня)</span>
+            </label>
+            {!newChallenge.personal && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', userSelect: 'none' }}>
+                <div onClick={() => setNewChallenge(p => ({ ...p, assignAll: !p.assignAll }))}
+                  style={{ width: 36, height: 20, borderRadius: 10, position: 'relative', flexShrink: 0, cursor: 'pointer',
+                    background: newChallenge.assignAll ? 'var(--color-primary)' : 'var(--border-subtle)', transition: 'background 0.2s' }}>
+                  <span style={{ position: 'absolute', top: 2, left: newChallenge.assignAll ? 18 : 2,
+                    width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                    transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+                </div>
+                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+                  Назначить всем участникам
+                  {newChallenge.assignAll && juniors.length > 0 && (
+                    <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>({juniors.length})</span>
+                  )}
+                </span>
+              </label>
+            )}
+            {createChallengeError && <p style={{ color: 'var(--color-primary-bright)', fontSize: 12 }}>{createChallengeError}</p>}
+            <Button full onClick={handleCreateChallenge} disabled={createChallengeMut.isPending || assignChallengeMut.isPending}>
+              {assignChallengeMut.isPending ? 'Назначение...' : createChallengeMut.isPending ? 'Создание...' : newChallenge.personal ? 'Создать для себя' : newChallenge.assignAll && juniors.length > 0 ? `Создать и назначить (${juniors.length})` : 'Создать'}
             </Button>
           </div>
         </Modal>
@@ -379,62 +790,6 @@ export function AdminPage() {
           </div>
         </Modal>
       )}
-
-      {/* Award Achievement Modal */}
-      {awardModal !== null && (() => {
-        const ach = achievements.find(a => a.id === awardModal);
-        const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
-        return (
-          <Modal open={true} onClose={() => setAwardModal(null)} title="Наградить участника" type="dialog">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              {ach && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}>
-                  <span style={{ fontSize: 28 }}>{ach.icon}</span>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{ach.title}</p>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>+{ach.xp} XP</p>
-                  </div>
-                </div>
-              )}
-              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Выберите участника</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
-                {juniors.map(u => {
-                  const alreadyHas = allUserAchievements.some(ua => ua.user_id === u.id && ua.achievement_id === awardModal);
-                  const isSelected = awardUserId === u.id;
-                  return (
-                    <button key={u.id}
-                      onClick={() => !alreadyHas && setAwardUserId(u.id)}
-                      disabled={alreadyHas}
-                      style={{
-                        padding: '8px 12px', borderRadius: 8, border: '1px solid', textAlign: 'left', cursor: alreadyHas ? 'default' : 'pointer', fontSize: 13,
-                        borderColor: isSelected ? 'var(--color-primary)' : 'var(--border-subtle)',
-                        background: isSelected ? 'rgba(204,0,0,0.1)' : 'transparent',
-                        color: alreadyHas ? 'var(--text-muted)' : 'var(--text-primary)',
-                        opacity: alreadyHas ? 0.5 : 1,
-                      }}
-                    >
-                      {u.username}
-                      {alreadyHas && <span style={{ marginLeft: 8, fontSize: 11 }}>✓ уже есть</span>}
-                    </button>
-                  );
-                })}
-              </div>
-              <Button
-                full
-                disabled={!awardUserId || awardAchievement.isPending}
-                onClick={async () => {
-                  if (!awardUserId || awardModal === null) return;
-                  await awardAchievement.mutateAsync({ user_id: awardUserId, achievement_id: awardModal });
-                  setAwardModal(null);
-                  setAwardUserId(null);
-                }}
-              >
-                {awardAchievement.isPending ? 'Выдача...' : 'Выдать достижение'}
-              </Button>
-            </div>
-          </Modal>
-        );
-      })()}
 
       {/* New Activity Modal */}
       {newActivityModal && (

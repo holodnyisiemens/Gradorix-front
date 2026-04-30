@@ -418,7 +418,7 @@ async function seed() {
         console.error(`  ❌  ${ach.icon} ${ach.title}: ${res.status} — ${err}`);
         fail++;
       } else {
-        console.log(`  ✅  ${ach.icon} ${ach.title} (+${ach.xp} XP)`);
+        console.log(`  ✅  ${ach.icon} ${ach.title} (+${ach.xp} БАЛЛОВ)`);
         ok++;
       }
     } catch (e) {

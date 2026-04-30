@@ -8,6 +8,8 @@
   border-bottom: 1px solid var(--border-color);
   padding-bottom: var(--space-2);
   flex-wrap: wrap;
+  scrollbar-width: none;
+  overflow-x: auto;
 }
 .tab {
   padding: var(--space-1) var(--space-3);

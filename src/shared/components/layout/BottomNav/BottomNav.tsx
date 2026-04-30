@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Zap, Trophy, User, Users, FlaskConical, Link2, Calendar } from 'lucide-react';
+import { Home, Zap, Trophy, User, Users, FlaskConical, Link2, Calendar, Settings, Star } from 'lucide-react';
 import type { UserRole } from '@shared/types';
 import styles from './BottomNav.module.css';
 
@@ -16,7 +16,7 @@ function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
       return [
         { to: '/dashboard',   icon: <Home size={20} />,          label: 'Главная' },
         { to: '/challenges',  icon: <Zap size={20} />,           label: 'Задачи' },
-        { to: '/tests',       icon: <FlaskConical size={20} />,  label: 'Тесты' },
+        { to: '/points',      icon: <Star size={20} />,        label: 'Мои достижения' },
         { to: '/leaderboard', icon: <Trophy size={20} />,        label: 'Рейтинг' },
         { to: '/profile',     icon: <User size={20} />,          label: 'Профиль' },
       ];
@@ -31,8 +31,8 @@ function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
     case 'HR':
       return [
         { to: '/dashboard',   icon: <Home size={20} />,    label: 'Главная' },
-        { to: '/users',       icon: <Users size={20} />,   label: 'Люди' },
-        { to: '/challenges',  icon: <Zap size={20} />,     label: 'Задачи' },
+        { to: '/leaderboard',       icon: <Trophy size={20} />,   label: 'Рейтинг' },
+        { to: '/admin',       icon: <Settings size={20} />, label: 'Админ' },
         { to: '/mentorships', icon: <Link2 size={20} />,   label: 'Пары' },
         { to: '/profile',     icon: <User size={20} />,    label: 'Профиль' },
       ];

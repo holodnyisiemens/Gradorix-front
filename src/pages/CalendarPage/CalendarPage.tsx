@@ -257,6 +257,10 @@ export function CalendarPage() {
       return;
     }
     if (isEmployee && ev.type === 'meeting' && ev.date <= today) {
+      if (ev.createdBy === user.id) {
+        setDetailEvent(ev);
+        return;
+      }
       setAttendanceEvent(ev);
       return;
     }
@@ -491,6 +495,34 @@ export function CalendarPage() {
               </div>
               {attendanceEvent.description && (
                 <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{attendanceEvent.description}</p>
+              )}
+              {attendanceEvent.createdBy != null && (() => {
+                const creator = allUsers.find(u => u.id === attendanceEvent.createdBy);
+                return creator ? (
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                    Инициатор: <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{creator.username}</span>
+                  </p>
+                ) : null;
+              })()}
+              {attendanceEvent.attendeeIds.length > 0 && (
+                <div>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+                    Участники ({attendanceEvent.attendeeIds.length})
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {attendanceEvent.attendeeIds.map(uid => {
+                      const u = allUsers.find(x => x.id === uid);
+                      return u ? (
+                        <span key={uid} style={{
+                          padding: '2px 8px', borderRadius: 100, fontSize: 11,
+                          background: uid === user.id ? 'rgba(204,0,0,0.1)' : 'var(--bg-elevated)',
+                          color: uid === user.id ? 'var(--color-primary-bright)' : 'var(--text-secondary)',
+                          border: `1px solid ${uid === user.id ? 'rgba(204,0,0,0.25)' : 'var(--border-subtle)'}`,
+                        }}>{u.username}</span>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
               )}
               {isLocked ? (
                 <div style={{
