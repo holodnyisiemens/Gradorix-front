@@ -12,7 +12,7 @@ import styles from './RegisterForm.module.css';
 
 const ROLE_OPTIONS: SelectOption[] = [
   { value: 'EMPLOYEE', label: 'Участник проекта ОКД' },
-  { value: 'HR', label: 'Администратор' },
+  //{ value: 'HR', label: 'Администратор' },
   { value: 'MENTOR', label: 'Ментор' },
 ];
 
