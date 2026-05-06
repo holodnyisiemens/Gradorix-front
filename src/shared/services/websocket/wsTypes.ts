@@ -26,12 +26,16 @@
 // CLIENT → SERVER  (WsInbound)
 // =============================================================================
 
+export type AgentWorkMode = 'normal' | 'data_work' | 'report';
+
 /** Send a message to the AI chat agent. */
 export interface WsChatMessageIn {
   type: 'chat_message';
   payload: {
     /** User's text input */
     text: string;
+
+    agent_mode: AgentWorkMode;
     /**
      * Optional session identifier.
      * Pass the same value across messages to keep AI context within one
@@ -111,6 +115,17 @@ export interface WsChatReplyOut {
   };
 }
 
+/** Report file is generated and ready for download. */
+export interface WsExcelReadyOut {
+  type: 'excel_ready';
+  payload: {
+    /** Relative path (e.g. /reports/abc.xlsx) or absolute URL */
+    file_url: string;
+    /** File name for UI */
+    filename: string;
+  };
+}
+
 /** Heartbeat response. */
 export interface WsPongOut {
   type: 'pong';
@@ -136,5 +151,6 @@ export type WsOutbound =
   | WsNotificationOut
   | WsChatTypingOut
   | WsChatReplyOut
+  | WsExcelReadyOut
   | WsPongOut
   | WsErrorOut;
