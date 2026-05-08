@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { RouteAnalyticsTracker } from '@shared/components/analytics/RouteAnalyticsTracker';
 import { AppLayout } from '@shared/components/layout/AppLayout/AppLayout';
 import { ProtectedRoute } from '@shared/components/routing/ProtectedRoute';
 import { PublicRoute } from '@shared/components/routing/PublicRoute';
@@ -27,52 +28,57 @@ import { AttendancePage } from '@pages/AttendancePage/AttendancePage';
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
-    element: (
-      <PublicRoute>
-        <LoginPage />
-      </PublicRoute>
-    ),
-  },
-  {
-    path: '/register',
-    element: (
-      <PublicRoute>
-        <RegisterPage />
-      </PublicRoute>
-    ),
-  },
-  {
-    path: '/',
-    element: (
-      <ProtectedRoute>
-        <AppLayout />
-      </ProtectedRoute>
-    ),
+    element: <RouteAnalyticsTracker />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: 'dashboard',        element: <DashboardPage /> },
-      { path: 'calendar',         element: <CalendarPage /> },
-      { path: 'challenges',       element: <ChallengesPage /> },
-      { path: 'challenges/:id',   element: <ChallengePage /> },
-      { path: 'users',            element: <UsersPage /> },
-      { path: 'mentorships',      element: <MentorshipsPage /> },
-      { path: 'notifications',    element: <NotificationsPage /> },
-      { path: 'juniors',          element: <JuniorsPage /> },
-      { path: 'profile',          element: <ProfilePage /> },
-      { path: 'leaderboard',      element: <LeaderboardPage /> },
-      { path: 'tests',            element: <TestsPage /> },
-      { path: 'tests/new',         element: <QuizBuilderPage /> },
-      { path: 'tests/:id/edit',   element: <QuizBuilderPage /> },
-      { path: 'tests/:id/review', element: <QuizReviewPage /> },
-      { path: 'tests/:id',        element: <TestPage /> },
-      { path: 'knowledge',        element: <KnowledgePage /> },
-      { path: 'knowledge/:sectionId', element: <KnowledgeSectionPage /> },
-      { path: 'team',             element: <TeamPage /> },
-      { path: 'points',           element: <PointsPage /> },
-      { path: 'admin',            element: <AdminPage /> },
-      { path: 'attendance',       element: <AttendancePage /> },
+      {
+        path: '/login',
+        element: (
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: '/register',
+        element: (
+          <PublicRoute>
+            <RegisterPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: '/',
+        element: (
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          { index: true, element: <Navigate to="/dashboard" replace /> },
+          { path: 'dashboard',        element: <DashboardPage /> },
+          { path: 'calendar',         element: <CalendarPage /> },
+          { path: 'challenges',       element: <ChallengesPage /> },
+          { path: 'challenges/:id',   element: <ChallengePage /> },
+          { path: 'users',            element: <UsersPage /> },
+          { path: 'mentorships',      element: <MentorshipsPage /> },
+          { path: 'notifications',    element: <NotificationsPage /> },
+          { path: 'juniors',          element: <JuniorsPage /> },
+          { path: 'profile',          element: <ProfilePage /> },
+          { path: 'leaderboard',      element: <LeaderboardPage /> },
+          { path: 'tests',            element: <TestsPage /> },
+          { path: 'tests/new',        element: <QuizBuilderPage /> },
+          { path: 'tests/:id/edit',   element: <QuizBuilderPage /> },
+          { path: 'tests/:id/review', element: <QuizReviewPage /> },
+          { path: 'tests/:id',        element: <TestPage /> },
+          { path: 'knowledge',        element: <KnowledgePage /> },
+          { path: 'knowledge/:sectionId', element: <KnowledgeSectionPage /> },
+          { path: 'team',             element: <TeamPage /> },
+          { path: 'points',           element: <PointsPage /> },
+          { path: 'admin',            element: <AdminPage /> },
+          { path: 'attendance',       element: <AttendancePage /> },
+        ],
+      },
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
-  { path: '*', element: <Navigate to="/" replace /> },
 ]);

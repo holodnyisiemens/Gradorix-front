@@ -5,6 +5,7 @@ import { useAuthStore } from '@modules/auth/store/authStore';
 import { useThemeStore } from '@shared/store/themeStore';
 import { authApi } from '@shared/api/services/auth';
 import { registerPushSubscription } from '@shared/services/push';
+import { setUserId } from '@shared/services/analytics/ga';
 import { router } from './router';
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ function AppInner() {
           const user = await authApi.getMe();
           login(user, token, refreshToken ?? '');
           registerPushSubscription(user.id);
+          setUserId(user.id);
         } catch {
           localStorage.removeItem('gradorix-token');
           localStorage.removeItem('gradorix-refresh-token');
