@@ -6,6 +6,7 @@ import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import { useKBSections, useKBArticles, useCreateKBSection, useDeleteKBSection } from '@shared/hooks/useApi';
+import { analytics } from '@shared/lib/analytics';
 import styles from './KnowledgePage.module.css';
 
 export function KnowledgePage() {
@@ -47,7 +48,7 @@ export function KnowledgePage() {
             const count = allArticles.filter((a) => a.sectionId === section.id).length;
             return (
               <div key={section.id} style={{ position: 'relative' }}>
-                <button className={styles.section} onClick={() => navigate(`/knowledge/${section.id}`)}>
+                <button className={styles.section} onClick={() => { analytics.track('база_знаний_открыт_раздел', { section_id: section.id }); navigate(`/knowledge/${section.id}`); }}>
                   <span className={styles.icon}>{section.icon || '📄'}</span>
                   <p className={styles.title}>{section.title}</p>
                   <p className={styles.desc}>{section.description}</p>

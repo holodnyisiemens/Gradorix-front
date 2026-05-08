@@ -9,6 +9,7 @@ import { Input } from '@shared/components/ui/Input/Input';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import { RoleBadge } from '@shared/components/ui/Badge/Badge';
 import { useUserPoints, useUserAchievementsWithStatus, useQuizResults, useChallengeJuniors, useUpdateUser } from '@shared/hooks/useApi';
+import { analytics } from '@shared/lib/analytics';
 import styles from './ProfilePage.module.css';
 
 const LEVEL_THRESHOLDS = [0, 200, 500, 900, 1400, 2000];
@@ -215,7 +216,7 @@ export function ProfilePage() {
           </Card>
         )}
 
-        <Button variant="danger" full onClick={logout}>
+        <Button variant="danger" full onClick={() => { analytics.track('выход_из_системы'); analytics.reset(); logout(); }}>
           <LogOut size={16} />
           Выйти из аккаунта
         </Button>

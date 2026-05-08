@@ -12,6 +12,7 @@ import { Input } from '@shared/components/ui/Input/Input';
 import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import type { ChallengeStatus, ChallengeEmployeeProgress } from '@shared/types';
+import { analytics } from '@shared/lib/analytics';
 import styles from './ChallengesPage.module.css';
 
 type Filter = 'all' | ChallengeStatus | ChallengeEmployeeProgress;
@@ -139,7 +140,7 @@ export function ChallengesPage() {
           {filters.map((f) => (
             <button key={f.key}
               className={[styles.filterBtn, filter === f.key ? styles.active : ''].join(' ')}
-              onClick={() => setFilter(f.key)}
+              onClick={() => { setFilter(f.key); if (isEmployee) analytics.track('задачи_изменён_фильтр', { filter: f.key }); }}
             >{f.label}</button>
           ))}
         </div>
@@ -159,7 +160,7 @@ export function ChallengesPage() {
                   awardedPoints={isEmployee && 'awardedPoints' in c ? (c.awardedPoints as number | null) : undefined}
                   showProgress={isEmployee}
                   pendingReview={pendingCount || undefined}
-                  onClick={() => navigate(`/challenges/${c.id}`)}
+                  onClick={() => { if (isEmployee) analytics.track('задача_открыта', { challenge_id: c.id, progress: 'progress' in c ? c.progress : undefined }); navigate(`/challenges/${c.id}`); }}
                 />
               );
             })}

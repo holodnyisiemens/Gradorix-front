@@ -17,6 +17,7 @@ import { Input } from '@shared/components/ui/Input/Input';
 import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import type { ChallengeStatus } from '@shared/types';
+import { analytics } from '@shared/lib/analytics';
 import styles from './ChallengePage.module.css';
 
 interface DonutSegment { value: number; color: string; label: string }
@@ -192,6 +193,7 @@ export function ChallengePage() {
     if (!trimmed || links.includes(trimmed)) return;
     setLinks(prev => [...prev, trimmed]);
     setLinkInput('');
+    analytics.track('задача_добавлена_ссылка', { challenge_id: challenge?.id });
   }
 
   function removeLink(url: string) {
@@ -214,6 +216,7 @@ export function ChallengePage() {
       juniorId: user.id,
       data: { comment: comment || undefined, links: finalLinks.length ? finalLinks : undefined, progress: 'IN_PROGRESS' },
     });
+    analytics.track('задача_сохранён_черновик', { challenge_id: challenge?.id, has_links: finalLinks.length > 0, has_comment: !!comment });
     setSaving(null);
   }
 
@@ -227,6 +230,7 @@ export function ChallengePage() {
       juniorId: user.id,
       data: { comment: comment || undefined, links: finalLinks.length ? finalLinks : undefined, progress: 'DONE' },
     });
+    analytics.track('задача_отправлена_на_проверку', { challenge_id: challenge?.id, has_links: finalLinks.length > 0, has_comment: !!comment, links_count: finalLinks.length });
     setSaving(null);
   }
 
@@ -439,7 +443,8 @@ export function ChallengePage() {
         )}
 
         {challenge.url && (
-          <a className={styles.link} href={challenge.url} target="_blank" rel="noopener noreferrer">
+          <a className={styles.link} href={challenge.url} target="_blank" rel="noopener noreferrer"
+            onClick={() => analytics.track('задача_открыт_материал', { challenge_id: challenge.id })}>
             <ExternalLink size={16} />
             Открыть материал
           </a>

@@ -17,6 +17,7 @@ import { HRCharts } from '@modules/charts/HRCharts';
 import { UserProfileModal } from '@pages/UsersPage/UsersPage';
 import type { User } from '@shared/types';
 import { HiPoProgressChart } from '@modules/charts/HiPoProgressChart';
+import { analytics } from '@shared/lib/analytics';
 import styles from './DashboardPage.module.css';
 
 function greetByTime(): string {
@@ -106,7 +107,7 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
                     border: '1px solid var(--border-subtle)', borderRadius: 10,
                     cursor: 'pointer',
                   }}
-                  onClick={() => navigate('/calendar')}
+                  onClick={() => { analytics.track('дашборд_нажато_событие', { event_type: event.type }); navigate('/calendar'); }}
                 >
                   <span style={{ fontSize: 20 }}>
                     {event.type === 'challenge' ? '⚡' : event.type === 'meeting' ? '👥' : '🚨'}
@@ -122,19 +123,19 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
         </div>
 
         <div className={styles.statsGrid}>
-          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/challenges')}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => { analytics.track('дашборд_нажата_статистика', { stat: 'всего_задач' }); navigate('/challenges'); }}>
             <span className={`${styles.statValue} ${styles.statValueAccent}`}>{total}</span>
             <span className={styles.statLabel}>Всего задач</span>
           </div>
-          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/challenges')}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => { analytics.track('дашборд_нажата_статистика', { stat: 'выполнено_задач' }); navigate('/challenges'); }}>
             <span className={`${styles.statValue} ${styles.statValueGreen}`}>{done}</span>
             <span className={styles.statLabel}>Выполнено</span>
           </div>
-          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/challenges')}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => { analytics.track('дашборд_нажата_статистика', { stat: 'в_процессе_задач' }); navigate('/challenges'); }}>
             <span className={`${styles.statValue} ${styles.statValueOrange}`}>{inProgress}</span>
             <span className={styles.statLabel}>В процессе</span>
           </div>
-          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => navigate('/points')}>
+          <div className={styles.statCard} style={{ cursor: 'pointer' }} onClick={() => { analytics.track('дашборд_нажата_статистика', { stat: 'баллы' }); navigate('/points'); }}>
             <span className={`${styles.statValue} ${styles.statValueYellow}`}>{totalPoints}</span>
             <span className={styles.statLabel}>Баллов набрано</span>
           </div>
@@ -171,7 +172,7 @@ function JuniorDashboard({ userId, firstName, greeting, dateLabel, navigate }: {
                 key={c.id}
                 challenge={c}
                 showProgress
-                onClick={() => navigate(`/challenges/${c.id}`)}
+                onClick={() => { analytics.track('дашборд_открыта_задача', { challenge_id: c.id, progress: c.progress }); navigate(`/challenges/${c.id}`); }}
               />
             ))}
             {activeChallenges.length === 0 && (

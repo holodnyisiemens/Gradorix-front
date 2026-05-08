@@ -11,6 +11,7 @@ import {
   useQuizzes, useQuizResults,
 } from '@shared/hooks/useApi';
 import { Link2, Plus, X, ClipboardCheck, Calendar, CheckCircle } from 'lucide-react';
+import { analytics } from '@shared/lib/analytics';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { ActivityStatus } from '@shared/types';
@@ -297,6 +298,7 @@ function HiPoAchievementsPage() {
       links: form.links.length ? form.links : undefined,
       achieved_date: form.achievedDate || undefined,
     });
+    analytics.track('личное_достижение_отправлено', { has_links: form.links.length > 0 });
     setAddModal(false);
     setForm({ title: '', description: '', achievedDate: '', linkInput: '', links: [] });
   }
@@ -375,7 +377,7 @@ function HiPoAchievementsPage() {
 
                 {a.status === 'pending' && (
                   <div className={styles.actions}>
-                    <Button size="sm" variant="danger" onClick={() => deleteActivity.mutate(a.id)}>
+                    <Button size="sm" variant="danger" onClick={() => { analytics.track('личное_достижение_удалено', { activity_id: a.id }); deleteActivity.mutate(a.id); }}>
                       Удалить
                     </Button>
                   </div>

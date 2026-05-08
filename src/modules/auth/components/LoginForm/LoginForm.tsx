@@ -7,6 +7,7 @@ import { Card } from '@shared/components/ui/Card/Card';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { authApi } from '@shared/api/services/auth';
 import { registerPushSubscription } from '@shared/services/push';
+import { analytics } from '@shared/lib/analytics';
 import styles from './LoginForm.module.css';
 
 export function LoginForm() {
@@ -27,6 +28,8 @@ export function LoginForm() {
       const user = await authApi.getMe();
       login(user, access_token, refresh_token);
       registerPushSubscription(user.id);
+      analytics.identify(user.id, { username: user.username, role: user.role });
+      analytics.track('вход_в_систему', { role: user.role });
     } catch {
       setError('Неверный логин или пароль');
     } finally {

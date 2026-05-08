@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { analytics } from '@shared/lib/analytics';
 import { BottomNav } from '../BottomNav/BottomNav';
 import { SideNav } from '../SideNav/SideNav';
 import { AgentWidget } from '@shared/components/ui/AgentWidget/AgentWidget';
@@ -15,6 +16,11 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
+  const location = useLocation();
+
+  useEffect(() => {
+    analytics.track('$pageview', { path: location.pathname });
+  }, [location.pathname]);
 
   // Connect WebSocket when layout mounts (user is authenticated),
   // disconnect when they log out / layout unmounts.

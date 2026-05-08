@@ -4,6 +4,7 @@ import { useQuiz, useQuizResults, useSubmitQuizResult } from '@shared/hooks/useA
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
 import { useAuthStore } from '@modules/auth/store/authStore';
+import { analytics } from '@shared/lib/analytics';
 import styles from './TestPage.module.css';
 
 type Phase = 'intro' | 'quiz' | 'result';
@@ -80,6 +81,7 @@ export function TestPage() {
         points_earned: earned,
         answers: textAnswers,
       });
+      analytics.track('тест_завершён', { quiz_id: quiz.id, score, points_earned: earned, questions: quiz.questions.length });
       setPhase('result');
     }
   }
@@ -126,7 +128,7 @@ export function TestPage() {
                 <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-warning-bright)' }}>+{prevResult.pointsEarned} баллов заработано</p>
               </div>
             )}
-            <Button full onClick={() => { setAnswers([]); setStep(0); setPhase('quiz'); }}>
+            <Button full onClick={() => { analytics.track('тест_начат', { quiz_id: quiz.id, questions: quiz.questions.length, retake: !!prevResult }); setAnswers([]); setStep(0); setPhase('quiz'); }}>
               {prevResult ? 'Пройти ещё раз' : 'Начать тест'}
             </Button>
             <Button full variant="ghost" onClick={() => navigate('/tests')}>Назад</Button>
@@ -154,7 +156,7 @@ export function TestPage() {
               </p>
             </div>
             <Button full onClick={() => navigate('/tests')}>К списку тестов</Button>
-            <Button full variant="ghost" onClick={() => navigate('/leaderboard')}>Посмотреть рейтинг</Button>
+            <Button full variant="ghost" onClick={() => { analytics.track('рейтинг_просмотрен_после_теста', { quiz_id: quiz.id, score: finalScore }); navigate('/leaderboard'); }}>Посмотреть рейтинг</Button>
           </div>
         </div>
       </>

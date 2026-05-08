@@ -8,6 +8,7 @@ import { Card } from '@shared/components/ui/Card/Card';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { authApi } from '@shared/api/services/auth';
 import { registerPushSubscription } from '@shared/services/push';
+import { analytics } from '@shared/lib/analytics';
 import styles from './RegisterForm.module.css';
 
 const ROLE_OPTIONS: SelectOption[] = [
@@ -71,6 +72,8 @@ export function RegisterForm() {
       const user = await authApi.getMe();
       login(user, access_token, refresh_token);
       registerPushSubscription(user.id);
+      analytics.identify(user.id, { username: user.username, role: user.role });
+      analytics.track('регистрация', { role: user.role });
     } catch (err: unknown) {
       const axiosData = (err as { response?: { data?: { detail?: string } } })?.response?.data;
       const rawMsg = axiosData?.detail ?? 'Не удалось зарегистрироваться. Возможно, такой логин уже занят.';
