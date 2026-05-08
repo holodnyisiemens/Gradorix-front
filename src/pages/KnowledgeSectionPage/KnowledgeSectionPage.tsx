@@ -8,6 +8,7 @@ import { Modal } from '@shared/components/ui/Modal/Modal';
 import { useKBSections, useKBArticles, useCreateKBArticle, useDeleteKBArticle } from '@shared/hooks/useApi';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import type { KBArticle } from '@shared/types';
+import { analytics } from '@shared/lib/analytics';
 import styles from './KnowledgeSectionPage.module.css';
 
 function renderMarkdown(text: string): React.ReactNode[] {
@@ -138,7 +139,7 @@ export function KnowledgeSectionPage() {
         <div className={styles.list}>
           {articles.map((article) => (
             <div key={article.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <button className={styles.article} style={{ flex: 1 }} onClick={() => setSelected(article)}>
+              <button className={styles.article} style={{ flex: 1 }} onClick={() => { analytics.track('база_знаний_открыта_статья', { article_id: article.id, title: article.title }); setSelected(article); }}>
                 <p className={styles.articleTitle}>{article.title}</p>
                 <p className={styles.articleMeta}>
                   {article.author} · {article.createdAt}

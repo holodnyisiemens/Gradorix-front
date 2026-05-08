@@ -5,6 +5,7 @@ import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { useLeaderboard, useUsers } from '@shared/hooks/useApi';
 import { UserProfileModal } from '@pages/UsersPage/UsersPage';
 import type { User } from '@shared/types';
+import { analytics } from '@shared/lib/analytics';
 import styles from './LeaderboardPage.module.css';
 
 const LEVEL_THRESHOLDS = [0, 200, 500, 900, 1400, 2000];
@@ -76,7 +77,7 @@ export function LeaderboardPage() {
                 key={entry.userId}
                 className={[styles.row, isMe ? styles.rowMe : ''].join(' ')}
                 style={{ cursor: 'pointer' }}
-                onClick={() => isMe ? navigate('/profile') : setProfileUser(u)}
+                onClick={() => { if (!isMe) { analytics.track('рейтинг_просмотрен_профиль', { viewed_user_id: u.id, rank: entry.rank }); setProfileUser(u); } else navigate('/profile'); }}
               >
                 <span className={[styles.rank, rankClass(entry.rank)].join(' ')}>
                   {rankEmoji(entry.rank)}

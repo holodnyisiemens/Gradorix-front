@@ -4,6 +4,7 @@ import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Button } from '@shared/components/ui/Button/Button';
 import { useQuizzes, useQuizResults, useDeleteQuiz } from '@shared/hooks/useApi';
 import { Clock, Star, Pencil, ClipboardCheck } from 'lucide-react';
+import { analytics } from '@shared/lib/analytics';
 import styles from './TestsPage.module.css';
 
 export function TestsPage() {
@@ -42,7 +43,7 @@ export function TestsPage() {
               <div key={quiz.id} style={{ position: 'relative' }}>
                 <div
                   className={[styles.card, result ? styles.cardCompleted : ''].join(' ')}
-                  onClick={() => navigate(`/tests/${quiz.id}`)}
+                  onClick={() => { if (!isHR) analytics.track('тест_открыт', { quiz_id: quiz.id, already_completed: !!result }); navigate(`/tests/${quiz.id}`); }}
                 >
                   <div className={styles.cardTop}>
                     <p className={styles.cardTitle}>{quiz.title}</p>

@@ -18,6 +18,7 @@ import {
   useQuizResults,
 } from '@shared/hooks/useApi';
 import { achievementsApi } from '@shared/api/services/achievements';
+import { analytics } from '@shared/lib/analytics';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Activity, ActivityStatus, UserRole, ChallengeStatus } from '@shared/types';
@@ -112,34 +113,27 @@ export function AdminPage() {
     const ed = editing[id];
     await updateActivity.mutateAsync({
       id,
-      data: {
-        status: 'approved',
-        awarded_points: ed?.points ?? 0,
-        review_note: ed?.note || undefined,
-      },
+      data: { status: 'approved', awarded_points: ed?.points ?? 0, review_note: ed?.note || undefined },
     });
+    analytics.track('личное_достижение_одобрено', { activity_id: id, points: ed?.points ?? 0 });
   }
 
   async function reject(id: number) {
     const ed = editing[id];
     await updateActivity.mutateAsync({
       id,
-      data: {
-        status: 'rejected',
-        review_note: ed?.note || 'Не соответствует критериям',
-      },
+      data: { status: 'rejected', review_note: ed?.note || 'Не соответствует критериям' },
     });
+    analytics.track('личное_достижение_отклонено', { activity_id: id });
   }
 
   async function revision(id: number) {
     const ed = editing[id];
     await updateActivity.mutateAsync({
       id,
-      data: {
-        status: 'revision',
-        review_note: ed?.note || 'Требуется доработка',
-      },
+      data: { status: 'revision', review_note: ed?.note || 'Требуется доработка' },
     });
+    analytics.track('личное_достижение_на_доработку', { activity_id: id });
   }
 
   const FILTER_BTNS: { key: 'all' | ActivityStatus; label: string }[] = [
@@ -169,6 +163,7 @@ export function AdminPage() {
   async function addAchievement() {
     await achievementsApi.create(newAch);
     qc.invalidateQueries({ queryKey: ['achievements'] });
+    analytics.track('достижение_создано', { title: newAch.title, xp: newAch.xp });
     setNewAchModal(false);
     setNewAch({ title: '', description: '', icon: '🏆', xp: 100, category: 'challenge' });
   }
@@ -186,6 +181,7 @@ export function AdminPage() {
         password: newUser.password,
         role: newUser.role,
       });
+      analytics.track('пользователь_создан', { role: newUser.role });
       setNewUserModal(false);
       setNewUser({ username: '', email: '', password: '', role: 'EMPLOYEE' });
     } catch {
@@ -228,6 +224,7 @@ export function AdminPage() {
       } else if (newChallenge.assignAll && juniors.length > 0) {
         await Promise.all(juniors.map(j => assignChallengeMut.mutateAsync({ challenge_id: created.id, employee_id: j.id, assigned_by: user.id, progress: 'GOING' })));
       }
+      analytics.track('задача_создана', { status: newChallenge.status, assign_all: newChallenge.assignAll, personal: newChallenge.personal });
       setNewChallengeModal(false);
       setNewChallenge(EMPTY_CHALLENGE);
     } catch (e: unknown) {
@@ -355,7 +352,7 @@ export function AdminPage() {
                 {pending > 0 && <span style={{ color: 'var(--color-warning-bright)', marginLeft: 8 }}>• {pending} требует проверки</span>}
               </p>
             </div>
-            <Button size="sm" variant="ghost" onClick={() => navigate(`/tests/${q.id}/review`)}>
+            <Button size="sm" variant="ghost" onClick={() => { analytics.track('тест_открыта_проверка', { quiz_id: q.id }); navigate(`/tests/${q.id}/review`); }}>
               <ClipboardCheck size={14} style={{ marginRight: 4 }} />
               Проверить
             </Button>
@@ -391,7 +388,7 @@ export function AdminPage() {
                       ><Pencil size={15} /></button>
                       <button
                         title="Удалить"
-                        onClick={e => { e.stopPropagation(); deleteAchievement.mutate(ach.id); }}
+                        onClick={e => { e.stopPropagation(); analytics.track('достижение_удалено', { achievement_id: ach.id }); deleteAchievement.mutate(ach.id); }}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 6, border: '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', color: 'var(--color-primary-bright)', flexShrink: 0 }}
                       ><Trash2 size={15} /></button>
                       {isOpen ? <ChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />}
@@ -409,10 +406,10 @@ export function AdminPage() {
                                 {has ? (
                                   <>
                                     <span style={{ fontSize: 11, color: 'var(--color-success-bright)', marginRight: 'var(--space-2)' }}>✓ Выдано</span>
-                                    <Button size="sm" variant="danger" onClick={() => revokeAchievement.mutate({ userId: emp.id, achievementId: ach.id })} disabled={revokeAchievement.isPending}>Отозвать</Button>
+                                    <Button size="sm" variant="danger" onClick={() => { analytics.track('достижение_отозвано', { achievement_id: ach.id, user_id: emp.id }); revokeAchievement.mutate({ userId: emp.id, achievementId: ach.id }); }} disabled={revokeAchievement.isPending}>Отозвать</Button>
                                   </>
                                 ) : (
-                                  <Button size="sm" onClick={() => awardAchievement.mutate({ user_id: emp.id, achievement_id: ach.id })} disabled={awardAchievement.isPending}>Выдать</Button>
+                                  <Button size="sm" onClick={() => { analytics.track('достижение_выдано', { achievement_id: ach.id, user_id: emp.id }); awardAchievement.mutate({ user_id: emp.id, achievement_id: ach.id }); }} disabled={awardAchievement.isPending}>Выдать</Button>
                                 )}
                               </div>
                             );
@@ -656,6 +653,7 @@ export function AdminPage() {
             <Button full onClick={async () => {
               await achievementsApi.update(editAchModal, { title: achEditData.title, description: achEditData.description, icon: achEditData.icon, xp: Number(achEditData.xp) });
               qc.invalidateQueries({ queryKey: ['achievements'] });
+              analytics.track('достижение_изменено', { achievement_id: editAchModal });
               setEditAchModal(null);
             }}>Сохранить</Button>
           </div>
