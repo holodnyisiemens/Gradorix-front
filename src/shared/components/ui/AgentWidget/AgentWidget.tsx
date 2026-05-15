@@ -177,7 +177,14 @@ export function AgentWidget() {
   }, [messages, isTyping, open]);
 
   useEffect(() => {
-    if (!modeMenuOpen) return;
+    if (!isHR) {
+      setModeMenuOpen(false);
+      setAgentMode('normal');
+    }
+  }, [isHR]);
+
+  useEffect(() => {
+    if (!isHR || !modeMenuOpen) return;
     function onDocMouseDown(e: MouseEvent) {
       const el = modeMenuRef.current;
       if (el && !el.contains(e.target as Node)) setModeMenuOpen(false);
@@ -191,7 +198,7 @@ export function AgentWidget() {
       document.removeEventListener('mousedown', onDocMouseDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [modeMenuOpen]);
+  }, [isHR, modeMenuOpen]);
 
   // ── Send message ─────────────────────────────────────────────────────────
   const sendMessage = useCallback((text: string) => {
@@ -213,7 +220,8 @@ export function AgentWidget() {
       // ── Real path: delegate to backend via WebSocket ──────────────────
       // Server will respond with chat_typing + chat_reply frames (or error → fallback)
       setIsTyping(true);
-      send({ type: 'chat_message', payload: { text: trimmed, agent_mode: agentMode } });
+      const agentModeToSend: AgentWorkMode = isHR ? agentMode : 'normal';
+      send({ type: 'chat_message', payload: { text: trimmed, agent_mode: agentModeToSend } });
     } else {
       // ── Fallback: local mock (until backend WS is ready) ──────────────
       setIsTyping(true);
@@ -226,7 +234,7 @@ export function AgentWidget() {
         setIsTyping(false);
       }, 800 + Math.random() * 600);
     }
-  }, [isConnected, send, user.role, replyCtx, agentMode]);
+  }, [isConnected, send, user.role, replyCtx, agentMode, isHR]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -328,45 +336,47 @@ export function AgentWidget() {
               rows={1}
             />
             <div className={styles.inputToolbar}>
-              <div className={styles.modeWrap} ref={modeMenuRef}>
-                <button
-                  type="button"
-                  className={styles.modeTrigger}
-                  onClick={() => setModeMenuOpen((v) => !v)}
-                  aria-expanded={modeMenuOpen}
-                  aria-haspopup="listbox"
-                  aria-label="Режим агента"
-                >
-                  <ModeTriggerIcon size={14} aria-hidden />
-                  <span>{selectedModeOption.shortLabel}</span>
-                  <ChevronDown
-                    size={14}
-                    className={[styles.modeTriggerChevron, modeMenuOpen ? styles.modeTriggerChevronOpen : ''].join(' ')}
-                    aria-hidden
-                  />
-                </button>
-                {modeMenuOpen && (
-                  <div className={styles.modeMenu} role="listbox" aria-label="Режим работы агента">
-                    {AGENT_MODE_OPTIONS.map(({ value, label, Icon }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        role="option"
-                        aria-selected={agentMode === value}
-                        className={[styles.modeMenuItem, agentMode === value ? styles.modeMenuItemActive : ''].join(' ')}
-                        onClick={() => {
-                          setAgentMode(value);
-                          setModeMenuOpen(false);
-                        }}
-                      >
-                        <Icon size={16} aria-hidden />
-                        <span className={styles.modeMenuLabel}>{label}</span>
-                        {agentMode === value ? <Check size={16} className={styles.modeMenuCheck} aria-hidden /> : <span className={styles.modeMenuCheckSlot} aria-hidden />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {isHR && (
+                <div className={styles.modeWrap} ref={modeMenuRef}>
+                  <button
+                    type="button"
+                    className={styles.modeTrigger}
+                    onClick={() => setModeMenuOpen((v) => !v)}
+                    aria-expanded={modeMenuOpen}
+                    aria-haspopup="listbox"
+                    aria-label="Режим агента"
+                  >
+                    <ModeTriggerIcon size={14} aria-hidden />
+                    <span>{selectedModeOption.shortLabel}</span>
+                    <ChevronDown
+                      size={14}
+                      className={[styles.modeTriggerChevron, modeMenuOpen ? styles.modeTriggerChevronOpen : ''].join(' ')}
+                      aria-hidden
+                    />
+                  </button>
+                  {modeMenuOpen && (
+                    <div className={styles.modeMenu} role="listbox" aria-label="Режим работы агента">
+                      {AGENT_MODE_OPTIONS.map(({ value, label, Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="option"
+                          aria-selected={agentMode === value}
+                          className={[styles.modeMenuItem, agentMode === value ? styles.modeMenuItemActive : ''].join(' ')}
+                          onClick={() => {
+                            setAgentMode(value);
+                            setModeMenuOpen(false);
+                          }}
+                        >
+                          <Icon size={16} aria-hidden />
+                          <span className={styles.modeMenuLabel}>{label}</span>
+                          {agentMode === value ? <Check size={16} className={styles.modeMenuCheck} aria-hidden /> : <span className={styles.modeMenuCheckSlot} aria-hidden />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className={styles.toolbarSpacer} />
               <button
                 className={styles.sendBtn}
