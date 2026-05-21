@@ -1,12 +1,24 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, X, Send, ChevronDown, Wifi, WifiOff } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Bot, X, Send, ChevronDown, Wifi, WifiOff, MessageSquare, Database, FileText, Check } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useUsers, useQuizzes, useQuizResults, useActivities, useChallengeJuniors, useUserPoints } from '@shared/hooks/useApi';
 import type { ChatMessage } from '@shared/types';
 import { generateReply, HIPO_SUGGESTIONS, HR_SUGGESTIONS, MENTOR_SUGGESTIONS, type ReplyContext } from './agentEngine';
 import { useWebSocket } from '@shared/services/websocket/useWebSocket';
-import type { WsChatReplyOut, WsChatTypingOut, WsErrorOut } from '@shared/services/websocket/wsTypes';
+import type { AgentWorkMode, WsChatReplyOut, WsChatTypingOut, WsErrorOut, WsExcelReadyOut } from '@shared/services/websocket/wsTypes';
 import styles from './AgentWidget.module.css';
+
+const AGENT_MODE_OPTIONS: Array<{
+  value: AgentWorkMode;
+  label: string;
+  shortLabel: string;
+  Icon: LucideIcon;
+}> = [
+  { value: 'normal', label: 'обычный', shortLabel: 'Обычный', Icon: MessageSquare },
+  { value: 'data_work', label: 'работа с данными', shortLabel: 'Данные', Icon: Database },
+  { value: 'report', label: 'отчёт', shortLabel: 'Отчёт', Icon: FileText },
+];
 
 function renderContent(content: string) {
   const parts = content.split(/(\*\*[^*]+\*\*)/g);
@@ -21,16 +33,39 @@ function timestamp() {
   return new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
+type WidgetMessage = ChatMessage & {
+  fileUrl?: string;
+  filename?: string;
+};
+
+function resolveReportUrl(fileUrl: string): string {
+  if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
+  const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+  return `${apiBase}${fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`}`;
+}
+
+function truncateFilename(name: string, max = 30): string {
+  return name.length > max ? `${name.slice(0, max)}...` : name;
+}
+
 export function AgentWidget() {
   const user = useAuthStore((s) => s.user)!;
   const isHR = user.role === 'HR';
   const isMentor = user.role === 'MENTOR';
 
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<WidgetMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [agentMode, setAgentMode] = useState<AgentWorkMode>('normal');
+  const [modeMenuOpen, setModeMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const modeMenuRef = useRef<HTMLDivElement>(null);
+
+  const selectedModeOption = useMemo(
+    () => AGENT_MODE_OPTIONS.find((o) => o.value === agentMode) ?? AGENT_MODE_OPTIONS[0],
+    [agentMode],
+  );
 
   // ── Mock data for fallback ───────────────────────────────────────────────
   const { data: allUsers = [] } = useUsers();
@@ -115,6 +150,24 @@ export function AgentWidget() {
         }
         return;
       }
+
+      if (msg.type === 'excel_ready') {
+        const { file_url, filename } = (msg as WsExcelReadyOut).payload;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `excel-${Date.now()}`,
+            role: 'assistant',
+            content: `Готов файл отчёта: ${truncateFilename(filename, 30)}`,
+            timestamp: timestamp(),
+            fileUrl: resolveReportUrl(file_url),
+            filename,
+          },
+        ]);
+        setIsTyping(false);
+        streamingIdRef.current = null;
+        return;
+      }
     });
   }, [subscribe]);
 
@@ -123,6 +176,30 @@ export function AgentWidget() {
     if (open) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping, open]);
 
+  useEffect(() => {
+    if (!isHR) {
+      setModeMenuOpen(false);
+      setAgentMode('normal');
+    }
+  }, [isHR]);
+
+  useEffect(() => {
+    if (!isHR || !modeMenuOpen) return;
+    function onDocMouseDown(e: MouseEvent) {
+      const el = modeMenuRef.current;
+      if (el && !el.contains(e.target as Node)) setModeMenuOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setModeMenuOpen(false);
+    }
+    document.addEventListener('mousedown', onDocMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isHR, modeMenuOpen]);
+
   // ── Send message ─────────────────────────────────────────────────────────
   const sendMessage = useCallback((text: string) => {
     if (!text.trim()) return;
@@ -130,7 +207,7 @@ export function AgentWidget() {
     const trimmed = text.trim();
     lastSentRef.current = trimmed;
 
-    const userMsg: ChatMessage = {
+    const userMsg: WidgetMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: trimmed,
@@ -143,7 +220,8 @@ export function AgentWidget() {
       // ── Real path: delegate to backend via WebSocket ──────────────────
       // Server will respond with chat_typing + chat_reply frames (or error → fallback)
       setIsTyping(true);
-      send({ type: 'chat_message', payload: { text: trimmed } });
+      const agentModeToSend: AgentWorkMode = isHR ? agentMode : 'normal';
+      send({ type: 'chat_message', payload: { text: trimmed, agent_mode: agentModeToSend } });
     } else {
       // ── Fallback: local mock (until backend WS is ready) ──────────────
       setIsTyping(true);
@@ -156,8 +234,7 @@ export function AgentWidget() {
         setIsTyping(false);
       }, 800 + Math.random() * 600);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, send, user.role, replyCtx]);
+  }, [isConnected, send, user.role, replyCtx, agentMode, isHR]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -165,6 +242,8 @@ export function AgentWidget() {
       sendMessage(input);
     }
   }
+
+  const ModeTriggerIcon = selectedModeOption.Icon;
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -221,6 +300,17 @@ export function AgentWidget() {
                 className={[styles.bubble, msg.role === 'user' ? styles.bubbleUser : styles.bubbleAssistant].join(' ')}
               >
                 <div style={{ whiteSpace: 'pre-line' }}>{renderContent(msg.content)}</div>
+                {msg.fileUrl && msg.filename && (
+                  <a
+                    href={msg.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    download={msg.filename}
+                    className={styles.reportLink}
+                  >
+                    Скачать файл: {truncateFilename(msg.filename, 30)}
+                  </a>
+                )}
                 <div className={styles.timestamp}>{msg.timestamp}</div>
               </div>
             ))}
@@ -236,7 +326,7 @@ export function AgentWidget() {
           </div>
 
           {/* Input */}
-          <div className={styles.inputRow}>
+          <div className={styles.inputArea}>
             <textarea
               className={styles.input}
               value={input}
@@ -245,14 +335,58 @@ export function AgentWidget() {
               placeholder="Напишите сообщение..."
               rows={1}
             />
-            <button
-              className={styles.sendBtn}
-              onClick={() => sendMessage(input)}
-              disabled={!input.trim() || isTyping}
-              aria-label="Отправить"
-            >
-              <Send size={15} />
-            </button>
+            <div className={styles.inputToolbar}>
+              {isHR && (
+                <div className={styles.modeWrap} ref={modeMenuRef}>
+                  <button
+                    type="button"
+                    className={styles.modeTrigger}
+                    onClick={() => setModeMenuOpen((v) => !v)}
+                    aria-expanded={modeMenuOpen}
+                    aria-haspopup="listbox"
+                    aria-label="Режим агента"
+                  >
+                    <ModeTriggerIcon size={14} aria-hidden />
+                    <span>{selectedModeOption.shortLabel}</span>
+                    <ChevronDown
+                      size={14}
+                      className={[styles.modeTriggerChevron, modeMenuOpen ? styles.modeTriggerChevronOpen : ''].join(' ')}
+                      aria-hidden
+                    />
+                  </button>
+                  {modeMenuOpen && (
+                    <div className={styles.modeMenu} role="listbox" aria-label="Режим работы агента">
+                      {AGENT_MODE_OPTIONS.map(({ value, label, Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="option"
+                          aria-selected={agentMode === value}
+                          className={[styles.modeMenuItem, agentMode === value ? styles.modeMenuItemActive : ''].join(' ')}
+                          onClick={() => {
+                            setAgentMode(value);
+                            setModeMenuOpen(false);
+                          }}
+                        >
+                          <Icon size={16} aria-hidden />
+                          <span className={styles.modeMenuLabel}>{label}</span>
+                          {agentMode === value ? <Check size={16} className={styles.modeMenuCheck} aria-hidden /> : <span className={styles.modeMenuCheckSlot} aria-hidden />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className={styles.toolbarSpacer} />
+              <button
+                className={styles.sendBtn}
+                onClick={() => sendMessage(input)}
+                disabled={!input.trim() || isTyping}
+                aria-label="Отправить"
+              >
+                <Send size={15} />
+              </button>
+            </div>
           </div>
         </div>
       )}

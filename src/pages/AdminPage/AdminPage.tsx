@@ -16,12 +16,14 @@ import {
   useMeetingAttendance, useMarkAttendance, useUpdateAttendance, useDeleteAttendance,
   useQuizzes,
   useQuizResults,
+  useTeams, useCreateTeam, useUpdateTeam, useDeleteTeam,
 } from '@shared/hooks/useApi';
 import { achievementsApi } from '@shared/api/services/achievements';
 import { analytics } from '@shared/lib/analytics';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Activity, ActivityStatus, UserRole, ChallengeStatus } from '@shared/types';
+import { analytics } from '@shared/lib/analytics';
+import type { Activity, ActivityStatus, UserRole, ChallengeStatus, TeamStatus } from '@shared/types';
 
 const STATUS_LABEL: Record<ActivityStatus, string> = {
   pending: 'На проверке',
@@ -42,11 +44,17 @@ const EMPTY_CHALLENGE = {
   date: '', url: '', maxPoints: '', assignAll: false, personal: false,
 };
 
+const TEAM_STATUS_LABEL: Record<TeamStatus, string> = {
+  active: 'Активна',
+  on_hold: 'На паузе',
+  completed: 'Завершена',
+};
+
 import styles from './AdminPage.module.css';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-type Tab = 'achievements' | 'activities' | 'users' | 'events' | 'tests' | 'personal'|'challenges';
+type Tab = 'achievements' | 'activities' | 'users' | 'events' | 'tests' | 'personal'|'challenges' | 'teams';
 
 export function AdminPage() {
   const user = useAuthStore((s) => s.user)!;
@@ -73,6 +81,16 @@ export function AdminPage() {
   const [newActivity, setNewActivity] = useState({ title: '', description: '', requested_points: '100', userId: 0 });
   const [attendanceExpanded, setAttendanceExpanded] = useState<number | null>(null);
   const [attendanceSearch, setAttendanceSearch] = useState('');
+  const [createTeamModal, setCreateTeamModal] = useState(false);
+  const [editTeamId, setEditTeamId] = useState<number | null>(null);
+  const [teamForm, setTeamForm] = useState({
+    name: '',
+    project: '',
+    description: '',
+    status: 'active' as TeamStatus,
+    mentor_id: '' as string | number,
+    member_ids: [] as number[],
+  });
 
   const { data: activities = [] } = useActivities();
   const { data: achievements = [] } = useAchievements();
@@ -91,8 +109,12 @@ export function AdminPage() {
   const { data: allUserAchievements = [] } = useAllUserAchievements();
   const { data: quizzes = [] } = useQuizzes();
   const { data: allResults = [] } = useQuizResults();
+  const { data: teams = [] } = useTeams();
   const createChallengeMut = useCreateChallenge();
   const assignChallengeMut = useAssignChallenge();
+  const createTeam = useCreateTeam();
+  const updateTeam = useUpdateTeam();
+  const deleteTeam = useDeleteTeam();
   const { data: attendance = [] } = useMeetingAttendance();
   const markAttendance = useMarkAttendance();
   const updateAttendance = useUpdateAttendance();
@@ -117,6 +139,7 @@ export function AdminPage() {
     });
     analytics.track('личное_достижение_одобрено', { activity_id: id, points: ed?.points ?? 0 });
   }
+
 
   async function reject(id: number) {
     const ed = editing[id];
@@ -234,6 +257,7 @@ export function AdminPage() {
   }
 
   const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
+  const mentors = allUsers.filter(u => u.role === 'MENTOR');
 
   const filteredChallenges = (challengeFilter === 'all' ? challenges : challenges.filter(c => c.status === challengeFilter))
     .filter(c => !challengeSearch.trim() || c.title.toLowerCase().includes(challengeSearch.toLowerCase()))
@@ -243,8 +267,70 @@ export function AdminPage() {
       return pb - pa;
     });
 
+  function toggleTeamMember(id: number) {
+    setTeamForm(prev => ({
+      ...prev,
+      member_ids: prev.member_ids.includes(id) ? prev.member_ids.filter(x => x !== id) : [...prev.member_ids, id],
+    }));
+  }
+
+  function resetTeamForm() {
+    setTeamForm({
+      name: '',
+      project: '',
+      description: '',
+      status: 'active',
+      mentor_id: '',
+      member_ids: [],
+    });
+  }
+
+  function openEditTeam(team: typeof teams[number]) {
+    setEditTeamId(team.id);
+    setTeamForm({
+      name: team.name,
+      project: team.project,
+      description: team.description,
+      status: team.status,
+      mentor_id: team.mentorId ?? '',
+      member_ids: team.memberIds,
+    });
+  }
+
+  async function handleCreateTeam() {
+    if (!teamForm.name) return;
+    await createTeam.mutateAsync({
+      name: teamForm.name,
+      project: teamForm.project,
+      description: teamForm.description,
+      status: teamForm.status,
+      mentor_id: teamForm.mentor_id ? Number(teamForm.mentor_id) : undefined,
+      member_ids: teamForm.member_ids,
+    });
+    setCreateTeamModal(false);
+    resetTeamForm();
+  }
+
+  async function handleUpdateTeam() {
+    if (!editTeamId) return;
+    await updateTeam.mutateAsync({
+      id: editTeamId,
+      data: {
+        name: teamForm.name,
+        project: teamForm.project,
+        description: teamForm.description,
+        status: teamForm.status,
+        mentor_id: teamForm.mentor_id ? Number(teamForm.mentor_id) : undefined,
+        member_ids: teamForm.member_ids,
+      },
+    });
+    setEditTeamId(null);
+    resetTeamForm();
+  }
+
   const TABS: { key: Tab; label: string }[] = [
     { key: 'challenges',   label: 'Задачи' },
+    { key: 'teams',        label: 'Команды' },
     { key: 'achievements', label: 'Достижения' },
     { key: 'events',       label: 'Мероприятия' },
     { key: 'tests',        label: 'Тесты' },
@@ -298,6 +384,47 @@ export function AdminPage() {
                       pendingReview={pendingCount || undefined}
                       onClick={() => navigate(`/challenges/${c.id}`)}
                     />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TEAMS TAB */}
+        {tab === 'teams' && (
+          <div>
+            <Button full style={{ marginBottom: 'var(--space-3)' }} onClick={() => setCreateTeamModal(true)}>
+              + Создать команду
+            </Button>
+            {teams.length === 0 ? (
+              <div className={styles.empty}>Команд пока нет</div>
+            ) : (
+              <div className={styles.list}>
+                {teams.map(team => {
+                  const mentor = team.mentorId ? allUsers.find(u => u.id === team.mentorId) : null;
+                  const memberCount = team.memberIds.length;
+                  const statusClass = team.status === 'active'
+                    ? styles.approved
+                    : team.status === 'on_hold'
+                      ? styles.revision
+                      : styles.rejected;
+
+                  return (
+                    <div key={team.id} className={styles.item}>
+                      <div className={styles.itemTop}>
+                        <p className={styles.itemTitle}>{team.name}</p>
+                        <span className={[styles.status, statusClass].join(' ')}>{TEAM_STATUS_LABEL[team.status]}</span>
+                      </div>
+                      <p className={styles.itemSub}>{team.project || 'Без проекта'}</p>
+                      <p className={styles.itemDesc}>{team.description || 'Описание не заполнено'}</p>
+                      {mentor && <p className={styles.itemSub}>Ментор: {mentor.username}</p>}
+                      <p className={styles.itemSub}>Участников: {memberCount}</p>
+                      <div className={styles.itemActions}>
+                        <Button size="sm" variant="ghost" onClick={() => openEditTeam(team)}>Редактировать</Button>
+                        <Button size="sm" variant="danger" onClick={() => deleteTeam.mutate(team.id)}>Удалить</Button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -754,6 +881,119 @@ export function AdminPage() {
         </Modal>
       )}
 
+      {(createTeamModal || editTeamId !== null) && (
+        <Modal
+          open={true}
+          onClose={() => {
+            setCreateTeamModal(false);
+            setEditTeamId(null);
+            resetTeamForm();
+          }}
+          title={editTeamId ? 'Редактировать команду' : 'Создать команду'}
+          type="dialog"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <Input label="Название команды *" value={teamForm.name} onChange={e => setTeamForm(p => ({ ...p, name: e.target.value }))} />
+            <Input label="Проект" value={teamForm.project} onChange={e => setTeamForm(p => ({ ...p, project: e.target.value }))} />
+            <Input label="Описание" value={teamForm.description} onChange={e => setTeamForm(p => ({ ...p, description: e.target.value }))} />
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Статус</p>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                {(['active', 'on_hold', 'completed'] as TeamStatus[]).map(status => (
+                  <button
+                    key={status}
+                    onClick={() => setTeamForm(p => ({ ...p, status }))}
+                    style={{
+                      flex: 1,
+                      padding: '6px',
+                      borderRadius: 6,
+                      border: '1px solid',
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      borderColor: teamForm.status === status ? 'var(--color-primary)' : 'var(--border-subtle)',
+                      background: teamForm.status === status ? 'rgba(204,0,0,0.15)' : 'transparent',
+                      color: teamForm.status === status ? 'var(--color-primary-bright)' : 'var(--text-muted)',
+                    }}
+                  >
+                    {TEAM_STATUS_LABEL[status]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Ментор</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 120, overflowY: 'auto' }}>
+                <button
+                  onClick={() => setTeamForm(p => ({ ...p, mentor_id: '' }))}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 6,
+                    border: '1px solid',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    borderColor: !teamForm.mentor_id ? 'var(--color-primary)' : 'var(--border-subtle)',
+                    background: !teamForm.mentor_id ? 'rgba(204,0,0,0.15)' : 'transparent',
+                    color: !teamForm.mentor_id ? 'var(--color-primary-bright)' : 'var(--text-muted)',
+                  }}
+                >
+                  — Без ментора
+                </button>
+                {mentors.map(mentor => (
+                  <button
+                    key={mentor.id}
+                    onClick={() => setTeamForm(p => ({ ...p, mentor_id: mentor.id }))}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: 6,
+                      border: '1px solid',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      borderColor: teamForm.mentor_id === mentor.id ? 'var(--color-primary)' : 'var(--border-subtle)',
+                      background: teamForm.mentor_id === mentor.id ? 'rgba(204,0,0,0.15)' : 'transparent',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {mentor.username}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>Участники проекта</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 150, overflowY: 'auto' }}>
+                {juniors.map(member => {
+                  const selected = teamForm.member_ids.includes(member.id);
+                  return (
+                    <button
+                      key={member.id}
+                      onClick={() => toggleTeamMember(member.id)}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: 6,
+                        border: '1px solid',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        borderColor: selected ? 'var(--color-primary)' : 'var(--border-subtle)',
+                        background: selected ? 'rgba(204,0,0,0.15)' : 'transparent',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
+                      {selected ? '✓ ' : ''}{member.username}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <Button full onClick={editTeamId ? handleUpdateTeam : handleCreateTeam} disabled={createTeam.isPending || updateTeam.isPending}>
+              {editTeamId ? 'Сохранить' : 'Создать команду'}
+            </Button>
+          </div>
+        </Modal>
+      )}
+
       {/* New User Modal */}
       {newUserModal && (
         <Modal open={true} onClose={() => { setNewUserModal(false); setNewUserError(''); }} title="Создать пользователя" type="dialog">
@@ -776,7 +1016,7 @@ export function AdminPage() {
                       cursor: 'pointer', fontSize: 12, fontFamily: 'var(--font-display)',
                     }}
                   >
-                    {{ JUNIOR: 'Участник', MENTOR: 'Ментор', HR: 'HR' }[r] ?? r}
+                    {{ EMPLOYEE: 'Участник', MENTOR: 'Ментор', HR: 'HR' }[r] ?? r}
                   </button>
                 ))}
               </div>

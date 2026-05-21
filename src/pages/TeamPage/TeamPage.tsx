@@ -33,7 +33,7 @@ export function TeamPage() {
   const mentors = allUsers.filter(u => u.role === 'MENTOR');
   const juniors = allUsers.filter(u => u.role === 'EMPLOYEE');
 
-  const team = isHR ? null : teams.find((t) => t.memberIds.includes(user.id) || t.mentorId === user.id);
+  const myTeams = isHR ? [] : teams.filter((t) => t.memberIds.includes(user.id) || t.mentorId === user.id);
 
   function toggleMember(id: number) {
     setForm(p => ({
@@ -181,8 +181,8 @@ export function TeamPage() {
     );
   }
 
-  // Non-HR: show own team
-  if (!team) {
+  // Non-HR: show all own teams
+  if (myTeams.length === 0) {
     return (
       <>
         <PageHeader title="Моя команда" showBack />
@@ -193,66 +193,75 @@ export function TeamPage() {
     );
   }
 
-  const mentor = team.mentorId ? allUsers.find((u) => u.id === team.mentorId) : null;
-  const members = team.memberIds.map((id) => allUsers.find((u) => u.id === id)).filter(Boolean) as typeof allUsers;
-
   return (
     <>
-      <PageHeader title="Моя команда" showBack subtitle={team.project} />
+      <PageHeader
+        title="Мои команды"
+        showBack
+        subtitle={myTeams.length === 1 ? myTeams[0].project : `${myTeams.length} команд`}
+      />
       <div className={styles.page}>
-        <Card accent>
-          <div className={styles.teamHeader}>
-            <div className={styles.teamIcon}>👥</div>
-            <div className={styles.teamInfo}>
-              <p className={styles.teamName}>{team.name}</p>
-              <p className={styles.teamProject}>{team.project}</p>
-            </div>
-            <Badge color={STATUS_COLOR[team.status]}>{STATUS_LABEL[team.status]}</Badge>
-          </div>
-          <p className={styles.teamDesc}>{team.description}</p>
-        </Card>
-
-        {mentor && (
-          <div>
-            <p className={styles.sectionLabel}>Ментор</p>
-            <Card>
-              <div className={styles.memberRow}>
-                <div className={styles.avatar} style={{ borderColor: 'rgba(58,154,238,0.4)', color: 'var(--color-info-bright)' }}>
-                  {mentor.username.slice(0, 2).toUpperCase()}
-                </div>
-                <div className={styles.memberInfo}>
-                  <p className={styles.memberName}>{mentor.username}</p>
-                  <p className={styles.memberRole}>@{mentor.username}</p>
-                </div>
-                <Badge color="blue">Ментор</Badge>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        <div>
-          <p className={styles.sectionLabel}>Участники · {members.length}</p>
-          <div className={styles.memberList}>
-            {members.map((m) => {
-              if (!m) return null;
-              const isMe = m.id === user.id;
-              return (
-                <Card key={m.id}>
-                  <div className={styles.memberRow}>
-                    <div className={styles.avatar} style={{ borderColor: isMe ? 'rgba(204,0,0,0.4)' : 'rgba(61,189,106,0.4)', color: isMe ? 'var(--color-primary-bright)' : 'var(--color-success-bright)' }}>
-                      {m.username.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className={styles.memberInfo}>
-                      <p className={styles.memberName}>{m.username}{isMe ? ' (вы)' : ''}</p>
-                      <p className={styles.memberRole}>@{m.username}</p>
-                    </div>
-                    <Badge color="green">Участник</Badge>
+        {myTeams.map((team) => {
+          const mentor = team.mentorId ? allUsers.find((u) => u.id === team.mentorId) : null;
+          const members = team.memberIds.map((id) => allUsers.find((u) => u.id === id)).filter(Boolean) as typeof allUsers;
+          return (
+            <div key={team.id} style={{ marginBottom: 'var(--space-4)' }}>
+              <Card accent>
+                <div className={styles.teamHeader}>
+                  <div className={styles.teamIcon}>👥</div>
+                  <div className={styles.teamInfo}>
+                    <p className={styles.teamName}>{team.name}</p>
+                    <p className={styles.teamProject}>{team.project}</p>
                   </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
+                  <Badge color={STATUS_COLOR[team.status]}>{STATUS_LABEL[team.status]}</Badge>
+                </div>
+                <p className={styles.teamDesc}>{team.description}</p>
+              </Card>
+
+              {mentor && (
+                <div>
+                  <p className={styles.sectionLabel}>Ментор</p>
+                  <Card>
+                    <div className={styles.memberRow}>
+                      <div className={styles.avatar} style={{ borderColor: 'rgba(58,154,238,0.4)', color: 'var(--color-info-bright)' }}>
+                        {mentor.username.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className={styles.memberInfo}>
+                        <p className={styles.memberName}>{mentor.username}</p>
+                        <p className={styles.memberRole}>@{mentor.username}</p>
+                      </div>
+                      <Badge color="blue">Ментор</Badge>
+                    </div>
+                  </Card>
+                </div>
+              )}
+
+              <div>
+                <p className={styles.sectionLabel}>Участники · {members.length}</p>
+                <div className={styles.memberList}>
+                  {members.map((m) => {
+                    if (!m) return null;
+                    const isMe = m.id === user.id;
+                    return (
+                      <Card key={m.id}>
+                        <div className={styles.memberRow}>
+                          <div className={styles.avatar} style={{ borderColor: isMe ? 'rgba(204,0,0,0.4)' : 'rgba(61,189,106,0.4)', color: isMe ? 'var(--color-primary-bright)' : 'var(--color-success-bright)' }}>
+                            {m.username.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className={styles.memberInfo}>
+                            <p className={styles.memberName}>{m.username}{isMe ? ' (вы)' : ''}</p>
+                            <p className={styles.memberRole}>@{m.username}</p>
+                          </div>
+                          <Badge color="green">Участник</Badge>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );

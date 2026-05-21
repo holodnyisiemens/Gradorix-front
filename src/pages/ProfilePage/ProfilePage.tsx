@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical } from 'lucide-react';
+import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
@@ -196,6 +196,24 @@ export function ProfilePage() {
               ))}
             </div>
           </div>
+        )}
+
+        {isHiPo && (
+          <Card>
+            <p className={styles.sectionTitle}>Контакты организаторов</p>
+            <div className={styles.infoList}>
+              <div className={styles.infoRow}>
+                <Mail size={16} className={styles.infoIcon} />
+                <span className={styles.infoLabel}>Email</span>
+                <span className={styles.infoValue}>organizers@gradorix.ru</span>
+              </div>
+              <div className={styles.infoRow}>
+                <Send size={16} className={styles.infoIcon} />
+                <span className={styles.infoLabel}>Telegram</span>
+                <span className={styles.infoValue}>@gradorix_org</span>
+              </div>
+            </div>
+          </Card>
         )}
 
         <Button variant="danger" full onClick={() => { analytics.track('выход_из_системы'); analytics.reset(); logout(); }}>
