@@ -22,7 +22,7 @@ import { achievementsApi } from '@shared/api/services/achievements';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { useQueryClient } from '@tanstack/react-query';
 import { analytics } from '@shared/lib/analytics';
-import type { Activity, ActivityStatus, UserRole, ChallengeStatus, TeamStatus } from '@shared/types';
+import type { Activity, ActivityStatus, UserRole, ChallengeStatus, TeamStatus, MeetingAttendance } from '@shared/types';
 
 const STATUS_LABEL: Record<ActivityStatus, string> = {
   pending: 'На проверке',
@@ -80,8 +80,63 @@ export function AdminPage() {
   const [newActivity, setNewActivity] = useState({ title: '', description: '', requested_points: '100', userId: 0 });
   const [attendanceExpanded, setAttendanceExpanded] = useState<number | null>(null);
   const [attendanceSearch, setAttendanceSearch] = useState('');
+  const [attendanceEditor, setAttendanceEditor] = useState<{
+    eventId: number;
+    userId: number;
+    record: MeetingAttendance | null;
+    attended: boolean;
+  } | null>(null);
+  const [attendanceEditorPoints, setAttendanceEditorPoints] = useState('');
+  const [attendanceEditorError, setAttendanceEditorError] = useState('');
   const [createTeamModal, setCreateTeamModal] = useState(false);
   const [editTeamId, setEditTeamId] = useState<number | null>(null);
+
+  function getAttendanceRecord(eventId: number, userId: number) {
+    return attendance.find(r => r.eventId === eventId && r.userId === userId) ?? null;
+  }
+
+  function openAttendanceEditor(eventId: number, userId: number) {
+    const record = getAttendanceRecord(eventId, userId);
+    setAttendanceEditor({ eventId, userId, record, attended: record?.attended ?? false });
+    setAttendanceEditorPoints(record?.awardedPoints != null ? String(record.awardedPoints) : '');
+    setAttendanceEditorError('');
+  }
+
+  function closeAttendanceEditor() {
+    setAttendanceEditor(null);
+    setAttendanceEditorPoints('');
+    setAttendanceEditorError('');
+  }
+
+  function handleSaveAttendance(attended: boolean) {
+    if (!attendanceEditor) return;
+    const points = attendanceEditorPoints.trim();
+    const pointsValue = points === '' ? undefined : Number(points);
+    if (pointsValue !== undefined && (Number.isNaN(pointsValue) || pointsValue < 0)) {
+      setAttendanceEditorError('Введите корректное число баллов');
+      return;
+    }
+
+    const payload: { attended: boolean; marked_by: number; awarded_points?: number } = {
+      attended,
+      marked_by: user.id,
+    };
+    if (attended && pointsValue !== undefined) {
+      payload.awarded_points = pointsValue;
+    }
+
+    if (attendanceEditor.record) {
+      updateAttendance.mutate({ id: attendanceEditor.record.id, data: payload });
+    } else {
+      markAttendance.mutate({
+        event_id: attendanceEditor.eventId,
+        user_id: attendanceEditor.userId,
+        ...payload,
+      });
+    }
+
+    closeAttendanceEditor();
+  }
   const [teamForm, setTeamForm] = useState({
     name: '',
     project: '',
@@ -568,18 +623,11 @@ export function AdminPage() {
             .sort((a, b) => b.date.localeCompare(a.date));
 
           function getRecord(eventId: number, userId: number) {
-            return attendance.find(r => r.eventId === eventId && r.userId === userId) ?? null;
+            return getAttendanceRecord(eventId, userId);
           }
 
-          function handleCycle(eventId: number, userId: number) {
-            const rec = getRecord(eventId, userId);
-            if (!rec) {
-              markAttendance.mutate({ event_id: eventId, user_id: userId, attended: false });
-            } else if (!rec.attended) {
-              updateAttendance.mutate({ id: rec.id, data: { attended: true } });
-            } else {
-              deleteAttendance.mutate(rec.id);
-            }
+          function openRowEditor(eventId: number, userId: number) {
+            openAttendanceEditor(eventId, userId);
           }
 
           if (meetingEvents.length === 0) {
@@ -628,17 +676,16 @@ export function AdminPage() {
                         {filteredEmployees.map(emp => {
                           const rec = getRecord(ev.id, emp.id);
                           const state: 'none' | 'absent' | 'present' = !rec ? 'none' : rec.attended ? 'present' : 'absent';
+                          const label = rec ? (rec.attended ? `✓${rec.awardedPoints != null ? ` +${rec.awardedPoints}` : ''}` : '✗ Не был') : '—';
                           return (
                             <div key={emp.id} className={styles.attendanceRow}>
                               <div className={styles.attendanceAvatar}>{emp.username.slice(0, 2).toUpperCase()}</div>
                               <p style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)' }}>{emp.username}</p>
                               <button
                                 className={[styles.attendanceToggle, state === 'present' ? styles.attendanceToggleOn : state === 'absent' ? styles.attendanceToggleOff : ''].join(' ')}
-                                onClick={() => handleCycle(ev.id, emp.id)}
+                                onClick={() => openRowEditor(ev.id, emp.id)}
                               >
-                                {state === 'none' && '—'}
-                                {state === 'absent' && '✗ Не был'}
-                                {state === 'present' && '✓ Был'}
+                                {label}
                               </button>
                             </div>
                           );
@@ -652,6 +699,74 @@ export function AdminPage() {
           );
         })()}
 
+        {attendanceEditor && (
+          <Modal open={true} onClose={closeAttendanceEditor} title="Управление посещаемостью" type="dialog">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}>
+                <span style={{ fontSize: 28 }}>🤝</span>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                    {events.find(ev => ev.id === attendanceEditor.eventId)?.title ?? 'Мероприятие'}
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {events.find(ev => ev.id === attendanceEditor.eventId)?.date ?? ''}
+                  </p>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Участник: <strong>{allUsers.find(u => u.id === attendanceEditor.userId)?.username ?? 'Пользователь'}</strong>
+              </p>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <button
+                  type="button"
+                  onClick={() => setAttendanceEditor(prev => prev ? ({ ...prev, attended: true }) : prev)}
+                  style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 8, border: attendanceEditor.attended ? '1px solid var(--color-success-bright)' : '1px solid var(--border-subtle)',
+                    background: attendanceEditor.attended ? 'rgba(61,189,106,0.12)' : 'transparent', color: attendanceEditor.attended ? 'var(--color-success-bright)' : 'var(--text-primary)',
+                    cursor: 'pointer', fontSize: 13,
+                  }}
+                >
+                  Присутствовал
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAttendanceEditor(prev => prev ? ({ ...prev, attended: false }) : prev)}
+                  style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 8, border: !attendanceEditor.attended ? '1px solid var(--color-primary)' : '1px solid var(--border-subtle)',
+                    background: !attendanceEditor.attended ? 'rgba(204,0,0,0.08)' : 'transparent', color: !attendanceEditor.attended ? 'var(--color-primary-bright)' : 'var(--text-primary)',
+                    cursor: 'pointer', fontSize: 13,
+                  }}
+                >
+                  Не был
+                </button>
+              </div>
+              {attendanceEditor.attended && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    Баллы (необязательно)
+                  </label>
+                  <input
+                    value={attendanceEditorPoints}
+                    onChange={e => setAttendanceEditorPoints(e.target.value)}
+                    placeholder="Например, 10"
+                    inputMode="numeric"
+                    style={{
+                      width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-elevated)', color: 'var(--text-primary)', fontSize: 13, outline: 'none'
+                    }}
+                  />
+                </div>
+              )}
+              {attendanceEditorError && <p style={{ color: 'var(--color-primary-bright)', fontSize: 12 }}>{attendanceEditorError}</p>}
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <Button full onClick={() => handleSaveAttendance(attendanceEditor.attended)} loading={markAttendance.isPending || updateAttendance.isPending}>
+                  Сохранить
+                </Button>
+                <Button full variant="secondary" onClick={closeAttendanceEditor}>Отмена</Button>
+              </div>
+            </div>
+          </Modal>
+        )}
 
         {tab === 'personal' && (
     <>

@@ -173,6 +173,7 @@ export interface MeetingAttendance {
   attended: boolean;
   markedAt?: string;
   markedBy?: number; // if HR overrode it
+  awardedPoints?: number;
 }
 
 // ===== ACTIVITY / POINTS MANAGEMENT =====

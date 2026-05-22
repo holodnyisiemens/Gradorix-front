@@ -489,7 +489,7 @@ export const useMarkAttendance = () => {
 export const useUpdateAttendance = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { attended?: boolean } }) =>
+    mutationFn: ({ id, data }: { id: number; data: { attended?: boolean; awarded_points?: number; marked_by?: number } }) =>
       meetingAttendanceApi.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['meeting-attendance'] }),
   });
