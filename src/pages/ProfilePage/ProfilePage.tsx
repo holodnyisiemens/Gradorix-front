@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, FileText, Send } from 'lucide-react';
+import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, FileText, BookOpen, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
@@ -37,6 +37,7 @@ function getExtraLinks(role: string): ExtraLink[] {
         { to: '/challenges',    icon: <Zap size={18} />,          label: 'Задачи' },
         { to: '/tests',         icon: <FlaskConical size={18} />, label: 'Тесты' },
         { to: '/surveys',       icon: <FileText size={18} />,     label: 'Опросы' },
+        { to: '/knowledge',     icon: <BookOpen size={18} />,     label: 'База знаний' },
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
       ];
     default:
