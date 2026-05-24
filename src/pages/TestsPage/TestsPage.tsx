@@ -43,7 +43,11 @@ export function TestsPage() {
               <div key={quiz.id} style={{ position: 'relative' }}>
                 <div
                   className={[styles.card, result ? styles.cardCompleted : ''].join(' ')}
-                  onClick={() => { if (!isHR) analytics.track('тест_открыт', { quiz_id: quiz.id, already_completed: !!result }); navigate(`/tests/${quiz.id}`); }}
+                  onClick={() => {
+                    if (isHR) return;
+                    analytics.track('тест_открыт', { quiz_id: quiz.id, already_completed: !!result });
+                    navigate(`/tests/${quiz.id}`);
+                  }}
                 >
                   <div className={styles.cardTop}>
                     <p className={styles.cardTitle}>{quiz.title}</p>

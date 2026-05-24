@@ -12,5 +12,7 @@ export { activitiesApi } from './services/activities';
 export { teamsApi } from './services/teams';
 export { quizzesApi } from './services/quizzes';
 export { quizResultsApi } from './services/quizResults';
+export { surveysApi } from './services/surveys';
+export { surveyResultsApi } from './services/surveyResults';
 export { kbApi } from './services/kb';
 export { meetingAttendanceApi } from './services/meetingAttendance';

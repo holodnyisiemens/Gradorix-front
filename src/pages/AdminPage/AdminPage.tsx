@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Pencil, Trash2, Calendar, CheckCircle, Link2, ClipboardCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pencil, Trash2, Calendar, CheckCircle, Link2, ClipboardCheck, BarChart3 } from 'lucide-react';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
@@ -16,6 +16,8 @@ import {
   useMeetingAttendance, useMarkAttendance, useUpdateAttendance, useDeleteAttendance,
   useQuizzes,
   useQuizResults,
+  useSurveys,
+  useSurveyResults,
   useTeams, useCreateTeam, useUpdateTeam, useDeleteTeam,
 } from '@shared/hooks/useApi';
 import { achievementsApi } from '@shared/api/services/achievements';
@@ -53,7 +55,7 @@ import styles from './AdminPage.module.css';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-type Tab = 'achievements' | 'activities' | 'users' | 'events' | 'tests' | 'personal'|'challenges' | 'teams';
+type Tab = 'achievements' | 'activities' | 'users' | 'events' | 'tests' | 'surveys' | 'personal' | 'challenges' | 'teams';
 
 export function AdminPage() {
   const user = useAuthStore((s) => s.user)!;
@@ -163,6 +165,8 @@ export function AdminPage() {
   const { data: allUserAchievements = [] } = useAllUserAchievements();
   const { data: quizzes = [] } = useQuizzes();
   const { data: allResults = [] } = useQuizResults();
+  const { data: surveys = [] } = useSurveys();
+  const { data: allSurveyResults = [] } = useSurveyResults();
   const { data: teams = [] } = useTeams();
   const createChallengeMut = useCreateChallenge();
   const assignChallengeMut = useAssignChallenge();
@@ -388,6 +392,7 @@ export function AdminPage() {
     { key: 'achievements', label: 'Достижения' },
     { key: 'events',       label: 'Мероприятия' },
     { key: 'tests',        label: 'Тесты' },
+    { key: 'surveys',      label: 'Опросы' },
     { key: 'users',        label: 'Участники' },
     { key: 'personal', label: 'Личные достижения' },
   ];
@@ -518,29 +523,56 @@ export function AdminPage() {
         )}
 
         {tab === 'tests' && quizzes.length === 0 && (
-<div className={styles.empty}>Нет тестов</div>)}
-{tab === 'tests' && quizzes.length !== 0 && (
-    <div className={styles.list}>
-      {quizzes.map(q => {
-        const count = allResults.filter(r => r.quizId === q.id).length;
-        const pending = allResults.filter(r => r.quizId === q.id && r.score === 0).length;
-        return (
-          <div key={q.id} className={styles.quizCard}>
-            <div className={styles.quizInfo}>
-              <p className={styles.quizTitle}>{q.title}</p>
-              <p className={styles.quizMeta}>
-                {count} {count === 1 ? 'результат' : count < 5 ? 'результата' : 'результатов'}
-                {pending > 0 && <span style={{ color: 'var(--color-warning-bright)', marginLeft: 8 }}>• {pending} требует проверки</span>}
-              </p>
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => { analytics.track('тест_открыта_проверка', { quiz_id: q.id }); navigate(`/tests/${q.id}/review`); }}>
-              <ClipboardCheck size={14} style={{ marginRight: 4 }} />
-              Проверить
-            </Button>
+          <div className={styles.empty}>Нет тестов</div>
+        )}
+        {tab === 'tests' && quizzes.length !== 0 && (
+          <div className={styles.list}>
+            {quizzes.map(q => {
+              const count = allResults.filter(r => r.quizId === q.id).length;
+              const pending = allResults.filter(r => r.quizId === q.id && r.score === 0).length;
+              return (
+                <div key={q.id} className={styles.quizCard}>
+                  <div className={styles.quizInfo}>
+                    <p className={styles.quizTitle}>{q.title}</p>
+                    <p className={styles.quizMeta}>
+                      {count} {count === 1 ? 'результат' : count < 5 ? 'результата' : 'результатов'}
+                      {pending > 0 && <span style={{ color: 'var(--color-warning-bright)', marginLeft: 8 }}>• {pending} требует проверки</span>}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => { analytics.track('тест_открыта_проверка', { quiz_id: q.id }); navigate(`/tests/${q.id}/review`); }}>
+                    <ClipboardCheck size={14} style={{ marginRight: 4 }} />
+                    Проверить
+                  </Button>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-    </div>
+        )}
+
+        {tab === 'surveys' && surveys.length === 0 && (
+          <div className={styles.empty}>Нет опросов</div>
+        )}
+        {tab === 'surveys' && surveys.length !== 0 && (
+          <div className={styles.list}>
+            {surveys.map(s => {
+              const count = allSurveyResults.filter(r => r.surveyId === s.id).length;
+              return (
+                <div key={s.id} className={styles.quizCard}>
+                  <div className={styles.quizInfo}>
+                    <p className={styles.quizTitle}>{s.title}</p>
+                    <p className={styles.quizMeta}>
+                      {count} {count === 1 ? 'ответ' : count < 5 ? 'ответа' : 'ответов'}
+                      {!s.available && <span style={{ color: 'var(--text-muted)', marginLeft: 8 }}>• скрыт</span>}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => { analytics.track('опрос_открыты_результаты', { survey_id: s.id }); navigate(`/surveys/${s.id}/results`); }}>
+                    <BarChart3 size={14} style={{ marginRight: 4 }} />
+                    Результаты
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* ACHIEVEMENTS TAB */}

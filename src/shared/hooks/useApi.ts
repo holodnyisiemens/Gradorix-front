@@ -13,6 +13,8 @@ import {
   teamsApi,
   quizzesApi,
   quizResultsApi,
+  surveysApi,
+  surveyResultsApi,
   kbApi,
   meetingAttendanceApi,
 } from '@shared/api';
@@ -22,6 +24,7 @@ import type { ActivityCreateInput, ActivityUpdateInput } from '@shared/api/servi
 import type { CalendarEventCreateInput } from '@shared/api/services/calendarEvents';
 import type { TeamCreateInput } from '@shared/api/services/teams';
 import type { QuizCreateInput } from '@shared/api/services/quizzes';
+import type { SurveyCreateInput } from '@shared/api/services/surveys';
 
 // ===== USERS =====
 export const useUsers = () =>
@@ -500,5 +503,81 @@ export const useDeleteAttendance = () => {
   return useMutation({
     mutationFn: (id: number) => meetingAttendanceApi.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['meeting-attendance'] }),
+  });
+};
+
+// ===== SURVEYS =====
+export const useSurveys = (available?: boolean) =>
+  useQuery({
+    queryKey: ['surveys', available],
+    queryFn: () => surveysApi.getAll(available !== undefined ? { available } : undefined),
+  });
+
+export const useSurvey = (id: number) =>
+  useQuery({
+    queryKey: ['surveys', id],
+    queryFn: () => surveysApi.getById(id),
+    enabled: !!id,
+    retry: (_count, err) => {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      return status !== 409;
+    },
+  });
+
+export const useCreateSurvey = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: SurveyCreateInput) => surveysApi.create(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['surveys'] }),
+  });
+};
+
+export const useUpdateSurvey = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<SurveyCreateInput> }) =>
+      surveysApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['surveys'] }),
+  });
+};
+
+export const useDeleteSurvey = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => surveysApi.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['surveys'] }),
+  });
+};
+
+// ===== SURVEY RESULTS =====
+export const useSurveyResults = (params?: { user_id?: number; quiz_id?: number }) =>
+  useQuery({
+    queryKey: ['survey-results', params],
+    queryFn: () => surveyResultsApi.getAll(params),
+  });
+
+export const useSubmitSurveyResult = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: surveyResultsApi.create,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['survey-results'] });
+      qc.invalidateQueries({ queryKey: ['surveys'] });
+    },
+  });
+};
+
+export const useSurveyStatistics = (surveyId: number) =>
+  useQuery({
+    queryKey: ['survey-statistics', surveyId],
+    queryFn: () => surveyResultsApi.getStatistics(surveyId),
+    enabled: !!surveyId,
+  });
+
+export const useDeleteSurveyResult = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => surveyResultsApi.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['survey-results'] }),
   });
 };
