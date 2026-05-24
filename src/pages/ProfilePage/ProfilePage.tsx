@@ -22,6 +22,9 @@ function getExtraLinks(role: string): ExtraLink[] {
       return [
         { to: '/challenges',    icon: <Zap size={18} />,          label: 'Задачи' },
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
+        { to: '/tests',         icon: <FlaskConical size={18} />, label: 'Тесты' },
+        { to: '/surveys',       icon: <FileText size={18} />,     label: 'Опросы' },
+        { to: '/knowledge',     icon: <BookOpen size={18} />,     label: 'База знаний' },
         { to: '/points',        icon: <Trophy size={18} />,       label: 'Личные достижения' },
         { to: '/team',          icon: <Users size={18} />,        label: 'Моя команда' },
       ];
