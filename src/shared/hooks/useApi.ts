@@ -18,6 +18,8 @@ import {
   kbApi,
   meetingAttendanceApi,
 } from '@shared/api';
+import type { ChangePasswordInput } from '@shared/api/services/auth';
+import { authApi } from '@shared/api/services/auth';
 import type { UserCreateInput, UserUpdateInput } from '@shared/api/services/users';
 import type { ChallengeCreateInput, ChallengeUpdateInput } from '@shared/api/services/challenges';
 import type { ActivityCreateInput, ActivityUpdateInput } from '@shared/api/services/activities';
@@ -56,6 +58,11 @@ export const useDeleteUser = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
 };
+
+export const useChangePassword = () =>
+  useMutation({
+    mutationFn: (data: ChangePasswordInput) => authApi.changePassword(data),
+  });
 
 // ===== CHALLENGES =====
 export const useChallenges = () =>

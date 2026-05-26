@@ -14,6 +14,11 @@ export interface LoginResponse {
 
 export type RegisterResponse = LoginResponse;
 
+export interface ChangePasswordInput {
+  old_password: string;
+  new_password: string;
+}
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const res = await apiClient.post<LoginResponse>('/auth/login', data);
@@ -37,5 +42,9 @@ export const authApi = {
   getMe: async (): Promise<User> => {
     const res = await apiClient.get<User>('/users/me');
     return res.data;
+  },
+
+  changePassword: async (data: ChangePasswordInput): Promise<void> => {
+    await apiClient.post('/auth/change-password', data);
   },
 };
