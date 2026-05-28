@@ -6,7 +6,14 @@ import { useUsers, useQuizzes, useQuizResults, useActivities, useChallengeJunior
 import type { ChatMessage } from '@shared/types';
 import { generateReply, HIPO_SUGGESTIONS, HR_SUGGESTIONS, MENTOR_SUGGESTIONS, type ReplyContext } from './agentEngine';
 import { useWebSocket } from '@shared/services/websocket/useWebSocket';
-import type { AgentWorkMode, WsChatReplyOut, WsChatTypingOut, WsErrorOut, WsExcelReadyOut } from '@shared/services/websocket/wsTypes';
+import type {
+  AgentWorkMode,
+  ReportFileFormat,
+  WsChatReplyOut,
+  WsChatTypingOut,
+  WsErrorOut,
+  WsExcelReadyOut,
+} from '@shared/services/websocket/wsTypes';
 import styles from './AgentWidget.module.css';
 
 const AGENT_MODE_OPTIONS: Array<{
@@ -18,6 +25,14 @@ const AGENT_MODE_OPTIONS: Array<{
   { value: 'normal', label: 'обычный', shortLabel: 'Обычный', Icon: MessageSquare },
   { value: 'data_work', label: 'работа с данными', shortLabel: 'Данные', Icon: Database },
   { value: 'report', label: 'отчёт', shortLabel: 'Отчёт', Icon: FileText },
+];
+
+const REPORT_FORMAT_OPTIONS: Array<{
+  value: ReportFileFormat;
+  label: string;
+}> = [
+  { value: 'excel', label: 'Excel (.xlsx)' },
+  { value: 'pdf', label: 'PDF (.pdf)' },
 ];
 
 function renderContent(content: string) {
@@ -58,6 +73,7 @@ export function AgentWidget() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [agentMode, setAgentMode] = useState<AgentWorkMode>('normal');
+  const [reportFormat, setReportFormat] = useState<ReportFileFormat>('excel');
   const [modeMenuOpen, setModeMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const modeMenuRef = useRef<HTMLDivElement>(null);
@@ -221,7 +237,15 @@ export function AgentWidget() {
       // Server will respond with chat_typing + chat_reply frames (or error → fallback)
       setIsTyping(true);
       const agentModeToSend: AgentWorkMode = isHR ? agentMode : 'normal';
-      send({ type: 'chat_message', payload: { text: trimmed, agent_mode: agentModeToSend } });
+      const payload: {
+        text: string;
+        agent_mode: AgentWorkMode;
+        report_format?: ReportFileFormat;
+      } = { text: trimmed, agent_mode: agentModeToSend };
+      if (isHR && agentModeToSend === 'report') {
+        payload.report_format = reportFormat;
+      }
+      send({ type: 'chat_message', payload });
     } else {
       // ── Fallback: local mock (until backend WS is ready) ──────────────
       setIsTyping(true);
@@ -234,7 +258,7 @@ export function AgentWidget() {
         setIsTyping(false);
       }, 800 + Math.random() * 600);
     }
-  }, [isConnected, send, user.role, replyCtx, agentMode, isHR]);
+  }, [isConnected, send, user.role, replyCtx, agentMode, reportFormat, isHR]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -347,7 +371,11 @@ export function AgentWidget() {
                     aria-label="Режим агента"
                   >
                     <ModeTriggerIcon size={14} aria-hidden />
-                    <span>{selectedModeOption.shortLabel}</span>
+                    <span>
+                      {agentMode === 'report'
+                        ? `${selectedModeOption.shortLabel} · ${reportFormat === 'pdf' ? 'PDF' : 'XLSX'}`
+                        : selectedModeOption.shortLabel}
+                    </span>
                     <ChevronDown
                       size={14}
                       className={[styles.modeTriggerChevron, modeMenuOpen ? styles.modeTriggerChevronOpen : ''].join(' ')}
@@ -365,7 +393,7 @@ export function AgentWidget() {
                           className={[styles.modeMenuItem, agentMode === value ? styles.modeMenuItemActive : ''].join(' ')}
                           onClick={() => {
                             setAgentMode(value);
-                            setModeMenuOpen(false);
+                            if (value !== 'report') setModeMenuOpen(false);
                           }}
                         >
                           <Icon size={16} aria-hidden />
@@ -373,6 +401,30 @@ export function AgentWidget() {
                           {agentMode === value ? <Check size={16} className={styles.modeMenuCheck} aria-hidden /> : <span className={styles.modeMenuCheckSlot} aria-hidden />}
                         </button>
                       ))}
+                      {agentMode === 'report' && (
+                        <div className={styles.reportFormatSection}>
+                          <p className={styles.reportFormatTitle}>Формат отчёта</p>
+                          <div className={styles.reportFormatOptions} role="group" aria-label="Формат отчёта">
+                            {REPORT_FORMAT_OPTIONS.map(({ value, label }) => (
+                              <button
+                                key={value}
+                                type="button"
+                                className={[
+                                  styles.reportFormatBtn,
+                                  reportFormat === value ? styles.reportFormatBtnActive : '',
+                                ].join(' ')}
+                                aria-pressed={reportFormat === value}
+                                onClick={() => {
+                                  setReportFormat(value);
+                                  setModeMenuOpen(false);
+                                }}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

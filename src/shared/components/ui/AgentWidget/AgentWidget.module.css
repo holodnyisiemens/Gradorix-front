@@ -377,6 +377,45 @@
   width: 16px;
   flex-shrink: 0;
 }
+.reportFormatSection {
+  margin-top: 4px;
+  padding: 8px 10px 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+.reportFormatTitle {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.reportFormatOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.reportFormatBtn {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+}
+.reportFormatBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.reportFormatBtnActive {
+  border-color: var(--accent-red);
+  background: rgba(204, 0, 0, 0.08);
+  color: var(--text-primary);
+}
 .sendBtn {
   width: 34px;
   height: 34px;

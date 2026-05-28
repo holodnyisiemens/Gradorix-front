@@ -28,6 +28,9 @@
 
 export type AgentWorkMode = 'normal' | 'data_work' | 'report';
 
+/** Формат файла отчёта (режим «Отчёт»). */
+export type ReportFileFormat = 'excel' | 'pdf';
+
 /** Send a message to the AI chat agent. */
 export interface WsChatMessageIn {
   type: 'chat_message';
@@ -36,6 +39,11 @@ export interface WsChatMessageIn {
     text: string;
 
     agent_mode: AgentWorkMode;
+    /**
+     * Формат отчёта. Передаётся при agent_mode === 'report'.
+     * excel — .xlsx, pdf — .pdf
+     */
+    report_format?: ReportFileFormat;
     /**
      * Optional session identifier.
      * Pass the same value across messages to keep AI context within one
@@ -115,11 +123,14 @@ export interface WsChatReplyOut {
   };
 }
 
-/** Report file is generated and ready for download. */
+/**
+ * Report file (Excel or PDF) is generated and ready for download.
+ * Event name kept as excel_ready for backward compatibility.
+ */
 export interface WsExcelReadyOut {
   type: 'excel_ready';
   payload: {
-    /** Relative path (e.g. /reports/abc.xlsx) or absolute URL */
+    /** Relative path (e.g. /reports/abc.xlsx, /reports/abc.pdf) or absolute URL */
     file_url: string;
     /** File name for UI */
     filename: string;
