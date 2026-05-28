@@ -126,6 +126,25 @@ export interface QuizResult {
   answers?: string[];    // text answers per question index (for 'text' type questions)
 }
 
+// ===== SURVEYS =====
+export interface Survey {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  durationMin: number;
+  questions: TestQuestion[];
+  available: boolean;
+}
+
+export interface SurveyResult {
+  id: number;
+  userId: number;
+  surveyId: number;
+  completedAt: string;
+  answers?: string[];    // answers per question index
+}
+
 // ===== KNOWLEDGE BASE =====
 export interface KBSection {
   id: number;
@@ -173,6 +192,7 @@ export interface MeetingAttendance {
   attended: boolean;
   markedAt?: string;
   markedBy?: number; // if HR overrode it
+  awardedPoints?: number;
 }
 
 // ===== ACTIVITY / POINTS MANAGEMENT =====

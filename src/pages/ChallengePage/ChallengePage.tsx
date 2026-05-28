@@ -16,7 +16,7 @@ import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
 import { DateInput } from '@shared/components/ui/Input/DateInput';
 import { Modal } from '@shared/components/ui/Modal/Modal';
-import type { ChallengeStatus } from '@shared/types';
+import type { ChallengeStatus, ChallengeEmployeeProgress } from '@shared/types';
 import { analytics } from '@shared/lib/analytics';
 import styles from './ChallengePage.module.css';
 
@@ -129,7 +129,7 @@ export function ChallengePage() {
 
   const activeAssignment = assignment ?? selfAssignment;
 
-  const awaitingReview = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points == null && a.employee_id !== user.id);
+  const awaitingReview = challengeAssignments.filter(a => a.awarded_points == null && a.employee_id !== user.id);
   const alreadyReviewed = challengeAssignments.filter(a => a.progress === 'DONE' && a.awarded_points != null && a.employee_id !== user.id);
 
   const stats = (() => {
@@ -313,6 +313,9 @@ export function ChallengePage() {
         <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-primary)' }}>
           👤 {name}
         </p>
+        <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>
+          Статус: {a.progress}
+        </p>
         {a.comment && (
           <p style={{
             fontSize: 13, color: 'var(--text-secondary)',
@@ -371,7 +374,11 @@ export function ChallengePage() {
     await updateJunior.mutateAsync({
       challengeId: challenge.id,
       juniorId: a.employee_id,
-      data: { awarded_points: finalPoints, feedback: st.feedback || undefined },
+      data: {
+        progress: 'DONE' as ChallengeEmployeeProgress,
+        awarded_points: finalPoints,
+        feedback: st.feedback || undefined,
+      },
     });
     createNotification.mutate({
       user_id: a.employee_id,
@@ -524,7 +531,7 @@ export function ChallengePage() {
               }}
             >
               <Star size={14} />
-              <span style={{ flex: 1, textAlign: 'left' }}>На проверке ({awaitingReview.length})</span>
+              <span style={{ flex: 1, textAlign: 'left' }}>Оценка ({awaitingReview.length})</span>
               {reviewExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
             {reviewExpanded && (

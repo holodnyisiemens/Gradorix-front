@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, Send } from 'lucide-react';
+import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, FileText, BookOpen, Send, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useThemeStore, type Theme } from '@shared/store/themeStore';
@@ -10,7 +10,7 @@ import { Button } from '@shared/components/ui/Button/Button';
 import { Input } from '@shared/components/ui/Input/Input';
 import { Modal } from '@shared/components/ui/Modal/Modal';
 import { RoleBadge } from '@shared/components/ui/Badge/Badge';
-import { useUserPoints, useUserAchievementsWithStatus, useQuizResults, useChallengeJuniors, useUpdateUser } from '@shared/hooks/useApi';
+import { useUserPoints, useUserAchievementsWithStatus, useQuizResults, useChallengeJuniors, useUpdateUser, useChangePassword } from '@shared/hooks/useApi';
 import { analytics } from '@shared/lib/analytics';
 import styles from './ProfilePage.module.css';
 
@@ -42,6 +42,9 @@ function getExtraLinks(role: string): ExtraLink[] {
       return [
         { to: '/challenges',    icon: <Zap size={18} />,          label: 'Задачи' },
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
+        { to: '/tests',         icon: <FlaskConical size={18} />, label: 'Тесты' },
+        { to: '/surveys',       icon: <FileText size={18} />,     label: 'Опросы' },
+        { to: '/knowledge',     icon: <BookOpen size={18} />,     label: 'База знаний' },
         { to: '/points',        icon: <Trophy size={18} />,       label: 'Личные достижения' },
         { to: '/team',          icon: <Users size={18} />,        label: 'Моя команда' },
       ];
@@ -56,6 +59,8 @@ function getExtraLinks(role: string): ExtraLink[] {
         { to: '/mentorships',   icon: <Link2 size={18} />,        label: 'Менторство' },
         { to: '/challenges',    icon: <Zap size={18} />,          label: 'Задачи' },
         { to: '/tests',         icon: <FlaskConical size={18} />, label: 'Тесты' },
+        { to: '/surveys',       icon: <FileText size={18} />,     label: 'Опросы' },
+        { to: '/knowledge',     icon: <BookOpen size={18} />,     label: 'База знаний' },
         { to: '/calendar',      icon: <Calendar size={18} />,     label: 'Календарь' },
       ];
     default:
@@ -70,6 +75,35 @@ function rankEmoji(rank: number) {
   return `#${rank}`;
 }
 
+type EditFormState = {
+  username: string;
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+function emptyEditForm(username: string): EditFormState {
+  return { username, oldPassword: '', newPassword: '', confirmPassword: '' };
+}
+
+function validatePasswordFields(form: EditFormState): string {
+  const hasAny = form.oldPassword || form.newPassword || form.confirmPassword;
+  if (!hasAny) return '';
+
+  if (!form.oldPassword) return 'Введите текущий пароль';
+  if (!form.newPassword) return 'Введите новый пароль';
+  if (form.newPassword.length < 6) return 'Новый пароль должен быть минимум 6 символов';
+  if (form.newPassword !== form.confirmPassword) return 'Пароли не совпадают';
+  return '';
+}
+
+function translatePasswordError(raw: string): string {
+  if (raw.toLowerCase().includes('invalid old password')) {
+    return 'Неверный текущий пароль';
+  }
+  return raw;
+}
+
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user)!;
   const logout = useAuthStore((s) => s.logout);
@@ -78,9 +112,12 @@ export function ProfilePage() {
   const { season, setSeason } = useSeasonStore();
   const navigate = useNavigate();
   const updateUser = useUpdateUser();
+  const changePassword = useChangePassword();
 
   const [editModal, setEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ username: user.username });
+  const [editForm, setEditForm] = useState<EditFormState>(() => emptyEditForm(user.username));
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const initials = user.username.slice(0, 2).toUpperCase();
 
@@ -100,12 +137,62 @@ export function ProfilePage() {
       })()
     : 0;
 
-  async function handleSaveProfile() {
-    await updateUser.mutateAsync({ id: user.id, data: { username: editForm.username } });
-    const state = useAuthStore.getState();
-    loginStore({ ...user, username: editForm.username }, state.token!, state.refreshToken!);
-    setEditModal(false);
+  function openEditModal() {
+    setEditForm(emptyEditForm(user.username));
+    setFormError('');
+    setShowPasswords(false);
+    setEditModal(true);
   }
+
+  function closeEditModal() {
+    setEditModal(false);
+    setFormError('');
+  }
+
+  async function handleSaveProfile() {
+    setFormError('');
+
+    const passwordError = validatePasswordFields(editForm);
+    if (passwordError) {
+      setFormError(passwordError);
+      return;
+    }
+
+    const wantsPassword = !!(editForm.oldPassword || editForm.newPassword || editForm.confirmPassword);
+    const usernameChanged = editForm.username.trim() !== user.username;
+
+    if (!wantsPassword && !usernameChanged) {
+      closeEditModal();
+      return;
+    }
+
+    try {
+      if (wantsPassword) {
+        await changePassword.mutateAsync({
+          old_password: editForm.oldPassword,
+          new_password: editForm.newPassword,
+        });
+      }
+
+      if (usernameChanged) {
+        await updateUser.mutateAsync({ id: user.id, data: { username: editForm.username.trim() } });
+        const state = useAuthStore.getState();
+        loginStore(
+          { ...user, username: editForm.username.trim() },
+          state.token!,
+          state.refreshToken!,
+        );
+      }
+
+      closeEditModal();
+    } catch (err: unknown) {
+      const axiosData = (err as { response?: { data?: { detail?: string } } })?.response?.data;
+      const rawMsg = axiosData?.detail ?? 'Не удалось сохранить изменения';
+      setFormError(translatePasswordError(rawMsg));
+    }
+  }
+
+  const isSaving = updateUser.isPending || changePassword.isPending;
 
   return (
     <>
@@ -117,7 +204,7 @@ export function ProfilePage() {
             {user.username}
           </h2>
           <RoleBadge role={user.role} />
-          <Button variant="ghost" size="sm" style={{ marginTop: 8 }} onClick={() => setEditModal(true)}>
+          <Button variant="ghost" size="sm" style={{ marginTop: 8 }} onClick={openEditModal}>
             <Edit2 size={13} /> Редактировать
           </Button>
         </div>
@@ -292,11 +379,50 @@ export function ProfilePage() {
       </div>
 
       {editModal && (
-        <Modal open={true} onClose={() => setEditModal(false)} title="Редактировать профиль" type="dialog">
+        <Modal open={true} onClose={closeEditModal} title="Редактировать профиль" type="dialog">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <Input label="Логин" value={editForm.username} onChange={e => setEditForm(p => ({ ...p, username: e.target.value }))} />
-            <Button full onClick={handleSaveProfile} disabled={updateUser.isPending}>
-              {updateUser.isPending ? 'Сохранение...' : 'Сохранить'}
+            <Input
+              label="Логин"
+              value={editForm.username}
+              onChange={e => setEditForm(p => ({ ...p, username: e.target.value }))}
+            />
+
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', margin: 0 }}>
+              Смена пароля
+            </p>
+            <Input
+              label="Текущий пароль"
+              type={showPasswords ? 'text' : 'password'}
+              value={editForm.oldPassword}
+              onChange={e => setEditForm(p => ({ ...p, oldPassword: e.target.value }))}
+              autoComplete="current-password"
+              iconRight={showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
+              onIconRightClick={() => setShowPasswords(v => !v)}
+            />
+            <Input
+              label="Новый пароль"
+              type={showPasswords ? 'text' : 'password'}
+              value={editForm.newPassword}
+              onChange={e => setEditForm(p => ({ ...p, newPassword: e.target.value }))}
+              autoComplete="new-password"
+            />
+            <Input
+              label="Подтвердите новый пароль"
+              type={showPasswords ? 'text' : 'password'}
+              value={editForm.confirmPassword}
+              onChange={e => setEditForm(p => ({ ...p, confirmPassword: e.target.value }))}
+              autoComplete="new-password"
+            />
+
+            {formError && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-danger)', fontSize: 'var(--text-sm)' }}>
+                <AlertCircle size={16} />
+                <span>{formError}</span>
+              </div>
+            )}
+
+            <Button full onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </div>
         </Modal>

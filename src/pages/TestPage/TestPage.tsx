@@ -18,6 +18,8 @@ export function TestPage() {
   const submitResult = useSubmitQuizResult();
 
   const prevResult = allResults.find((r) => r.quizId === Number(id));
+  const isEmployee = user.role === 'EMPLOYEE';
+  const alreadyCompleted = isEmployee && !!prevResult;
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
@@ -51,6 +53,7 @@ export function TestPage() {
   }
 
   function handleNext() {
+    if (alreadyCompleted) return;
     if (step < quiz.questions.length - 1) {
       setStep((s) => s + 1);
     } else {
@@ -105,33 +108,39 @@ export function TestPage() {
     return 'Есть куда расти';
   }
 
-  if (phase === 'intro') {
+  if (phase === 'intro' || (phase === 'quiz' && alreadyCompleted)) {
     return (
       <>
         <PageHeader title={quiz.title} showBack subtitle={quiz.category} />
         <div className={styles.page}>
           <div className={styles.results}>
             <div className={styles.resultHero}>
-              <div className={styles.resultEmoji}>🧪</div>
-              <p className={styles.resultTitle}>{quiz.title}</p>
-              <p className={styles.resultMeta}>{quiz.description}</p>
-              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16 }}>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>⏱ {quiz.durationMin} мин</span>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>❓ {quiz.questions.length} вопросов</span>
-                <span style={{ fontSize: 12, color: 'var(--color-warning-bright)' }}>⭐ +{quiz.points} баллов</span>
-              </div>
+              <div className={styles.resultEmoji}>{alreadyCompleted ? resultEmoji(prevResult!.score) : '🧪'}</div>
+              <p className={styles.resultTitle}>{alreadyCompleted ? resultTitle(prevResult!.score) : quiz.title}</p>
+              <p className={styles.resultMeta}>{alreadyCompleted ? 'Вы уже прошли этот тест' : quiz.description}</p>
+              {!alreadyCompleted && (
+                <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>⏱ {quiz.durationMin} мин</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>❓ {quiz.questions.length} вопросов</span>
+                  <span style={{ fontSize: 12, color: 'var(--color-warning-bright)' }}>⭐ +{quiz.points} баллов</span>
+                </div>
+              )}
             </div>
-            {prevResult && (
+            {alreadyCompleted && prevResult && (
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', textAlign: 'center' }}>
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Предыдущий результат</p>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Ваш результат</p>
                 <p style={{ fontSize: 'var(--text-xl)', fontFamily: 'var(--font-display)', color: 'var(--color-success-bright)' }}>{prevResult.score}%</p>
                 <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-warning-bright)' }}>+{prevResult.pointsEarned} баллов заработано</p>
               </div>
             )}
-            <Button full onClick={() => { analytics.track('тест_начат', { quiz_id: quiz.id, questions: quiz.questions.length, retake: !!prevResult }); setAnswers([]); setStep(0); setPhase('quiz'); }}>
-              {prevResult ? 'Пройти ещё раз' : 'Начать тест'}
+            {!alreadyCompleted && (
+              <Button full onClick={() => { analytics.track('тест_начат', { quiz_id: quiz.id, questions: quiz.questions.length }); setAnswers([]); setStep(0); setPhase('quiz'); }}>
+                Начать тест
+              </Button>
+            )}
+            <Button full variant={alreadyCompleted ? undefined : 'ghost'} onClick={() => navigate('/tests')}>
+              {alreadyCompleted ? 'К списку тестов' : 'Назад'}
             </Button>
-            <Button full variant="ghost" onClick={() => navigate('/tests')}>Назад</Button>
           </div>
         </div>
       </>

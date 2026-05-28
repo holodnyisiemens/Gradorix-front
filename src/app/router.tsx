@@ -18,6 +18,10 @@ import { TestsPage } from '@pages/TestsPage/TestsPage';
 import { TestPage } from '@pages/TestPage/TestPage';
 import { QuizBuilderPage } from '@pages/QuizBuilderPage/QuizBuilderPage';
 import { QuizReviewPage } from '@pages/QuizReviewPage/QuizReviewPage';
+import { SurveysPage } from '@pages/SurveysPage/SurveysPage';
+import { SurveyPage } from '@pages/SurveyPage/SurveyPage';
+import { SurveyBuilderPage } from '@pages/SurveyBuilderPage/SurveyBuilderPage';
+import { SurveyResultsPage } from '@pages/SurveyResultsPage/SurveyResultsPage';
 import { KnowledgePage } from '@pages/KnowledgePage/KnowledgePage';
 import { KnowledgeSectionPage } from '@pages/KnowledgeSectionPage/KnowledgeSectionPage';
 import { TeamPage } from '@pages/TeamPage/TeamPage';
@@ -66,6 +70,11 @@ export const router = createBrowserRouter([
       { path: 'tests/:id/edit',   element: <QuizBuilderPage /> },
       { path: 'tests/:id/review', element: <QuizReviewPage /> },
       { path: 'tests/:id',        element: <TestPage /> },
+      { path: 'surveys',          element: <SurveysPage /> },
+      { path: 'surveys/new',       element: <SurveyBuilderPage /> },
+      { path: 'surveys/:id/edit', element: <SurveyBuilderPage /> },
+      { path: 'surveys/:id/results', element: <SurveyResultsPage /> },
+      { path: 'surveys/:id',      element: <SurveyPage /> },
       { path: 'knowledge',        element: <KnowledgePage /> },
       { path: 'knowledge/:sectionId', element: <KnowledgeSectionPage /> },
       { path: 'team',             element: <TeamPage /> },

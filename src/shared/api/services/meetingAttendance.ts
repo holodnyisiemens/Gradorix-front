@@ -8,6 +8,7 @@ interface MeetingAttendanceBackend {
   attended: boolean;
   marked_at?: string | null;
   marked_by?: number | null;
+  awarded_points?: number | null;
 }
 
 function mapAttendance(b: MeetingAttendanceBackend): MeetingAttendance {
@@ -18,6 +19,7 @@ function mapAttendance(b: MeetingAttendanceBackend): MeetingAttendance {
     attended: b.attended,
     markedAt: b.marked_at ?? undefined,
     markedBy: b.marked_by ?? undefined,
+    awardedPoints: b.awarded_points ?? undefined,
   };
 }
 
@@ -26,6 +28,7 @@ export interface AttendanceCreateInput {
   user_id: number;
   attended: boolean;
   marked_by?: number;
+  awarded_points?: number;
 }
 
 export const meetingAttendanceApi = {

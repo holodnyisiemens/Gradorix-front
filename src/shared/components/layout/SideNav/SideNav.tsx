@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Home, Calendar, Zap, Users, Link2, LogOut,
   Trophy, BookOpen, FlaskConical, Star, Settings,
-  MoreHorizontal, ChevronDown,
+  MoreHorizontal, ChevronDown, FileText,
 } from 'lucide-react';
 import type { UserRole } from '@shared/types';
 import { useAuthStore } from '@modules/auth/store/authStore';
@@ -29,16 +29,15 @@ function getNavConfig(role: UserRole): NavConfig {
           { to: '/dashboard',    icon: <Home size={18} />,          label: 'Главная' },
           { to: '/leaderboard',  icon: <Trophy size={18} />,        label: 'Рейтинг' },
           { to: '/challenges',   icon: <Zap size={18} />,           label: 'Задачи' },
-          { to: '/points',     icon: <Star size={18} />,          label: 'Мои достижения' },
-
+          { to: '/points',       icon: <Star size={18} />,          label: 'Мои достижения' },
         ],
         secondary: [
           { to: '/knowledge',  icon: <BookOpen size={18} />,      label: 'База знаний' },
           { to: '/team',       icon: <Users size={18} />,         label: 'Моя команда' },
-          { to: '/tests',        icon: <FlaskConical size={18} />,  label: 'Тесты' },
+          { to: '/tests',      icon: <FlaskConical size={18} />,  label: 'Тесты' },
+          { to: '/surveys',    icon: <FileText size={18} />,      label: 'Опросы' },
         ],
-      };
-    case 'MENTOR':
+      };    case 'MENTOR':
       return {
         primary: [
           { to: '/dashboard',   icon: <Home size={18} />,      label: 'Главная' },
