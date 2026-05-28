@@ -85,9 +85,9 @@
 }
 
 .danger {
-  background: rgba(204, 0, 0, 0.15);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--accent-red-bright);
-  border: 1px solid rgba(204, 0, 0, 0.3);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 .danger:hover {
   background: var(--accent-red);

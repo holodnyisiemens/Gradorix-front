@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
+import { useThemeStore, type Theme } from '@shared/store/themeStore';
+import { useSeasonStore, type Season } from '@shared/store/seasonStore';
 import { PageHeader } from '@shared/components/layout/PageHeader/PageHeader';
 import { Card } from '@shared/components/ui/Card/Card';
 import { Button } from '@shared/components/ui/Button/Button';
@@ -11,6 +13,24 @@ import { RoleBadge } from '@shared/components/ui/Badge/Badge';
 import { useUserPoints, useUserAchievementsWithStatus, useQuizResults, useChallengeJuniors, useUpdateUser } from '@shared/hooks/useApi';
 import { analytics } from '@shared/lib/analytics';
 import styles from './ProfilePage.module.css';
+
+const THEME_GROUPS: { label: string; dark: Theme; light: Theme; color: string }[] = [
+  { label: 'Очень тёмные дела', dark: 'dark',         light: 'light',              color: '#cc0000' },
+  { label: 'Пацаны',            dark: 'boys',         light: 'boys-light',         color: '#f5c518' },
+  { label: 'Во все тяжкие',     dark: 'breaking-bad', light: 'breaking-bad-light', color: '#76c417' },
+  { label: 'Аркейн',            dark: 'arcane',       light: 'arcane-light',       color: '#8b5cf6' },
+  { label: 'Игра в кальмара',   dark: 'squid-game',   light: 'squid-game-light',   color: '#e91e8c' },
+  { label: 'DC',                dark: 'dc',           light: 'dc-light',           color: '#3d8ef0' },
+  { label: 'Marvel',            dark: 'marvel',       light: 'marvel-light',       color: '#f03030' },
+];
+
+const SEASON_OPTS: { value: Season; label: string }[] = [
+  { value: null,     label: '—'  },
+  { value: 'winter', label: '❄️' },
+  { value: 'spring', label: '🌸' },
+  { value: 'summer', label: '☀️' },
+  { value: 'autumn', label: '🍂' },
+];
 
 const LEVEL_THRESHOLDS = [0, 200, 500, 900, 1400, 2000];
 
@@ -54,6 +74,8 @@ export function ProfilePage() {
   const user = useAuthStore((s) => s.user)!;
   const logout = useAuthStore((s) => s.logout);
   const loginStore = useAuthStore((s) => s.login);
+  const { theme, setTheme } = useThemeStore();
+  const { season, setSeason } = useSeasonStore();
   const navigate = useNavigate();
   const updateUser = useUpdateUser();
 
@@ -215,6 +237,53 @@ export function ProfilePage() {
             </div>
           </Card>
         )}
+
+        <div>
+          <p className={styles.sectionTitle}>Внешний вид</p>
+          <div className={styles.appearanceCard}>
+            <div className={styles.appearanceRow}>
+              <span className={styles.appearanceLabel}>Сезон</span>
+              <div className={styles.seasonBtns}>
+                {SEASON_OPTS.map(o => (
+                  <button
+                    key={String(o.value)}
+                    title={o.value ?? 'Выключить'}
+                    className={[styles.seasonBtn, season === o.value ? styles.seasonBtnActive : ''].join(' ')}
+                    onClick={() => setSeason(o.value)}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.appearanceDivider} />
+
+            <p className={styles.appearanceLabel}>Тема</p>
+            <div className={styles.themeList}>
+              {THEME_GROUPS.map(g => (
+                <div key={g.dark} className={styles.themeRow}>
+                  <span className={styles.themeRowDot} style={{ background: g.color }} />
+                  <span className={styles.themeRowName}>{g.label}</span>
+                  <div className={styles.themeVariants}>
+                    <button
+                      title={`${g.label} — тёмная`}
+                      className={[styles.themeVariantBtn, styles.themeVariantDark, theme === g.dark ? styles.themeVariantActive : ''].join(' ')}
+                      style={{ '--swatch-color': g.color } as React.CSSProperties}
+                      onClick={() => setTheme(g.dark)}
+                    />
+                    <button
+                      title={`${g.label} — светлая`}
+                      className={[styles.themeVariantBtn, styles.themeVariantLight, theme === g.light ? styles.themeVariantActive : ''].join(' ')}
+                      style={{ '--swatch-color': g.color } as React.CSSProperties}
+                      onClick={() => setTheme(g.light)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <Button variant="danger" full onClick={() => { analytics.track('выход_из_системы'); analytics.reset(); logout(); }}>
           <LogOut size={16} />

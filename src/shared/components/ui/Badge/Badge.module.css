@@ -26,37 +26,37 @@
 }
 
 .red {
-  background: rgba(204, 0, 0, 0.15);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--accent-red-bright);
-  border: 1px solid rgba(204, 0, 0, 0.25);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 .red .dot { background: var(--accent-red-bright); }
 
 .orange {
-  background: rgba(224, 92, 0, 0.15);
+  background: color-mix(in srgb, var(--accent-orange) 15%, transparent);
   color: var(--accent-orange-bright);
-  border: 1px solid rgba(224, 92, 0, 0.25);
+  border: 1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent);
 }
 .orange .dot { background: var(--accent-orange-bright); }
 
 .green {
-  background: rgba(45, 138, 78, 0.15);
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
   color: var(--color-success-bright);
-  border: 1px solid rgba(45, 138, 78, 0.25);
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
 }
 .green .dot { background: var(--color-success-bright); }
 
 .yellow {
-  background: rgba(245, 197, 24, 0.12);
+  background: color-mix(in srgb, var(--accent-yellow) 12%, transparent);
   color: var(--accent-yellow);
-  border: 1px solid rgba(245, 197, 24, 0.25);
+  border: 1px solid color-mix(in srgb, var(--accent-yellow) 25%, transparent);
 }
 .yellow .dot { background: var(--accent-yellow); }
 
 .blue {
-  background: rgba(26, 58, 107, 0.3);
+  background: color-mix(in srgb, var(--color-info) 30%, transparent);
   color: var(--color-info-bright);
-  border: 1px solid rgba(58, 154, 238, 0.25);
+  border: 1px solid color-mix(in srgb, var(--color-info-bright) 25%, transparent);
 }
 .blue .dot { background: var(--color-info-bright); }
 

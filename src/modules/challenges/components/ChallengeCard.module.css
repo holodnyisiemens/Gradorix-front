@@ -27,7 +27,7 @@
 .card.active::before  { background: var(--color-success-bright); box-shadow: 0 0 8px var(--color-success-bright); }
 .card.upcoming::before { background: var(--color-info-bright); }
 .card.completed::before { background: var(--text-muted); }
-.card.cancelled::before { background: var(--color-danger-bright); }
+.card.cancelled::before { background: var(--color-primary-bright); }
 .card.draft::before { background: var(--border-strong); }
 
 .card:hover {
@@ -109,8 +109,8 @@
   font-size: 11px;
   color: var(--color-warning-bright);
   font-family: var(--font-display);
-  background: rgba(255, 170, 64, 0.1);
-  border: 1px solid rgba(255, 170, 64, 0.2);
+  background: color-mix(in srgb, var(--color-warning-bright) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning-bright) 20%, transparent);
   border-radius: var(--radius-full);
   padding: 1px 7px;
   white-space: nowrap;

@@ -4,7 +4,9 @@ import { analytics } from '@shared/lib/analytics';
 import { BottomNav } from '../BottomNav/BottomNav';
 import { SideNav } from '../SideNav/SideNav';
 import { AgentWidget } from '@shared/components/ui/AgentWidget/AgentWidget';
+import { SeasonalEffect } from '@shared/components/ui/SeasonalEffect/SeasonalEffect';
 import { useAuthStore } from '@modules/auth/store/authStore';
+import { useSeasonStore } from '@shared/store/seasonStore';
 import { wsClient } from '@shared/services/websocket/wsClient';
 import { useWsNotifications } from '@shared/services/websocket/useWsNotifications';
 import styles from './AppLayout.module.css';
@@ -16,6 +18,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
+  const season = useSeasonStore((s) => s.season);
   const location = useLocation();
 
   useEffect(() => {
@@ -46,6 +49,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Floating AI Agent — visible on all pages */}
       <AgentWidget />
+
+      {/* Seasonal particle overlay */}
+      <SeasonalEffect season={season} />
     </div>
   );
 }

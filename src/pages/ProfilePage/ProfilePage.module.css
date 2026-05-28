@@ -84,8 +84,8 @@
 
 /* Points / Level block */
 .levelBlock {
-  background: linear-gradient(135deg, rgba(204,0,0,0.1) 0%, rgba(204,0,0,0.03) 100%);
-  border: 1px solid rgba(204,0,0,0.3);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 10%, transparent) 0%, color-mix(in srgb, var(--color-primary) 3%, transparent) 100%);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   display: flex;
@@ -253,6 +253,123 @@
 .extraLinkChevron {
   color: var(--text-muted);
   flex-shrink: 0;
+}
+
+/* Appearance section */
+.appearanceCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.appearanceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.appearanceLabel {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.appearanceDivider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: var(--space-1) 0;
+}
+
+.seasonBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.seasonBtn {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.seasonBtn:hover {
+  border-color: var(--border-accent);
+  transform: scale(1.08);
+}
+
+.seasonBtnActive {
+  border-color: var(--accent-red-bright);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.themeList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.themeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.themeRowDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.themeRowName {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.themeVariants {
+  display: flex;
+  gap: 4px;
+}
+
+.themeVariantBtn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(128, 128, 128, 0.3);
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.themeVariantBtn:hover {
+  transform: scale(1.15);
+  border-color: var(--swatch-color, rgba(255,255,255,0.5));
+}
+
+.themeVariantDark {
+  background: linear-gradient(to bottom, #1a1a1a 60%, var(--swatch-color, #888) 60%);
+}
+
+.themeVariantLight {
+  background: linear-gradient(to bottom, #f0f0f0 60%, var(--swatch-color, #888) 60%);
+}
+
+.themeVariantActive {
+  border-color: var(--swatch-color, white) !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  transform: scale(1.1);
 }
 
 @media (min-width: 768px) {

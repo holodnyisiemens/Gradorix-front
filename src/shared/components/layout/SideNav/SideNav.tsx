@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  Home, Calendar, Zap, Users, Link2, User, LogOut,
+  Home, Calendar, Zap, Users, Link2, LogOut,
   Trophy, BookOpen, FlaskConical, Star, Settings,
-  CalendarCheck, Sun, Moon, MoreHorizontal, ChevronDown,
+  MoreHorizontal, ChevronDown,
 } from 'lucide-react';
 import type { UserRole } from '@shared/types';
 import { useAuthStore } from '@modules/auth/store/authStore';
-import { useThemeStore } from '@shared/store/themeStore';
 import styles from './SideNav.module.css';
 
 interface NavItem {
@@ -106,7 +105,6 @@ export function SideNav(_: SideNavProps) {
   const user = useAuthStore((s) => s.user)!;
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const { theme, toggle } = useThemeStore();
   const { primary, secondary } = getNavConfig(user.role);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -159,12 +157,6 @@ export function SideNav(_: SideNavProps) {
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
-
-      {/* Theme toggle */}
-      <button className={styles.themeBtn} onClick={toggle}>
-        {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-        {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
-      </button>
 
       {/* User block — clicking goes to profile */}
       <div className={styles.user} onClick={() => navigate('/profile')} role="button">

@@ -23,19 +23,19 @@
   height: 52px;
   border-radius: var(--radius-full);
   background: var(--accent-red);
-  color: #fff;
+  color: var(--text-inverted);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(204, 0, 0, 0.45);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-primary) 45%, transparent);
   transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
   flex-shrink: 0;
 }
 .fab:hover {
   background: var(--accent-red-bright);
-  box-shadow: 0 6px 28px rgba(204, 0, 0, 0.6);
+  box-shadow: 0 6px 28px color-mix(in srgb, var(--color-primary) 60%, transparent);
   transform: scale(1.05);
 }
 .fabOpen {
@@ -181,7 +181,7 @@
 .suggestion:hover {
   border-color: var(--accent-red);
   color: var(--text-primary);
-  background: rgba(204, 0, 0, 0.06);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
 }
 
 /* Bubbles */
@@ -196,7 +196,7 @@
 .bubbleUser {
   align-self: flex-end;
   background: var(--accent-red);
-  color: #fff;
+  color: var(--text-inverted);
   border-bottom-right-radius: 4px;
 }
 .bubbleAssistant {
@@ -218,7 +218,7 @@
 }
 .reportLink:hover {
   border-color: var(--accent-red);
-  background: rgba(204, 0, 0, 0.06);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
 }
 .timestamp {
   font-size: 10px;
@@ -363,7 +363,7 @@
   background: var(--bg-card);
 }
 .modeMenuItemActive {
-  background: rgba(204, 0, 0, 0.08);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 .modeMenuLabel {
   flex: 1;
@@ -382,7 +382,7 @@
   height: 34px;
   border-radius: var(--radius-md);
   background: var(--accent-red);
-  color: #fff;
+  color: var(--text-inverted);
   border: none;
   cursor: pointer;
   display: flex;

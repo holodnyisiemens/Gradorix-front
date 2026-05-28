@@ -1,8 +1,8 @@
 .page { padding-top: var(--space-4); }
 
 .myCard {
-  background: linear-gradient(135deg, rgba(204,0,0,0.12) 0%, rgba(204,0,0,0.04) 100%);
-  border: 1px solid rgba(204,0,0,0.35);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, transparent) 0%, color-mix(in srgb, var(--color-primary) 4%, transparent) 100%);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   display: flex;
@@ -85,8 +85,8 @@
 }
 
 .rowMe {
-  border-color: rgba(204,0,0,0.4);
-  background: rgba(204,0,0,0.04);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent);
 }
 
 .rank {
@@ -97,7 +97,7 @@
   text-align: center;
 }
 
-.rankGold   { color: #f5c518; }
+.rankGold   { color: var(--accent-yellow); }
 .rankSilver { color: #a0aec0; }
 .rankBronze { color: #c87533; }
 

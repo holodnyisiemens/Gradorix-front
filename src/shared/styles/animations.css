@@ -25,8 +25,8 @@
 }
 
 @keyframes pulse-glow-text {
-  0%, 100% { text-shadow: 0 0 8px rgba(204, 0, 0, 0.6); }
-  50% { text-shadow: 0 0 20px rgba(204, 0, 0, 0.9), 0 0 40px rgba(204, 0, 0, 0.5); }
+  0%, 100% { text-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 60%, transparent); }
+  50% { text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 90%, transparent), 0 0 40px color-mix(in srgb, var(--color-primary) 50%, transparent); }
 }
 
 @keyframes fade-in {

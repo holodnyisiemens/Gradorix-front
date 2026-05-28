@@ -12,8 +12,8 @@
 }
 
 .earned {
-  border-color: rgba(245, 197, 24, 0.25);
-  background: rgba(245, 197, 24, 0.04);
+  border-color: color-mix(in srgb, var(--accent-yellow) 25%, transparent);
+  background: color-mix(in srgb, var(--accent-yellow) 4%, transparent);
 }
 
 .locked {
@@ -35,8 +35,8 @@
 }
 
 .earned .icon {
-  background: rgba(245, 197, 24, 0.1);
-  border-color: rgba(245, 197, 24, 0.3);
+  background: color-mix(in srgb, var(--accent-yellow) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-yellow) 30%, transparent);
 }
 
 .content { flex: 1; min-width: 0; }

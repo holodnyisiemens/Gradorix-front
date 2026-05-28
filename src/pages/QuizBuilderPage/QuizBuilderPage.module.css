@@ -51,7 +51,7 @@
 
 .error {
   font-size: var(--text-xs);
-  color: var(--color-danger-bright);
+  color: var(--color-primary-bright);
   margin-top: var(--space-1);
 }
 
@@ -90,7 +90,7 @@
 }
 .toggleOn::after {
   transform: translateX(18px);
-  background: #fff;
+  background: var(--text-inverted);
 }
 .toggleLabel {
   font-size: var(--text-sm);
@@ -195,7 +195,7 @@
   flex-shrink: 0;
   transition: color var(--transition-fast), background var(--transition-fast);
 }
-.deleteBtn:hover { color: var(--color-danger-bright); background: rgba(204,0,0,0.08); }
+.deleteBtn:hover { color: var(--color-primary-bright); background: color-mix(in srgb, var(--color-primary) 8%, transparent); }
 
 /* ── Inline edit form ─────────────────────────────── */
 .inlineForm {
@@ -291,7 +291,7 @@
 .optionCheck:hover { border-color: var(--color-success-bright); color: var(--color-success-bright); }
 .optionCheckActive {
   border-color: var(--color-success-bright);
-  background: rgba(61,189,106,0.12);
+  background: color-mix(in srgb, var(--color-success-bright) 12%, transparent);
   color: var(--color-success-bright);
 }
 
@@ -321,7 +321,7 @@
   border-radius: var(--radius-sm);
   transition: color var(--transition-fast);
 }
-.optionRemove:hover { color: var(--color-danger-bright); }
+.optionRemove:hover { color: var(--color-primary-bright); }
 
 .addOptionBtn {
   display: flex;
@@ -366,7 +366,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--text-inverted);
   transition: all var(--transition-fast);
 }
 .gradedCheckOn {
@@ -422,5 +422,5 @@
 .addQuestionBtn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary-bright);
-  background: rgba(204,0,0,0.04);
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent);
 }

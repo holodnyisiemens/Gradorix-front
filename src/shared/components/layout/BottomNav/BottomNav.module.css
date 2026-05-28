@@ -3,7 +3,7 @@
   width: 100%;
   height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
   flex-shrink: 0;
-  background: rgba(17, 17, 17, 0.98);
+  background: color-mix(in srgb, var(--bg-card) 98%, transparent);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -50,7 +50,7 @@
   content: '';
   position: absolute;
   inset: -4px;
-  background: rgba(204, 0, 0, 0.12);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   border-radius: var(--radius-md);
   z-index: -1;
 }
@@ -76,7 +76,7 @@
   border-radius: 50%;
   font-size: 9px;
   font-weight: var(--font-bold);
-  color: white;
+  color: var(--text-inverted);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -14,9 +14,9 @@
 .item:active { background: rgba(255,255,255,0.03); }
 
 .unread {
-  background: rgba(204, 0, 0, 0.04);
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent);
 }
-.unread:hover { background: rgba(204, 0, 0, 0.07); }
+.unread:hover { background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
 
 .unreadDot {
   position: absolute;

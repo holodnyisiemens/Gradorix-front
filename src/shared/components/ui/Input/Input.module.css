@@ -40,7 +40,7 @@
 
 .input:focus {
   border-color: var(--accent-red);
-  box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .input:disabled {
@@ -65,9 +65,9 @@
 .iconRight { right: var(--space-3); pointer-events: auto; cursor: pointer; }
 .iconRight:hover { color: var(--text-secondary); }
 
-.error { border-color: var(--color-danger) !important; }
+.error { border-color: var(--color-primary) !important; }
 
 .errorMsg {
   font-size: var(--text-xs);
-  color: var(--color-danger-bright);
+  color: var(--color-primary-bright);
 }

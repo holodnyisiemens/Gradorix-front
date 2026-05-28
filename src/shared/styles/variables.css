@@ -106,36 +106,525 @@
   --border-color: rgba(240, 237, 230, 0.12);
 }
 
+/* ════════════════════════════════════════════════════════
+   ТЁМНЫЕ ТЕМЫ
+   ════════════════════════════════════════════════════════ */
+
+/* ─── Пацаны (The Boys) ─── Воут / золото Хоумлендера / тёмный ★ */
+[data-theme="boys"] {
+  --bg-base: #080608;
+  --bg-card: #0f0d12;
+  --bg-elevated: #181520;
+  --bg-subtle: #0f0d12;
+  --bg-overlay: rgba(0, 0, 0, 0.88);
+
+  --accent-red: #f5c518;
+  --accent-red-bright: #ffd700;
+  --accent-red-glow: rgba(245, 197, 24, 0.4);
+  --accent-orange: #c8380a;
+  --accent-orange-bright: #e84e1a;
+  --accent-yellow: #f5c518;
+  --accent-blue: #1a1540;
+  --accent-blue-bright: #3530a0;
+
+  --color-primary: #f5c518;
+  --color-primary-bright: #ffd700;
+
+  --text-primary: #f5f0e0;
+  --text-secondary: #9a8f60;
+  --text-muted: #5a5030;
+  --text-accent: #ffd700;
+  --text-inverted: #080608;
+
+  --border-subtle: rgba(245, 197, 24, 0.07);
+  --border-default: rgba(245, 197, 24, 0.14);
+  --border-strong: rgba(245, 197, 24, 0.28);
+  --border-accent: rgba(245, 197, 24, 0.55);
+  --border-color: rgba(245, 197, 24, 0.14);
+
+  --glow-red: 0 0 20px rgba(245, 197, 24, 0.65), 0 0 40px rgba(245, 197, 24, 0.3);
+  --glow-red-sm: 0 0 8px rgba(245, 197, 24, 0.55);
+  --glow-orange: 0 0 20px rgba(200, 56, 10, 0.5), 0 0 40px rgba(200, 56, 10, 0.2);
+  --glow-text: 0 0 10px rgba(245, 197, 24, 0.9), 0 0 20px rgba(245, 197, 24, 0.45);
+}
+
+/* ─── Во все тяжкие (Breaking Bad) ─── хим. зелёный / пустыня / HEI$ENBERG ★ */
+[data-theme="breaking-bad"] {
+  --bg-base: #050904;
+  --bg-card: #0b0f09;
+  --bg-elevated: #131810;
+  --bg-subtle: #0b0f09;
+  --bg-overlay: rgba(0, 0, 0, 0.88);
+
+  --accent-red: #76c417;
+  --accent-red-bright: #9de02a;
+  --accent-red-glow: rgba(118, 196, 23, 0.4);
+  --accent-orange: #d46a10;
+  --accent-orange-bright: #f08020;
+  --accent-yellow: #c8990a;
+  --accent-blue: #0e2a0e;
+  --accent-blue-bright: #1e5a1e;
+
+  --color-primary: #76c417;
+  --color-primary-bright: #9de02a;
+
+  --text-primary: #e8f2dc;
+  --text-secondary: #6e8860;
+  --text-muted: #404e38;
+  --text-accent: #9de02a;
+  --text-inverted: #050904;
+
+  --border-subtle: rgba(118, 196, 23, 0.07);
+  --border-default: rgba(118, 196, 23, 0.14);
+  --border-strong: rgba(118, 196, 23, 0.28);
+  --border-accent: rgba(118, 196, 23, 0.55);
+  --border-color: rgba(118, 196, 23, 0.14);
+
+  --glow-red: 0 0 20px rgba(118, 196, 23, 0.65), 0 0 40px rgba(118, 196, 23, 0.3);
+  --glow-red-sm: 0 0 8px rgba(118, 196, 23, 0.55);
+  --glow-orange: 0 0 20px rgba(212, 106, 16, 0.5), 0 0 40px rgba(212, 106, 16, 0.2);
+  --glow-text: 0 0 10px rgba(118, 196, 23, 0.9), 0 0 20px rgba(118, 196, 23, 0.45);
+}
+
+/* ─── Аркейн (Arcane) ─── Пилтовер/Зон / фиолет / золото / магия ★ */
+[data-theme="arcane"] {
+  --bg-base: #060510;
+  --bg-card: #0e0c1e;
+  --bg-elevated: #17142c;
+  --bg-subtle: #0e0c1e;
+  --bg-overlay: rgba(0, 0, 0, 0.92);
+
+  --accent-red: #8b5cf6;
+  --accent-red-bright: #a78bfa;
+  --accent-red-glow: rgba(139, 92, 246, 0.45);
+  --accent-orange: #f59e0b;
+  --accent-orange-bright: #fbbf24;
+  --accent-yellow: #f59e0b;
+  --accent-blue: #0a1a50;
+  --accent-blue-bright: #06b6d4;
+
+  --color-primary: #8b5cf6;
+  --color-primary-bright: #a78bfa;
+
+  --text-primary: #eae5f8;
+  --text-secondary: #7268a8;
+  --text-muted: #453a78;
+  --text-accent: #a78bfa;
+  --text-inverted: #060510;
+
+  --border-subtle: rgba(139, 92, 246, 0.09);
+  --border-default: rgba(139, 92, 246, 0.18);
+  --border-strong: rgba(139, 92, 246, 0.35);
+  --border-accent: rgba(139, 92, 246, 0.6);
+  --border-color: rgba(139, 92, 246, 0.18);
+
+  --glow-red: 0 0 20px rgba(139, 92, 246, 0.65), 0 0 40px rgba(139, 92, 246, 0.3);
+  --glow-red-sm: 0 0 8px rgba(139, 92, 246, 0.55);
+  --glow-orange: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
+  --glow-text: 0 0 10px rgba(139, 92, 246, 0.9), 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+/* ─── Игра в кальмара (Squid Game) ─── малиновый / бирюзовый / чёрный ★ */
+[data-theme="squid-game"] {
+  --bg-base: #090407;
+  --bg-card: #12060f;
+  --bg-elevated: #1c0b18;
+  --bg-subtle: #12060f;
+  --bg-overlay: rgba(0, 0, 0, 0.92);
+
+  --accent-red: #e91e8c;
+  --accent-red-bright: #f43fa8;
+  --accent-red-glow: rgba(233, 30, 140, 0.45);
+  --accent-orange: #00bda5;
+  --accent-orange-bright: #00d9bf;
+  --accent-yellow: #00bda5;
+  --accent-blue: #003d35;
+  --accent-blue-bright: #007d6a;
+
+  --color-primary: #e91e8c;
+  --color-primary-bright: #f43fa8;
+
+  --text-primary: #f8e6f2;
+  --text-secondary: #956080;
+  --text-muted: #5a2848;
+  --text-accent: #f43fa8;
+  --text-inverted: #090407;
+
+  --border-subtle: rgba(233, 30, 140, 0.08);
+  --border-default: rgba(233, 30, 140, 0.16);
+  --border-strong: rgba(233, 30, 140, 0.32);
+  --border-accent: rgba(233, 30, 140, 0.6);
+  --border-color: rgba(233, 30, 140, 0.16);
+
+  --glow-red: 0 0 20px rgba(233, 30, 140, 0.65), 0 0 40px rgba(233, 30, 140, 0.3);
+  --glow-red-sm: 0 0 8px rgba(233, 30, 140, 0.55);
+  --glow-orange: 0 0 20px rgba(0, 189, 165, 0.5), 0 0 40px rgba(0, 189, 165, 0.25);
+  --glow-text: 0 0 10px rgba(233, 30, 140, 0.9), 0 0 20px rgba(233, 30, 140, 0.5);
+}
+
+/* ─── DC ─── тёмный Готэм / электрик-синий / золото Бэтмена ★ */
+[data-theme="dc"] {
+  --bg-base: #030610;
+  --bg-card: #070c1e;
+  --bg-elevated: #0c1228;
+  --bg-subtle: #070c1e;
+  --bg-overlay: rgba(0, 0, 0, 0.92);
+
+  --accent-red: #1565c0;
+  --accent-red-bright: #3d8ef0;
+  --accent-red-glow: rgba(21, 101, 192, 0.45);
+  --accent-orange: #f0b800;
+  --accent-orange-bright: #ffd000;
+  --accent-yellow: #f0b800;
+  --accent-blue: #0a1560;
+  --accent-blue-bright: #1565c0;
+
+  --color-primary: #1565c0;
+  --color-primary-bright: #3d8ef0;
+
+  --text-primary: #e4ecf8;
+  --text-secondary: #6070a0;
+  --text-muted: #384868;
+  --text-accent: #3d8ef0;
+  --text-inverted: #030610;
+
+  --border-subtle: rgba(21, 101, 192, 0.09);
+  --border-default: rgba(21, 101, 192, 0.18);
+  --border-strong: rgba(21, 101, 192, 0.35);
+  --border-accent: rgba(21, 101, 192, 0.6);
+  --border-color: rgba(21, 101, 192, 0.18);
+
+  --glow-red: 0 0 20px rgba(21, 101, 192, 0.65), 0 0 40px rgba(61, 142, 240, 0.3);
+  --glow-red-sm: 0 0 8px rgba(61, 142, 240, 0.55);
+  --glow-orange: 0 0 20px rgba(240, 184, 0, 0.45), 0 0 40px rgba(240, 184, 0, 0.2);
+  --glow-text: 0 0 10px rgba(61, 142, 240, 0.9), 0 0 20px rgba(21, 101, 192, 0.5);
+}
+
+/* ─── Marvel ─── кроваво-красный / золото / тёмный космос ★ */
+[data-theme="marvel"] {
+  --bg-base: #080406;
+  --bg-card: #12060c;
+  --bg-elevated: #1c0c14;
+  --bg-subtle: #12060c;
+  --bg-overlay: rgba(0, 0, 0, 0.92);
+
+  --accent-red: #cc1010;
+  --accent-red-bright: #f03030;
+  --accent-red-glow: rgba(204, 16, 16, 0.45);
+  --accent-orange: #d4a010;
+  --accent-orange-bright: #f0c020;
+  --accent-yellow: #d4a010;
+  --accent-blue: #0a1060;
+  --accent-blue-bright: #1040c0;
+
+  --color-primary: #cc1010;
+  --color-primary-bright: #f03030;
+
+  --text-primary: #f5e6e6;
+  --text-secondary: #906060;
+  --text-muted: #583030;
+  --text-accent: #f03030;
+  --text-inverted: #080406;
+
+  --border-subtle: rgba(204, 16, 16, 0.08);
+  --border-default: rgba(204, 16, 16, 0.16);
+  --border-strong: rgba(204, 16, 16, 0.32);
+  --border-accent: rgba(204, 16, 16, 0.6);
+  --border-color: rgba(204, 16, 16, 0.16);
+
+  --glow-red: 0 0 20px rgba(204, 16, 16, 0.65), 0 0 40px rgba(240, 48, 48, 0.3);
+  --glow-red-sm: 0 0 8px rgba(240, 48, 48, 0.55);
+  --glow-orange: 0 0 20px rgba(212, 160, 16, 0.45), 0 0 40px rgba(212, 160, 16, 0.2);
+  --glow-text: 0 0 10px rgba(240, 48, 48, 0.9), 0 0 20px rgba(204, 16, 16, 0.5);
+}
+
+/* ════════════════════════════════════════════════════════
+   СВЕТЛЫЕ ТЕМЫ (общие reset-значения переопределяются ниже)
+   ════════════════════════════════════════════════════════ */
+
+/* Светлая Stranger Things ─── тёплый крем / красные акценты */
 [data-theme="light"] {
-  --bg-base: #f0f2f5;
+  --bg-base: #fdf4f2;
   --bg-card: #ffffff;
-  --bg-elevated: #ffffff;
-  --bg-subtle: #e8eaed;
-  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-elevated: #fff8f7;
+  --bg-subtle: #f5e8e5;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
 
-  --accent-red: #1d4ed8;
-  --accent-red-bright: #2563eb;
-  --accent-red-glow: rgba(29, 78, 216, 0.3);
+  --accent-red: #b71c1c;
+  --accent-red-bright: #c62828;
+  --accent-red-glow: rgba(183, 28, 28, 0.2);
+  --accent-orange: #bf360c;
+  --accent-orange-bright: #e64a19;
+  --accent-yellow: #f9a825;
+  --accent-blue: #1a237e;
+  --accent-blue-bright: #283593;
 
-  --color-primary: #1d4ed8;
-  --color-primary-bright: #2563eb;
+  --color-primary: #b71c1c;
+  --color-primary-bright: #c62828;
 
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
-  --text-accent: #1d4ed8;
+  --text-primary: #1a0505;
+  --text-secondary: #5a3030;
+  --text-muted: #9a7070;
+  --text-accent: #b71c1c;
   --text-inverted: #ffffff;
 
   --border-subtle: rgba(0, 0, 0, 0.06);
   --border-default: rgba(0, 0, 0, 0.12);
   --border-strong: rgba(0, 0, 0, 0.25);
-  --border-accent: rgba(29, 78, 216, 0.5);
+  --border-accent: rgba(183, 28, 28, 0.4);
   --border-color: rgba(0, 0, 0, 0.12);
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
-  --glow-red: 0 0 20px rgba(29,78,216,0.2);
-  --glow-red-sm: 0 0 8px rgba(29,78,216,0.15);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.11);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.14);
+  --glow-red: 0 0 16px rgba(183, 28, 28, 0.15);
+  --glow-red-sm: 0 0 6px rgba(183, 28, 28, 0.12);
+  --glow-text: none;
+}
+
+/* Светлая Пацаны ─── кремово-жёлтый / золото / корпорация Воут */
+[data-theme="boys-light"] {
+  --bg-base: #fefcf0;
+  --bg-card: #ffffff;
+  --bg-elevated: #fffdf5;
+  --bg-subtle: #f5f0d8;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+
+  --accent-red: #b8860b;
+  --accent-red-bright: #c8980c;
+  --accent-red-glow: rgba(184, 134, 11, 0.2);
+  --accent-orange: #a83200;
+  --accent-orange-bright: #c84000;
+  --accent-yellow: #b8860b;
+  --accent-blue: #1a1540;
+  --accent-blue-bright: #3030a0;
+
+  --color-primary: #b8860b;
+  --color-primary-bright: #c8980c;
+
+  --text-primary: #1a1200;
+  --text-secondary: #5a4a10;
+  --text-muted: #9a8040;
+  --text-accent: #b8860b;
+  --text-inverted: #ffffff;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.22);
+  --border-accent: rgba(184, 134, 11, 0.4);
+  --border-color: rgba(0, 0, 0, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.11);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.14);
+  --glow-red: 0 0 16px rgba(184, 134, 11, 0.15);
+  --glow-red-sm: 0 0 6px rgba(184, 134, 11, 0.12);
+  --glow-text: none;
+}
+
+/* Светлая Во все тяжкие ─── песочно-зелёный / пустыня */
+[data-theme="breaking-bad-light"] {
+  --bg-base: #f5f8f0;
+  --bg-card: #ffffff;
+  --bg-elevated: #f8faf4;
+  --bg-subtle: #e6f0d8;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+
+  --accent-red: #3a7a0a;
+  --accent-red-bright: #4a9a0c;
+  --accent-red-glow: rgba(58, 122, 10, 0.2);
+  --accent-orange: #a85000;
+  --accent-orange-bright: #c86000;
+  --accent-yellow: #8a7000;
+  --accent-blue: #0a2a0a;
+  --accent-blue-bright: #1a5a1a;
+
+  --color-primary: #3a7a0a;
+  --color-primary-bright: #4a9a0c;
+
+  --text-primary: #080f04;
+  --text-secondary: #3a5028;
+  --text-muted: #7a9060;
+  --text-accent: #3a7a0a;
+  --text-inverted: #ffffff;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.22);
+  --border-accent: rgba(58, 122, 10, 0.4);
+  --border-color: rgba(0, 0, 0, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.11);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.14);
+  --glow-red: 0 0 16px rgba(58, 122, 10, 0.15);
+  --glow-red-sm: 0 0 6px rgba(58, 122, 10, 0.12);
+  --glow-text: none;
+}
+
+/* Светлая Аркейн ─── лавандовый / Пилтовер / магия */
+[data-theme="arcane-light"] {
+  --bg-base: #f4f0ff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f8f5ff;
+  --bg-subtle: #e8e0f8;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+
+  --accent-red: #5b21b6;
+  --accent-red-bright: #6d28d9;
+  --accent-red-glow: rgba(91, 33, 182, 0.2);
+  --accent-orange: #b45309;
+  --accent-orange-bright: #d97706;
+  --accent-yellow: #b45309;
+  --accent-blue: #0369a1;
+  --accent-blue-bright: #0284c7;
+
+  --color-primary: #5b21b6;
+  --color-primary-bright: #6d28d9;
+
+  --text-primary: #0d0520;
+  --text-secondary: #3b2070;
+  --text-muted: #7a60b0;
+  --text-accent: #5b21b6;
+  --text-inverted: #ffffff;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.22);
+  --border-accent: rgba(91, 33, 182, 0.4);
+  --border-color: rgba(0, 0, 0, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.11);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.14);
+  --glow-red: 0 0 16px rgba(91, 33, 182, 0.15);
+  --glow-red-sm: 0 0 6px rgba(91, 33, 182, 0.12);
+  --glow-text: none;
+}
+
+/* Светлая Игра в кальмара ─── пастельно-розовый / тиловый */
+[data-theme="squid-game-light"] {
+  --bg-base: #fff0f8;
+  --bg-card: #ffffff;
+  --bg-elevated: #fff5fb;
+  --bg-subtle: #f8ddef;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+
+  --accent-red: #9c1060;
+  --accent-red-bright: #b8186e;
+  --accent-red-glow: rgba(156, 16, 96, 0.2);
+  --accent-orange: #007a6a;
+  --accent-orange-bright: #009980;
+  --accent-yellow: #007a6a;
+  --accent-blue: #003830;
+  --accent-blue-bright: #006858;
+
+  --color-primary: #9c1060;
+  --color-primary-bright: #b8186e;
+
+  --text-primary: #15010c;
+  --text-secondary: #5a1840;
+  --text-muted: #a06080;
+  --text-accent: #9c1060;
+  --text-inverted: #ffffff;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.22);
+  --border-accent: rgba(156, 16, 96, 0.4);
+  --border-color: rgba(0, 0, 0, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.11);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.14);
+  --glow-red: 0 0 16px rgba(156, 16, 96, 0.15);
+  --glow-red-sm: 0 0 6px rgba(156, 16, 96, 0.12);
+  --glow-text: none;
+}
+
+/* Светлая DC ─── Метрополис / голубой + золото */
+[data-theme="dc-light"] {
+  --bg-base: #f0f4ff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f5f8ff;
+  --bg-subtle: #dce8ff;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+
+  --accent-red: #0d47a1;
+  --accent-red-bright: #1565c0;
+  --accent-red-glow: rgba(13, 71, 161, 0.2);
+  --accent-orange: #e65100;
+  --accent-orange-bright: #f4511e;
+  --accent-yellow: #c8960a;
+  --accent-blue: #0d47a1;
+  --accent-blue-bright: #1565c0;
+
+  --color-primary: #0d47a1;
+  --color-primary-bright: #1565c0;
+
+  --text-primary: #020818;
+  --text-secondary: #1a2f5a;
+  --text-muted: #607090;
+  --text-accent: #0d47a1;
+  --text-inverted: #ffffff;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.22);
+  --border-accent: rgba(13, 71, 161, 0.4);
+  --border-color: rgba(0, 0, 0, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.11);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.14);
+  --glow-red: 0 0 16px rgba(13, 71, 161, 0.15);
+  --glow-red-sm: 0 0 6px rgba(13, 71, 161, 0.12);
+  --glow-text: none;
+}
+
+/* Светлая Marvel ─── белый + алый Marvel-красный + золото */
+[data-theme="marvel-light"] {
+  --bg-base: #fff5f5;
+  --bg-card: #ffffff;
+  --bg-elevated: #fff8f8;
+  --bg-subtle: #f8dcdc;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+
+  --accent-red: #991010;
+  --accent-red-bright: #b01818;
+  --accent-red-glow: rgba(153, 16, 16, 0.2);
+  --accent-orange: #a07000;
+  --accent-orange-bright: #b88000;
+  --accent-yellow: #a07000;
+  --accent-blue: #081060;
+  --accent-blue-bright: #1030a0;
+
+  --color-primary: #991010;
+  --color-primary-bright: #b01818;
+
+  --text-primary: #150404;
+  --text-secondary: #5a1818;
+  --text-muted: #a06060;
+  --text-accent: #991010;
+  --text-inverted: #ffffff;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.22);
+  --border-accent: rgba(153, 16, 16, 0.4);
+  --border-color: rgba(0, 0, 0, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.11);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.14);
+  --glow-red: 0 0 16px rgba(153, 16, 16, 0.15);
+  --glow-red-sm: 0 0 6px rgba(153, 16, 16, 0.12);
   --glow-text: none;
 }

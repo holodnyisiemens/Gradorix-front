@@ -1,11 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Theme = 'dark' | 'light';
+export type Theme =
+  | 'dark' | 'light'
+  | 'boys' | 'boys-light'
+  | 'breaking-bad' | 'breaking-bad-light'
+  | 'arcane' | 'arcane-light'
+  | 'squid-game' | 'squid-game-light'
+  | 'dc' | 'dc-light'
+  | 'marvel' | 'marvel-light';
 
 interface ThemeState {
   theme: Theme;
-  toggle: () => void;
   setTheme: (t: Theme) => void;
 }
 
@@ -13,11 +19,6 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
       theme: 'dark',
-      toggle: () => set((s) => {
-        const next = s.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        return { theme: next };
-      }),
       setTheme: (t) => {
         document.documentElement.setAttribute('data-theme', t);
         set({ theme: t });

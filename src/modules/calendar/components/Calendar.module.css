@@ -63,7 +63,7 @@
 }
 .viewBtnActive {
   background: var(--accent-red);
-  color: #fff;
+  color: var(--text-inverted);
 }
 
 /* === WEEKDAY LABELS === */
@@ -111,10 +111,10 @@
   line-height: 1;
 }
 .dayOutsideMonth .dayNumber { color: var(--text-muted); opacity: 0.4; }
-.dayToday { background: rgba(204, 0, 0, 0.12); }
+.dayToday { background: color-mix(in srgb, var(--color-primary) 12%, transparent); }
 .dayToday .dayNumber { color: var(--accent-red-bright); font-weight: var(--font-bold); }
 .daySelected { background: var(--accent-red); box-shadow: var(--glow-red-sm); }
-.daySelected .dayNumber { color: white; }
+.daySelected .dayNumber { color: var(--text-inverted); }
 .daySelected:hover { background: var(--accent-red-bright); }
 
 .eventDots {
@@ -183,9 +183,9 @@
   flex-shrink: 0;
   font-size: var(--text-base);
 }
-.typeChallenge { background: rgba(224, 92, 0, 0.15); }
-.typeMeeting   { background: rgba(26, 106, 170, 0.2); }
-.typeDeadline  { background: rgba(204, 0, 0, 0.12); }
+.typeChallenge { background: color-mix(in srgb, var(--accent-orange) 15%, transparent); }
+.typeMeeting   { background: color-mix(in srgb, var(--color-info) 20%, transparent); }
+.typeDeadline  { background: color-mix(in srgb, var(--color-primary) 12%, transparent); }
 
 .eventContent { flex: 1; min-width: 0; }
 .eventTitle {
@@ -232,7 +232,7 @@
   border-right: 1px solid var(--border-subtle);
 }
 .weekDayHeader:last-child { border-right: none; }
-.weekDayHeaderToday { background: rgba(204, 0, 0, 0.06); }
+.weekDayHeaderToday { background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
 
 .weekDayName {
   font-size: 10px;
@@ -254,7 +254,7 @@
 }
 .weekDayNumToday {
   background: var(--accent-red);
-  color: #fff;
+  color: var(--text-inverted);
   box-shadow: var(--glow-red-sm);
 }
 

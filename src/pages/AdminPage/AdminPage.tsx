@@ -22,7 +22,6 @@ import { achievementsApi } from '@shared/api/services/achievements';
 import { analytics } from '@shared/lib/analytics';
 import { ChallengeCard } from '@modules/challenges/components/ChallengeCard';
 import { useQueryClient } from '@tanstack/react-query';
-import { analytics } from '@shared/lib/analytics';
 import type { Activity, ActivityStatus, UserRole, ChallengeStatus, TeamStatus } from '@shared/types';
 
 const STATUS_LABEL: Record<ActivityStatus, string> = {
