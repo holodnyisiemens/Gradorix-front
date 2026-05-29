@@ -53,12 +53,21 @@ export interface WsChatMessageIn {
   };
 }
 
+/** Send a message in mentor ↔ employee chat. */
+export interface WsMentorChatSendIn {
+  type: 'mentor_chat_send';
+  payload: {
+    peer_id: number;
+    text: string;
+  };
+}
+
 /** Heartbeat — server must respond with { type: "pong" }. */
 export interface WsPingIn {
   type: 'ping';
 }
 
-export type WsInbound = WsChatMessageIn | WsPingIn;
+export type WsInbound = WsChatMessageIn | WsMentorChatSendIn | WsPingIn;
 
 // =============================================================================
 // SERVER → CLIENT  (WsOutbound)
@@ -137,6 +146,19 @@ export interface WsExcelReadyOut {
   };
 }
 
+/** Mentor ↔ employee chat message (real-time). */
+export interface WsMentorChatMessageOut {
+  type: 'mentor_chat_message';
+  payload: {
+    id: string;
+    mentor_id: number;
+    employee_id: number;
+    sender_id: number;
+    body: string;
+    created_at: string;
+  };
+}
+
 /** Heartbeat response. */
 export interface WsPongOut {
   type: 'pong';
@@ -163,5 +185,6 @@ export type WsOutbound =
   | WsChatTypingOut
   | WsChatReplyOut
   | WsExcelReadyOut
+  | WsMentorChatMessageOut
   | WsPongOut
   | WsErrorOut;

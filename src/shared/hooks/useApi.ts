@@ -4,6 +4,7 @@ import {
   challengesApi,
   challengeEmployeeApi,
   mentorEmployeeApi,
+  mentorChatApi,
   notificationsApi,
   calendarEventsApi,
   achievementsApi,
@@ -165,6 +166,36 @@ export const useRemoveMentor = () => {
     mutationFn: ({ mentorId, juniorId }: { mentorId: number; juniorId: number }) =>
       mentorEmployeeApi.delete(mentorId, juniorId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['mentor-employee'] }),
+  });
+};
+
+// ===== MENTOR CHAT =====
+export const useMentorChatConversations = (enabled = true) =>
+  useQuery({
+    queryKey: ['mentor-chat', 'conversations'],
+    queryFn: () => mentorChatApi.getConversations(),
+    enabled,
+    refetchInterval: 30_000,
+  });
+
+export const useMentorChatMessages = (
+  mentorId: number | undefined,
+  employeeId: number | undefined,
+) =>
+  useQuery({
+    queryKey: ['mentor-chat', 'messages', mentorId, employeeId],
+    queryFn: () => mentorChatApi.getMessages(mentorId!, employeeId!),
+    enabled: !!mentorId && !!employeeId,
+  });
+
+export const useMarkMentorChatRead = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ mentorId, employeeId }: { mentorId: number; employeeId: number }) =>
+      mentorChatApi.markRead(mentorId, employeeId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mentor-chat'] });
+    },
   });
 };
 

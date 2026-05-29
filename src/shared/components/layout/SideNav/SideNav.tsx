@@ -3,8 +3,9 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Home, Calendar, Zap, Users, Link2, LogOut,
   Trophy, BookOpen, FlaskConical, Star, Settings,
-  MoreHorizontal, ChevronDown, FileText,
+  MoreHorizontal, ChevronDown, FileText, MessageCircle,
 } from 'lucide-react';
+import { useMentorChatConversations } from '@shared/hooks/useApi';
 import type { UserRole } from '@shared/types';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import styles from './SideNav.module.css';
@@ -21,7 +22,7 @@ interface NavConfig {
   secondary: NavItem[];
 }
 
-function getNavConfig(role: UserRole): NavConfig {
+function getNavConfig(role: UserRole, chatUnread = 0): NavConfig {
   switch (role) {
     case 'EMPLOYEE':
       return {
@@ -29,6 +30,7 @@ function getNavConfig(role: UserRole): NavConfig {
           { to: '/dashboard',    icon: <Home size={18} />,          label: 'Главная' },
           { to: '/leaderboard',  icon: <Trophy size={18} />,        label: 'Рейтинг' },
           { to: '/challenges',   icon: <Zap size={18} />,           label: 'Задачи' },
+          { to: '/chat',         icon: <MessageCircle size={18} />, label: 'Чат с ментором', badge: chatUnread },
           { to: '/points',       icon: <Star size={18} />,          label: 'Мои достижения' },
         ],
         secondary: [
@@ -42,6 +44,7 @@ function getNavConfig(role: UserRole): NavConfig {
         primary: [
           { to: '/dashboard',   icon: <Home size={18} />,      label: 'Главная' },
           { to: '/juniors',     icon: <Users size={18} />,     label: 'Подопечные' },
+          { to: '/chat',        icon: <MessageCircle size={18} />, label: 'Чат', badge: chatUnread },
           { to: '/challenges',  icon: <Zap size={18} />,       label: 'Задачи' },
           { to: '/calendar',    icon: <Calendar size={18} />,  label: 'Календарь' },
           { to: '/leaderboard', icon: <Trophy size={18} />,    label: 'Рейтинг' },
@@ -104,7 +107,10 @@ export function SideNav(_: SideNavProps) {
   const user = useAuthStore((s) => s.user)!;
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const { primary, secondary } = getNavConfig(user.role);
+  const chatEnabled = user.role === 'MENTOR' || user.role === 'EMPLOYEE';
+  const { data: chatConversations = [] } = useMentorChatConversations(chatEnabled);
+  const chatUnread = chatConversations.reduce((s, c) => s + c.unread_count, 0);
+  const { primary, secondary } = getNavConfig(user.role, chatUnread);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const initials = user.username.slice(0, 2).toUpperCase();

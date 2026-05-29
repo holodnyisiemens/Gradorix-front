@@ -28,6 +28,7 @@ import { TeamPage } from '@pages/TeamPage/TeamPage';
 import { PointsPage } from '@pages/PointsPage/PointsPage';
 import { AdminPage } from '@pages/AdminPage/AdminPage';
 import { AttendancePage } from '@pages/AttendancePage/AttendancePage';
+import { MentorChatPage } from '@pages/MentorChatPage/MentorChatPage';
 
 export const router = createBrowserRouter([
   {
@@ -63,6 +64,8 @@ export const router = createBrowserRouter([
       { path: 'mentorships',      element: <MentorshipsPage /> },
       { path: 'notifications',    element: <NotificationsPage /> },
       { path: 'juniors',          element: <JuniorsPage /> },
+      { path: 'chat',             element: <MentorChatPage /> },
+      { path: 'chat/:peerId',     element: <MentorChatPage /> },
       { path: 'profile',          element: <ProfilePage /> },
       { path: 'leaderboard',      element: <LeaderboardPage /> },
       { path: 'tests',            element: <TestsPage /> },

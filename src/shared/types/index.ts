@@ -27,6 +27,23 @@ export interface MentorEmployee {
   assigned_by: number;
 }
 
+export interface MentorChatMessage {
+  id: string;
+  mentor_id: number;
+  employee_id: number;
+  sender_id: number;
+  body: string;
+  created_at: string;
+}
+
+export interface MentorChatConversation {
+  mentor_id: number;
+  employee_id: number;
+  peer_id: number;
+  last_message?: MentorChatMessage | null;
+  unread_count: number;
+}
+
 export interface ChallengeEmployee {
   challenge_id: number;
   employee_id: number;

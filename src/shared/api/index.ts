@@ -3,6 +3,7 @@ export { usersApi } from './services/users';
 export { challengesApi } from './services/challenges';
 export { challengeEmployeeApi } from './services/challengeEmployee';
 export { mentorEmployeeApi } from './services/mentorEmployee';
+export { mentorChatApi } from './services/mentorChat';
 export { notificationsApi } from './services/notifications';
 export { calendarEventsApi } from './services/calendarEvents';
 export { achievementsApi } from './services/achievements';

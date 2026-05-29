@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Zap, Trophy, User, Users, FlaskConical, Link2, Calendar, Settings, Star } from 'lucide-react';
+import { Home, Zap, Trophy, User, Users, FlaskConical, Link2, Calendar, Settings, Star, MessageCircle } from 'lucide-react';
+import { useMentorChatConversations } from '@shared/hooks/useApi';
 import type { UserRole } from '@shared/types';
 import styles from './BottomNav.module.css';
 
@@ -10,13 +11,13 @@ interface NavItem {
   badge?: number;
 }
 
-function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
+function getNavItems(role: UserRole, chatUnread: number): NavItem[] {
   switch (role) {
     case 'EMPLOYEE':
       return [
         { to: '/dashboard',   icon: <Home size={20} />,          label: 'Главная' },
         { to: '/challenges',  icon: <Zap size={20} />,           label: 'Задачи' },
-        { to: '/points',      icon: <Star size={20} />,        label: 'Мои достижения' },
+        { to: '/chat',        icon: <MessageCircle size={20} />, label: 'Чат', badge: chatUnread },
         { to: '/leaderboard', icon: <Trophy size={20} />,        label: 'Рейтинг' },
         { to: '/profile',     icon: <User size={20} />,          label: 'Профиль' },
       ];
@@ -24,8 +25,8 @@ function getNavItems(role: UserRole, unreadCount: number): NavItem[] {
       return [
         { to: '/dashboard',   icon: <Home size={20} />,    label: 'Главная' },
         { to: '/juniors',     icon: <Users size={20} />,   label: 'Подопечные' },
+        { to: '/chat',        icon: <MessageCircle size={20} />, label: 'Чат', badge: chatUnread },
         { to: '/challenges',  icon: <Zap size={20} />,     label: 'Задачи' },
-        { to: '/calendar',    icon: <Calendar size={20} />, label: 'Календарь' },
         { to: '/profile',     icon: <User size={20} />,    label: 'Профиль' },
       ];
     case 'HR':
@@ -46,7 +47,10 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ role }: BottomNavProps) {
-  const items = getNavItems(role, 0);
+  const chatEnabled = role === 'MENTOR' || role === 'EMPLOYEE';
+  const { data: chatConversations = [] } = useMentorChatConversations(chatEnabled);
+  const chatUnread = chatConversations.reduce((s, c) => s + c.unread_count, 0);
+  const items = getNavItems(role, chatUnread);
 
   return (
     <nav className={styles.nav}>

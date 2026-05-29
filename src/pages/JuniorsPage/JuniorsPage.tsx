@@ -36,7 +36,7 @@ export function JuniorsPage() {
                 <UserCard
                   key={junior.id}
                   user={junior}
-                  onClick={() => navigate(`/juniors/${junior.id}`)}
+                  onClick={() => navigate(`/chat/${junior.id}`)}
                   extra={
                     total > 0 ? (
                       <Badge color={done === total ? 'green' : done > 0 ? 'orange' : 'gray'}>
