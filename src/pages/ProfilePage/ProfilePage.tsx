@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, FileText, BookOpen, Send, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { LogOut, User, Mail, Shield, Trophy, Edit2, Calendar, Zap, ClipboardList, Users, Settings, Link2, ChevronRight, FlaskConical, FileText, BookOpen, Send, Eye, EyeOff, AlertCircle, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@modules/auth/store/authStore';
 import { useThemeStore, type Theme } from '@shared/store/themeStore';
@@ -371,7 +371,14 @@ export function ProfilePage() {
             </div>
           </div>
         </div>
-
+        <Button
+          variant="secondary"
+          full
+          onClick={() => window.open('https://forms.yandex.ru/u/6a153c8bd046881f76cd9d0a/', '_blank', 'noopener,noreferrer')}
+        >
+          <MessageSquare size={16} />
+          Оставить обратную связь
+        </Button>
         <Button variant="danger" full onClick={() => { analytics.track('выход_из_системы'); analytics.reset(); logout(); }}>
           <LogOut size={16} />
           Выйти из аккаунта
