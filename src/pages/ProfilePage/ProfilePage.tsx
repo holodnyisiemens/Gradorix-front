@@ -15,7 +15,7 @@ import { analytics } from '@shared/lib/analytics';
 import styles from './ProfilePage.module.css';
 
 const THEME_GROUPS: { label: string; dark: Theme; light: Theme; color: string }[] = [
-  { label: 'Очень тёмные дела', dark: 'dark',         light: 'light',              color: '#cc0000' },
+  { label: 'Очень странные дела', dark: 'dark',         light: 'light',              color: '#cc0000' },
   { label: 'Пацаны',            dark: 'boys',         light: 'boys-light',         color: '#f5c518' },
   { label: 'Во все тяжкие',     dark: 'breaking-bad', light: 'breaking-bad-light', color: '#76c417' },
   { label: 'Аркейн',            dark: 'arcane',       light: 'arcane-light',       color: '#8b5cf6' },
